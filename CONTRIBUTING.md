@@ -34,6 +34,11 @@ to compile, the editor keeps the last assemblies that did, and the run reports t
 passing. Check the project's `Logs/Editor.log` for `error CS` before believing a pass, and delete
 the results file first so a stale one cannot be read as a fresh one.
 
+After syncing the Basis clone to a newer upstream commit, or upgrading a source package (VRChat
+SDK, UniVRM, Dynamic Bone, Modular Avatar, NDMF), and running the suite green against it, update
+the table in `docs/docs/versions.md`: the upstream commit id and date for Basis, the version for
+a source package, and `ProductInfo.CheckedAgainst` for a source package too.
+
 Most of the code is deliberately free of scene and AssetDatabase access so it can be tested
 without an editor open. Keep it that way: readers take text, mappers take plain data, and only
 the writers touch Unity objects.

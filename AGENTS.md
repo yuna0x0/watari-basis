@@ -100,6 +100,21 @@ tens of gigabytes and slow to rebuild.
 - **Menus belong to us, not to Basis.** `Tools/<ProductName>/...`, never under Basis's own menu.
   See `agent/decisions/0002`.
 
+## Versions checked
+
+`docs/docs/versions.md` and `ProductInfo.CheckedAgainst` state which release of each source the
+readers were checked against. Update them in the same change as the check, every time:
+
+- **The Basis clone is synced to a newer upstream commit** and the suite passes against it:
+  put that commit's id, linked to the upstream commit page, and the date in the Basis row.
+- **A source package is upgraded** and the suite passes against it: VRChat SDK, UniVRM, Dynamic
+  Bone, Modular Avatar, NDMF, or any source added later. Raise its row and `CheckedAgainst`, and
+  the changelog entry names the new version.
+
+A green run against the new release is what raises a row; an upgrade that was not tested does
+not. Where a release adds components, the procedure in
+`agent/research/vrchat-serialized-formats.md` comes first.
+
 ## Someone else's UI is not guessable
 
 Steps through another tool's interface are facts to be checked, not prose to be written from a
