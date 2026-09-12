@@ -15,7 +15,7 @@ the same versions.
 | UniVRM | 0.131.2 |
 | Dynamic Bone | 1.3.4 |
 | Modular Avatar | 1.18.7, with NDMF 1.14.8 |
-| Basis | `developer` at [c7d7bc44a](https://github.com/BasisVR/Basis/commit/c7d7bc44a3ae46e215b5499f926b5a474852a3b8), 2026-09-08 |
+| Basis | `developer` at [748fd4d3b](https://github.com/BasisVR/Basis/commit/748fd4d3b2259110c4224cab3391a1723b473f58), 2026-09-12 |
 
 ## VRChat SDK
 
