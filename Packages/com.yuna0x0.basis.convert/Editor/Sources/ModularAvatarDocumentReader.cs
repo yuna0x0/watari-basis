@@ -39,6 +39,18 @@ namespace yuna0x0.Basis.Convert.Sources
         /// one parameter and pick different values from it.</summary>
         public float Value = 1f;
 
+        /// <summary>The menu label. Modular Avatar shows this, else the object's name.</summary>
+        public string Label = string.Empty;
+
+        /// <summary>Whether the parameter starts at this item's value.</summary>
+        public bool IsDefault;
+
+        /// <summary>Whether the value is chosen at build time rather than authored.</summary>
+        public bool AutomaticValue = true;
+
+        public bool IsSaved = true;
+        public bool IsSynced = true;
+
         public bool IsToggle => ControlType == ControlTypeToggle;
 
         public const int ControlTypeToggle = 102;
@@ -49,6 +61,9 @@ namespace yuna0x0.Basis.Convert.Sources
     {
         /// <summary>Transform path, relative to the avatar root Modular Avatar resolves against.</summary>
         public string Path = string.Empty;
+
+        /// <summary>The object itself, which Modular Avatar prefers to the path when it is set.</summary>
+        public long TargetObjectFileId;
 
         public bool Active;
     }
@@ -111,6 +126,27 @@ namespace yuna0x0.Basis.Convert.Sources
             if (document.TryGetTopLevelFileIdReference("m_GameObject", out long owner))
             {
                 data.OwnerGameObjectFileId = owner;
+            }
+
+            data.Label = document.GetTopLevelValue("label") ?? string.Empty;
+            if (document.TryGetBool("isDefault", out bool isDefault))
+            {
+                data.IsDefault = isDefault;
+            }
+
+            if (document.TryGetBool("automaticValue", out bool automatic))
+            {
+                data.AutomaticValue = automatic;
+            }
+
+            if (document.TryGetBool("isSaved", out bool saved))
+            {
+                data.IsSaved = saved;
+            }
+
+            if (document.TryGetBool("isSynced", out bool synced))
+            {
+                data.IsSynced = synced;
             }
 
             if (!document.TryGetTopLevelBlock("Control", out List<string> control))
@@ -204,6 +240,15 @@ namespace yuna0x0.Basis.Convert.Sources
                 if (trimmed.StartsWith("referencePath:"))
                 {
                     current.Path = ValueOf(trimmed);
+                }
+                else if (trimmed.StartsWith("targetObject:"))
+                {
+                    int at = trimmed.IndexOf("fileID:");
+                    if (at >= 0)
+                    {
+                        string digits = trimmed.Substring(at + 7).Trim().TrimEnd('}').Trim();
+                        long.TryParse(digits, out current.TargetObjectFileId);
+                    }
                 }
                 else if (trimmed.StartsWith("Active:"))
                 {

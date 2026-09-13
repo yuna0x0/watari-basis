@@ -18,13 +18,15 @@ namespace yuna0x0.Basis.Convert.Rig
     public static class RigReadiness
     {
         /// <summary>
-        /// Bones Basis maps for full-body IK. A humanoid rig can be valid to Unity while missing
-        /// some of these, and the IK quietly does less when they are absent.
+        /// Bones the Basis avatar validator reports as errors when unmapped. Unity accepts a
+        /// humanoid without Chest or Neck; Basis does not.
         /// </summary>
         private static readonly HumanBodyBones[] Required =
         {
             HumanBodyBones.Hips,
             HumanBodyBones.Spine,
+            HumanBodyBones.Chest,
+            HumanBodyBones.Neck,
             HumanBodyBones.Head,
             HumanBodyBones.LeftUpperArm,
             HumanBodyBones.LeftLowerArm,
@@ -38,6 +40,15 @@ namespace yuna0x0.Basis.Convert.Rig
             HumanBodyBones.RightUpperLeg,
             HumanBodyBones.RightLowerLeg,
             HumanBodyBones.RightFoot,
+        };
+
+        /// <summary>
+        /// Bones the Basis validator warns about when unmapped. Eyes are checked separately.
+        /// </summary>
+        private static readonly HumanBodyBones[] Recommended =
+        {
+            HumanBodyBones.LeftShoulder,
+            HumanBodyBones.RightShoulder,
         };
 
         /// <summary>The four arm bones Basis looks under for a twist child.</summary>
@@ -107,13 +118,29 @@ namespace yuna0x0.Basis.Convert.Rig
             if (missing.Count > 0)
             {
                 log.Add(DiagnosticSeverity.Warning, "rig.missingBones",
-                    $"The humanoid mapping is missing {string.Join(", ", missing)}. Basis maps "
-                    + "these for full-body IK, and the parts that depend on them will not solve.");
+                    $"The humanoid mapping is missing {string.Join(", ", missing)}. The Basis "
+                    + "avatar validator reports these as errors.");
             }
             else
             {
                 log.Add(DiagnosticSeverity.Mapped, "rig.bonesComplete",
-                    "Every humanoid bone Basis maps for full-body IK is present.");
+                    "Every humanoid bone the Basis validator requires is mapped.");
+            }
+
+            List<string> recommended = new List<string>();
+            foreach (HumanBodyBones bone in Recommended)
+            {
+                if (animator.GetBoneTransform(bone) == null)
+                {
+                    recommended.Add(bone.ToString());
+                }
+            }
+
+            if (recommended.Count > 0)
+            {
+                log.Add(DiagnosticSeverity.Warning, "rig.recommendedBones",
+                    $"The humanoid mapping is missing {string.Join(", ", recommended)}. Basis "
+                    + "places them from a fallback table and its validator warns.");
             }
         }
 
@@ -125,10 +152,9 @@ namespace yuna0x0.Basis.Convert.Rig
             }
 
             log.Add(DiagnosticSeverity.Warning, "rig.jawMapped",
-                "A Jaw bone is mapped in the humanoid rig. The Basis setup guide asks for this "
-                + "assignment to be cleared, because it is usually mapped to something that is "
-                + "not a jaw and moves the head oddly. Clear it under the model's Configure, in "
-                + "the Head mapping.");
+                "A Jaw bone is mapped in the humanoid rig. Basis does not drive the Jaw, and "
+                + "humanoid retargeting moves whatever bone is mapped there. Clear it under the "
+                + "model's Configure, in the Head mapping, unless it is a jaw.");
         }
 
         private static void InspectEyes(Animator animator, List<ConversionDiagnostic> log)

@@ -174,6 +174,12 @@ namespace yuna0x0.Basis.Convert.Model
         /// </summary>
         public float DefaultValue;
 
+        /// <summary>Whether the value persists across sessions. Vixxy's default is to remember.</summary>
+        public bool Saved = true;
+
+        /// <summary>Whether the value is sent to other players. Vixxy's default is networked.</summary>
+        public bool NetworkSynced = true;
+
         public List<VixxyActivationPlan> Activations = new List<VixxyActivationPlan>();
         public List<VixxySubjectPlan> Subjects = new List<VixxySubjectPlan>();
 

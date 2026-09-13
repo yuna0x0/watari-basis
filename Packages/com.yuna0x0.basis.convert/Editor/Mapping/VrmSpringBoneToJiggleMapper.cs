@@ -34,12 +34,24 @@ namespace yuna0x0.Basis.Convert.Mapping
             List<VrmSpringJointData> joints = WithParameters(source.Joints);
             JiggleParameterPlan parameters = plan.Parameters;
 
-            // A chain's tail joint carries no parameters of its own: it says where the chain
-            // ends rather than how it behaves.
+            // A VRM 1.0 chain's last joint is its tail. UniVRM never reads its parameters
+            // (FastSpringBoneBuffer takes joints.Length - 1), though the importer writes defaults
+            // onto it, so it is dropped here whatever it carries.
+            if (source.IsVrm10 && joints.Count > 1 && joints[joints.Count - 1] == source.Joints[source.Joints.Count - 1])
+            {
+                joints.RemoveAt(joints.Count - 1);
+            }
+
             if (joints.Count == 0)
             {
                 joints.Add(source.Joints[0]);
             }
+
+            // Nothing below reads these, and the preset's values would otherwise stand in.
+            parameters.Stretch = new JiggleCurvedFloatPlan(0f);
+            parameters.Soften = 0f;
+            parameters.RootStretch = 0f;
+            parameters.AirDrag = new JiggleCurvedFloatPlan(0f);
 
             float[] stiffness = new float[joints.Count];
             float[] drag = new float[joints.Count];
@@ -58,9 +70,10 @@ namespace yuna0x0.Basis.Convert.Mapping
                 radius[i] = Mathf.Max(0f, joint.Radius);
 
                 // VRM's gravity is a direction and a magnitude; jiggle's is a multiplier on
-                // world gravity, so only the downward part has anywhere to go.
+                // world gravity, so only the vertical part has anywhere to go. Upward stays
+                // upward: jiggle's multiplier may be negative.
                 Vector3 pull = joint.GravityDir.normalized * joint.GravityPower;
-                gravity[i] = Mathf.Max(0f, -pull.y);
+                gravity[i] = -pull.y;
                 sideways |= joint.GravityPower > 0f
                     && !Mathf.Approximately(pull.magnitude, Mathf.Abs(pull.y));
             }
@@ -84,12 +97,22 @@ namespace yuna0x0.Basis.Convert.Mapping
                 + "same 0 to 1 scale.");
 
             parameters.Gravity = Curved(gravity);
+            if (Mathf.Abs(gravity[0]) > 0f || sideways)
+            {
+                log.Add(DiagnosticSeverity.Approximated, "vrm.gravity",
+                    $"gravity power {joints[0].GravityPower} became the jiggle gravity "
+                    + "multiplier. VRM adds it per step as a force against stiffness; jiggle "
+                    + "scales world gravity. The units differ, so this is a fit.");
+            }
+
             if (sideways)
             {
                 log.Add(DiagnosticSeverity.Approximated, "vrm.gravity.direction",
                     "Gravity did not point straight down. Jiggle scales world gravity rather "
-                    + "than taking a direction, so only the downward part carried across.");
+                    + "than taking a direction, so only the vertical part carried across.");
             }
+
+            MapAngleLimit(joints, parameters, log);
 
             bool collides = radius[0] > 0f;
             parameters.CollisionRadius = Curved(radius);
@@ -102,15 +125,73 @@ namespace yuna0x0.Basis.Convert.Mapping
                     + "metres.");
             }
 
+            // VRM simulates a chain relative to its centre transform, so the avatar's own
+            // motion never reaches it. Jiggle's ignoreRootMotion does the same from the rig's
+            // root bone.
             if (source.CenterFileId != 0L)
             {
-                log.Add(DiagnosticSeverity.Dropped, "vrm.center.dropped",
-                    "The chain named a centre transform. VRM simulates relative to it so hair "
-                    + "does not lag behind a moving avatar. Jiggle has no equivalent; its own "
-                    + "root motion handling covers some of the same ground.");
+                parameters.IgnoreRootMotion = 1f;
+                log.Add(DiagnosticSeverity.Approximated, "vrm.center",
+                    "The chain named a centre transform, so it ignored the avatar's motion. "
+                    + "The rig ignores root motion fully, measured at its root bone rather than "
+                    + "the centre.");
+            }
+            else
+            {
+                parameters.IgnoreRootMotion = 0f;
             }
 
             return plan;
+        }
+
+        /// <summary>
+        /// A VRM 1.0 cone limit is a half-angle in radians; jiggle's angle limit is 0..1 of 90
+        /// degrees. Hinge and spherical limits have no jiggle shape.
+        /// </summary>
+        private static void MapAngleLimit(List<VrmSpringJointData> joints,
+            JiggleParameterPlan parameters, List<ConversionDiagnostic> log)
+        {
+            const int cone = 1;
+            bool anyCone = false;
+            bool anyOther = false;
+            bool anyUnlimited = false;
+            float[] limits = new float[joints.Count];
+
+            for (int i = 0; i < joints.Count; i++)
+            {
+                VrmSpringJointData joint = joints[i];
+                if (joint.AngleLimitType == cone)
+                {
+                    anyCone = true;
+                    limits[i] = Mathf.Clamp01(joint.Pitch / (Mathf.PI * 0.5f));
+                }
+                else
+                {
+                    anyOther |= joint.AngleLimitType != 0;
+                    anyUnlimited |= joint.AngleLimitType == 0;
+                    limits[i] = 1f;
+                }
+            }
+
+            if (anyOther)
+            {
+                log.Add(DiagnosticSeverity.Dropped, "vrm.angleLimit.dropped",
+                    "A joint had a hinge or spherical angle limit. Jiggle has a cone only, so "
+                    + "that limit was dropped.");
+            }
+
+            if (!anyCone)
+            {
+                parameters.AngleLimitToggle = false;
+                return;
+            }
+
+            parameters.AngleLimitToggle = true;
+            parameters.AngleLimit = Curved(limits);
+            log.Add(DiagnosticSeverity.Approximated, "vrm.angleLimit.cone",
+                $"A cone limit of {joints[0].Pitch * Mathf.Rad2Deg:0} degrees became a jiggle "
+                + "angle limit. Cones wider than 90 degrees stop at 90"
+                + (anyUnlimited ? ", and joints without a limit take 90 too." : "."));
         }
 
         /// <summary>

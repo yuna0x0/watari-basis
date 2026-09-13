@@ -27,6 +27,19 @@ namespace yuna0x0.Basis.Convert.Model
     }
 
     /// <summary>One blendshape an expression sets, and how far.</summary>
+    /// <summary>
+    /// Names UniVRM gives the VRM 0.x presets, in <c>BlendShapePreset</c> order. A 0.x clip is
+    /// identified by its preset, and its free-text name may be anything.
+    /// </summary>
+    public static class Vrm0PresetNames
+    {
+        public static readonly string[] Names =
+        {
+            string.Empty, "Neutral", "A", "I", "U", "E", "O", "Blink", "Joy", "Angry", "Sorrow",
+            "Fun", "LookUp", "LookDown", "LookLeft", "LookRight", "Blink_L", "Blink_R",
+        };
+    }
+
     public sealed class VrmMorphBinding
     {
         /// <summary>Transform path of the renderer, relative to the avatar root.</summary>
@@ -127,6 +140,12 @@ namespace yuna0x0.Basis.Convert.Model
     /// <summary>One VRM expression, from either format.</summary>
     public sealed class VrmExpressionData
     {
+        /// <summary>
+        /// The preset this expression fills, by UniVRM's name for it, or empty for a custom one.
+        /// VRM 1.0 preset fields are named this way already; a 0.x clip's <c>Name</c> is free text.
+        /// </summary>
+        public string PresetName = string.Empty;
+
         public string Name = string.Empty;
         public VrmExpressionRole Role = VrmExpressionRole.Custom;
 

@@ -118,6 +118,16 @@ namespace yuna0x0.Basis.Convert.Sources
                 any = true;
             }
 
+            if (document.TryGetInt("m_anglelimitType", out int limitType))
+            {
+                joint.AngleLimitType = limitType;
+            }
+
+            if (document.TryGetFloat("m_pitch", out float pitch))
+            {
+                joint.Pitch = pitch;
+            }
+
             joint.HasParameters = any;
             return joint;
         }

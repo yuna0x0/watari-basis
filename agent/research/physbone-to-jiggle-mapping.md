@@ -3,7 +3,13 @@
 The reference for what maps to what, and how confident each row is. Verified 2026-08-30 against
 the jiggle source and real VRChat avatar data.
 
-## Curve semantics match
+## Curve semantics: same formula, different domain
+
+Both systems evaluate a falloff curve as `value * curve.Evaluate(t)`. The domain differs: VRChat's
+`CalcBoneRatio`/`CalcTransformRatio` divide the bone index by the chain's bone count, jiggle's
+`BuildNormalizedDistanceFromRootList` divides cumulative world distance by the longest path
+(checked 2026-09-14 against SDK 3.10.5 and the Basis clone). Curves carry over and are reported
+as `physbone.curves.domain`. The paragraph below predates that check.
 
 Both systems evaluate a falloff curve as `value * curve.Evaluate(t)` over normalized distance
 from the chain root. VRChat's `pullCurve`, `radiusCurve` and friends, and jiggle's
@@ -32,12 +38,13 @@ is a silent no-op. The emitter must always set `advancedToggle`.
 |---|---|---|
 | `rootTransform`, else the component's own object | `rootBone` | exact |
 | `ignoreTransforms` | `excludedTransforms` | exact |
-| `multiChildType == Ignore` | `excludeRoot` | exact |
+| `multiChildType == Ignore`, root with 2+ children | `excludeRoot` | exact for the root; branches below stay still in VRChat only |
+| any `multiChildType`, root with 1 child | root simulated | exact (SDK: `childCount == 1` is simulated before Multi Child Type is read) |
 | `immobile` | `ignoreRootMotion` | exact, same 0..1 sense |
-| `gravity` (+curve) | `gravity` (+curve) | exact |
+| `gravity` (+curve) | `gravity` (+curve) | approximated: PhysBone blends toward down, jiggle scales 9.81 m/s² |
 | `radius` (+curve) | `collisionRadius` (+curve), `collisionToggle` | exact |
-| `allowGrabbing` | `!lockFromGrabbing` | exact |
-| `maxStretch` | `maxGrabStretch` | exact |
+| `allowGrabbing && radius > 0` | `!lockFromGrabbing` | exact (radius 0 is never grabbable in VRChat) |
+| `maxStretch` | nothing (bounds bone length; `maxGrabStretch` bounds grab reach) | dropped |
 | `stretchMotion` (+curve) | `stretch` (+curve) | close |
 | `limitType` Angle/Hinge + `maxAngleX` | `angleLimit = deg/90`, `angleLimitToggle` | close |
 | `pull` (+`stiffness` when Advanced) | `stiffness` | **heuristic** |
@@ -47,7 +54,9 @@ is a silent no-op. The emitter must always set `advancedToggle`.
 | `immobileType == World` | folded into `ignoreRootMotion` | approximated |
 | `gravityFalloff`, `maxSquish`, `limitRotation`, `endpointPosition` | nothing | dropped |
 | `allowPosing`, `snapToHand`, `grabMovement` | nothing | dropped |
-| `parameter`, `isAnimated` | nothing, Vixxy territory | dropped |
+| `parameter` | nothing, Vixxy territory | dropped |
+| `isAnimated` | nothing needed: jiggle always follows the animated rest pose | mapped |
+| `spring` curve | nothing (drag runs opposite to spring) | dropped |
 | `stiffnessCurve` when pull also has a curve | nothing, pull's curve wins | dropped |
 
 Colliders map shape for shape, sphere, capsule and plane, since jiggle supports all three

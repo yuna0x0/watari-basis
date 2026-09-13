@@ -88,6 +88,52 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void LockedIsAlwaysWrittenBecauseVrchatForcesItInPlay()
+        {
+            // VRC.Dynamics: jobData.Locked = Locked || Application.isPlaying. Basis unlocked
+            // snaps undriven axes to the captured rest pose, which VRChat never does.
+            VrcConstraintData source = Constraint(VrcConstraintKind.Position);
+            source.Locked = false;
+
+            BasisConstraintPlan plan = VrcConstraintToBasisMapper.Map(source);
+
+            Assert.That(plan.Locked, Is.True);
+            Assert.That(plan.Diagnostics.HasCode("constraint.locked"), Is.True);
+        }
+
+        [Test]
+        public void LookAtRollIsNegatedForBasis()
+        {
+            // VRChat rotates by -Roll about the look axis, Basis by +Roll about the same axis.
+            VrcConstraintData source = Constraint(VrcConstraintKind.LookAt);
+            source.Roll = 30f;
+
+            Assert.That(VrcConstraintToBasisMapper.Map(source).Roll, Is.EqualTo(-30f).Within(1e-6f));
+        }
+
+        [Test]
+        public void ALoneSourceBelowFullWeightIsReported()
+        {
+            VrcConstraintData source = Constraint(VrcConstraintKind.Rotation);
+            source.Sources[0].Weight = 0.3f;
+
+            BasisConstraintPlan plan = VrcConstraintToBasisMapper.Map(source);
+
+            Assert.That(plan.Diagnostics.HasCode("constraint.source.weight.normalized"), Is.True);
+        }
+
+        [Test]
+        public void AimWithNoWorldUpIsReported()
+        {
+            VrcConstraintData source = Constraint(VrcConstraintKind.Aim);
+            source.WorldUp = VrcConstraintWorldUp.None;
+
+            BasisConstraintPlan plan = VrcConstraintToBasisMapper.Map(source);
+
+            Assert.That(plan.Diagnostics.HasCode("constraint.worldUp.none"), Is.True);
+        }
+
+        [Test]
         public void EmptySourceSlotsAreDroppedAndReported()
         {
             VrcConstraintData source = Constraint(VrcConstraintKind.Rotation);

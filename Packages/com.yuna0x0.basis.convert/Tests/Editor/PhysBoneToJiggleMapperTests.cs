@@ -186,10 +186,73 @@ namespace yuna0x0.Basis.Convert.Tests
             PhysBoneData source = Bone();
             source.MultiChildType = PhysBoneMultiChildType.Ignore;
 
-            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source, rootChildCount: 2);
 
             Assert.That(plan.ExcludeRoot, Is.True);
             Assert.That(plan.Diagnostics.HasCode("physbone.multiChildType.ignore"), Is.True);
+        }
+
+        [Test]
+        public void ARootWithOneChildIsSimulatedWhateverMultiChildTypeSays()
+        {
+            // VRChat: simulatedType = Child when childCount == 1, before Multi Child Type is
+            // consulted. Pinning the root would freeze the first joint of every strand.
+            foreach (PhysBoneMultiChildType type in new[]
+            {
+                PhysBoneMultiChildType.Ignore,
+                PhysBoneMultiChildType.First,
+                PhysBoneMultiChildType.Average,
+            })
+            {
+                PhysBoneData source = Bone();
+                source.MultiChildType = type;
+
+                JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source, rootChildCount: 1);
+
+                Assert.That(plan.ExcludeRoot, Is.False, type.ToString());
+                Assert.That(plan.Diagnostics.HasCode("physbone.multiChildType.oneChild"), Is.True);
+            }
+        }
+
+        [Test]
+        public void TheSpringCurveIsDroppedRatherThanInvertingTheFalloff()
+        {
+            // Drag runs opposite to spring, so multiplying drag by spring's curve would fade
+            // drag where spring fades.
+            PhysBoneData source = Bone();
+            source.Spring = new PhysBoneCurvedFloat(0.5f, AnimationCurve.Linear(0f, 1f, 1f, 0f));
+
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+
+            Assert.That(plan.Parameters.Drag.Value.CurveEnabled, Is.False);
+            Assert.That(plan.Diagnostics.HasCode("physbone.springCurve.dropped"), Is.True);
+        }
+
+        [Test]
+        public void GrabbingNeedsAPositiveRadius()
+        {
+            // PhysBoneManager skips a chain with radius <= 0 in both grab paths.
+            PhysBoneData zero = Bone();
+            zero.AllowGrabbing = true;
+            Assert.That(PhysBoneToJiggleMapper.Map(zero).LockFromGrabbing, Is.True);
+
+            PhysBoneData sized = Bone();
+            sized.AllowGrabbing = true;
+            sized.Radius = new PhysBoneCurvedFloat(0.05f);
+            Assert.That(PhysBoneToJiggleMapper.Map(sized).LockFromGrabbing, Is.False);
+        }
+
+        [Test]
+        public void HingeIsApproximatedAndCurvesAreReported()
+        {
+            PhysBoneData source = Bone();
+            source.LimitType = PhysBoneLimitType.Hinge;
+            source.Pull = new PhysBoneCurvedFloat(0.2f, AnimationCurve.Linear(0f, 1f, 1f, 0.5f));
+
+            List<ConversionDiagnostic> log = PhysBoneToJiggleMapper.Map(source).Diagnostics;
+
+            Assert.That(log.HasCode("physbone.limitType.hinge"), Is.True);
+            Assert.That(log.HasCode("physbone.curves.domain"), Is.True);
         }
 
         [Test]
@@ -198,7 +261,7 @@ namespace yuna0x0.Basis.Convert.Tests
             PhysBoneData source = Bone();
             source.MultiChildType = PhysBoneMultiChildType.Average;
 
-            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source, rootChildCount: 3);
 
             Assert.That(plan.Diagnostics.HasCode("physbone.multiChildType.blended"), Is.True);
         }
@@ -248,7 +311,10 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(plan.LockFromGrabbing, Is.True);
             Assert.That(plan.ExcludedTransformFileIds, Is.EquivalentTo(new[] { 11L, 22L }));
             Assert.That(plan.ColliderSourceFileIds, Is.EquivalentTo(new[] { 33L }));
-            Assert.That(plan.MaxGrabStretch, Is.EqualTo(1.5f).Within(1e-6f));
+            Assert.That(plan.Diagnostics.HasCode("physbone.maxStretch.dropped"), Is.True,
+                "Max Stretch bounds bone length; jiggle's grab stretch bounds grab reach.");
+            Assert.That(plan.Parameters.RootStretch, Is.EqualTo(0f),
+                "PhysBone never lets the root particle leave its animated position.");
         }
 
         [Test]

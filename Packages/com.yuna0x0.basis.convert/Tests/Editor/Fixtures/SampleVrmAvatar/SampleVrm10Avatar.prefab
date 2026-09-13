@@ -206,6 +206,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a942e03b39600e41a1b161e958048f7, type: 3}
   m_Name:
   m_EditorClassIdentifier:
+  m_stiffnessForce: 0.1
+  m_gravityPower: 0
+  m_gravityDir: {x: 0, y: -1, z: 0}
+  m_dragForce: 0.5
+  m_jointRadius: 0.03
+  m_anglelimitType: 0
 --- !u!1 &500000
 GameObject:
   m_ObjectHideFlags: 0

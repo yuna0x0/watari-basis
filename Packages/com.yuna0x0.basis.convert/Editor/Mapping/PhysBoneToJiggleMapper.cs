@@ -12,13 +12,25 @@ namespace yuna0x0.Basis.Convert.Mapping
     /// here can be unit tested directly.
     /// </para>
     /// <para>
-    /// Both systems evaluate a falloff curve as <c>value * curve(t)</c> over normalized distance
-    /// from the chain root, so curves carry across untouched and much of the mapping is exact.
+    /// Both systems evaluate a falloff curve as <c>value * curve(t)</c>, but PhysBone samples
+    /// <c>t</c> by bone index and jiggle by distance from the root, so curves carry across as an
+    /// approximation.
     /// </para>
     /// </summary>
     public static class PhysBoneToJiggleMapper
     {
-        public static JiggleRigPlan Map(PhysBoneData source, JiggleMappingProfile profile = null)
+        /// <summary>
+        /// Passed as <c>rootChildCount</c> when the caller has no hierarchy. Treated as a root
+        /// with several children, the case where Multi Child Type applies.
+        /// </summary>
+        public const int UnknownChildCount = -1;
+
+        /// <param name="rootChildCount">
+        /// Children of the root bone after ignored transforms are removed. PhysBone simulates a
+        /// root with exactly one child whatever Multi Child Type says.
+        /// </param>
+        public static JiggleRigPlan Map(PhysBoneData source, JiggleMappingProfile profile = null,
+            int rootChildCount = UnknownChildCount)
         {
             profile ??= JiggleMappingProfile.Default;
 
@@ -41,8 +53,11 @@ namespace yuna0x0.Basis.Convert.Mapping
             MapAngleLimit(source, profile, parameters, log);
             MapStretch(source, plan, parameters, log);
             MapGrab(source, plan, log);
-            MapMultiChild(source, plan, log);
+            MapMultiChild(source, plan, rootChildCount, log);
             ReportUnmappable(source, log);
+
+            // PhysBone never lets the root particle leave its animated position. Presets do.
+            parameters.RootStretch = 0f;
 
             return plan;
         }
@@ -88,12 +103,21 @@ namespace yuna0x0.Basis.Convert.Mapping
             float spring = Mathf.Clamp01(source.Spring.Value);
             float drag = Mathf.Lerp(profile.DragAtNoSpring, profile.DragAtFullSpring, spring);
 
-            parameters.Drag = new JiggleCurvedFloatPlan(drag, source.Spring.Curve);
+            // The curve cannot follow: it scales spring, and drag runs the other way, so a curve
+            // fading spring out toward the tip would fade drag out instead of raising it.
+            parameters.Drag = new JiggleCurvedFloatPlan(drag);
 
             log.Add(DiagnosticSeverity.Approximated, "physbone.spring.drag",
                 $"spring {source.Spring.Value} became jiggle drag {drag}. "
                 + "Spring and drag are inverses but their scales differ, so this is a fit, not "
                 + "a conversion.");
+
+            if (source.Spring.HasCurve)
+            {
+                log.Add(DiagnosticSeverity.Dropped, "physbone.springCurve.dropped",
+                    "The spring falloff curve was dropped. Drag runs opposite to spring, so the "
+                    + "curve would have inverted the falloff.");
+            }
         }
 
         private static void MapImmobile(PhysBoneData source, JiggleParameterPlan parameters,
@@ -128,8 +152,10 @@ namespace yuna0x0.Basis.Convert.Mapping
             parameters.Gravity = new JiggleCurvedFloatPlan(
                 source.Gravity.Value, source.Gravity.Curve);
 
-            log.Add(DiagnosticSeverity.Mapped, "physbone.gravity",
-                $"gravity {source.Gravity.Value} carried over, with its curve if it had one.");
+            log.Add(DiagnosticSeverity.Approximated, "physbone.gravity",
+                $"gravity {source.Gravity.Value} became the jiggle gravity multiplier, with its "
+                + "curve if it had one. PhysBone gravity blends the rest direction toward down; "
+                + "jiggle scales world gravity.");
 
             if (!Mathf.Approximately(source.GravityFalloff.Value, 0f))
             {
@@ -191,10 +217,14 @@ namespace yuna0x0.Basis.Convert.Mapping
             switch (source.LimitType)
             {
                 case PhysBoneLimitType.Angle:
-                case PhysBoneLimitType.Hinge:
                     log.Add(DiagnosticSeverity.Mapped, "physbone.limitType.angle",
-                        $"{source.LimitType} limit of {degrees} degrees became a jiggle angle "
-                        + "limit.");
+                        $"Angle limit of {degrees} degrees became a jiggle angle limit.");
+                    break;
+
+                case PhysBoneLimitType.Hinge:
+                    log.Add(DiagnosticSeverity.Approximated, "physbone.limitType.hinge",
+                        $"Hinge limit of {degrees} degrees became a jiggle cone of that angle. "
+                        + "A hinge also keeps the bone on one plane; the cone does not.");
                     break;
 
                 case PhysBoneLimitType.Polar:
@@ -238,29 +268,41 @@ namespace yuna0x0.Basis.Convert.Mapping
                 Clamp01(source.StretchMotion.Value, "jiggle.stretch", log),
                 source.StretchMotion.Curve);
 
+            if (source.StretchMotion.Value > 0f)
+            {
+                log.Add(DiagnosticSeverity.Mapped, "physbone.stretchMotion.stretch",
+                    $"stretchMotion {source.StretchMotion.Value} became jiggle stretch, with its "
+                    + "curve if it had one.");
+            }
+
             if (source.MaxStretch.Value > 0f)
             {
-                plan.MaxGrabStretch = source.MaxStretch.Value;
-                log.Add(DiagnosticSeverity.Mapped, "physbone.maxStretch.maxGrabStretch",
-                    $"maxStretch {source.MaxStretch.Value} became maxGrabStretch.");
+                log.Add(DiagnosticSeverity.Dropped, "physbone.maxStretch.dropped",
+                    $"Max Stretch {source.MaxStretch.Value} was dropped. It bounds how far a bone "
+                    + "may lengthen; jiggle has no such bound.");
             }
 
             if (source.MaxSquish.Value > 0f)
             {
                 log.Add(DiagnosticSeverity.Dropped, "physbone.maxSquish.dropped",
-                    $"Max Squish {source.MaxSquish.Value} was dropped. Jiggle bones stretch but "
-                    + "do not compress.");
+                    $"Max Squish {source.MaxSquish.Value} was dropped. It bounds how far a bone "
+                    + "may shorten; jiggle has no such bound.");
             }
         }
 
         private static void MapGrab(PhysBoneData source, JiggleRigPlan plan,
             List<ConversionDiagnostic> log)
         {
-            plan.LockFromGrabbing = !source.AllowGrabbing;
+            // VRChat skips grabbing when the radius is 0, whatever Allow Grabbing says.
+            bool grabbable = source.AllowGrabbing && source.Radius.Value > 0f;
+            plan.LockFromGrabbing = !grabbable;
             log.Add(DiagnosticSeverity.Mapped, "physbone.allowGrabbing",
-                source.AllowGrabbing
+                grabbable
                     ? "Grabbing stays enabled."
-                    : "Grabbing was disabled, so the jiggle rig is locked from grabbing.");
+                    : source.AllowGrabbing
+                        ? "Radius was 0, which VRChat treats as not grabbable, so the jiggle "
+                            + "rig is locked from grabbing."
+                        : "Grabbing was disabled, so the jiggle rig is locked from grabbing.");
 
             if (source.AllowPosing)
             {
@@ -277,8 +319,18 @@ namespace yuna0x0.Basis.Convert.Mapping
         }
 
         private static void MapMultiChild(PhysBoneData source, JiggleRigPlan plan,
-            List<ConversionDiagnostic> log)
+            int rootChildCount, List<ConversionDiagnostic> log)
         {
+            // Multi Child Type only applies to a root with several children. With one child the
+            // root is simulated toward it, which is what a jiggle root does on its own.
+            if (rootChildCount == 1)
+            {
+                plan.ExcludeRoot = false;
+                log.Add(DiagnosticSeverity.Mapped, "physbone.multiChildType.oneChild",
+                    "The root has one child, so PhysBone simulates it. The jiggle root moves too.");
+                return;
+            }
+
             switch (source.MultiChildType)
             {
                 case PhysBoneMultiChildType.Ignore:
@@ -310,9 +362,17 @@ namespace yuna0x0.Basis.Convert.Mapping
 
             if (source.IsAnimated)
             {
-                log.Add(DiagnosticSeverity.Warning, "physbone.isAnimated",
-                    "Is Animated was on, meaning something animated this PhysBone's settings. "
-                    + "Whatever drove it will not have come across, so the jiggle rig is static.");
+                log.Add(DiagnosticSeverity.Mapped, "physbone.isAnimated",
+                    "Is Animated was on, so the rest pose followed animation each frame. Jiggle "
+                    + "always does.");
+            }
+
+            if (source.Pull.HasCurve || source.Gravity.HasCurve || source.Radius.HasCurve
+                || source.MaxAngleX.HasCurve || source.StretchMotion.HasCurve)
+            {
+                log.Add(DiagnosticSeverity.Approximated, "physbone.curves.domain",
+                    "Falloff curves carried over. PhysBone samples them by bone index and jiggle "
+                    + "by distance from the root, so a bone reads a different point on the curve.");
             }
 
             if (source.EndpointPosition != Vector3.zero)

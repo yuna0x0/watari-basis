@@ -69,7 +69,102 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(stiffness.Value.Value, Is.EqualTo(1f).Within(0.001f));
             Assert.That(stiffness.Value.CurveEnabled, Is.True);
             Assert.That(stiffness.Value.Curve.Evaluate(1f), Is.EqualTo(0.5f).Within(0.001f),
-                "The tail joint carries no parameters, so the last one that does ends the curve.");
+                "UniVRM never reads the tail joint's parameters, so the joint before it ends "
+                + "the curve whatever the tail carries.");
+        }
+
+        private static VrmSpringChainData Chain(params VrmSpringJointData[] joints)
+        {
+            VrmSpringChainData chain = new VrmSpringChainData { IsVrm10 = true };
+            chain.Joints.AddRange(joints);
+            return chain;
+        }
+
+        [Test]
+        public void TheTailJointsParametersAreIgnored()
+        {
+            // FastSpringBoneBuffer takes joints.Length - 1: the tail only marks where the chain
+            // ends, though the importer writes default parameters onto it.
+            VrmSpringChainData chain = Chain(
+                new VrmSpringJointData { Radius = 0.02f, DragForce = 0.4f },
+                new VrmSpringJointData { Radius = 0.02f, DragForce = 0.4f },
+                new VrmSpringJointData { Radius = 0f, DragForce = 0.5f });
+
+            JiggleRigPlan plan = Mapping.VrmSpringBoneToJiggleMapper.Map(chain);
+
+            Assert.That(plan.Parameters.CollisionRadius.Value.CurveEnabled, Is.False,
+                "Only the two real joints count, and they agree.");
+            Assert.That(plan.Parameters.Drag.Value.Value, Is.EqualTo(0.4f).Within(1e-6f));
+        }
+
+        [Test]
+        public void PresetLeaksAreClosedAndGravityIsReported()
+        {
+            VrmSpringChainData chain = Chain(
+                new VrmSpringJointData { GravityPower = 0.2f, GravityDir = Vector3.up },
+                new VrmSpringJointData());
+
+            JiggleRigPlan plan = Mapping.VrmSpringBoneToJiggleMapper.Map(chain);
+
+            Assert.That(plan.Parameters.AngleLimitToggle, Is.False);
+            Assert.That(plan.Parameters.Stretch.Value.Value, Is.Zero);
+            Assert.That(plan.Parameters.RootStretch, Is.Zero);
+            Assert.That(plan.Parameters.IgnoreRootMotion, Is.Zero);
+            Assert.That(plan.Parameters.Gravity.Value.Value, Is.EqualTo(-0.2f).Within(1e-6f),
+                "Upward gravity stays upward; jiggle's multiplier may be negative.");
+            Assert.That(plan.Diagnostics.HasCode("vrm.gravity"), Is.True);
+        }
+
+        [Test]
+        public void AConeLimitBecomesAnAngleLimit()
+        {
+            VrmSpringChainData chain = Chain(
+                new VrmSpringJointData { AngleLimitType = 1, Pitch = Mathf.PI / 4f },
+                new VrmSpringJointData());
+
+            JiggleRigPlan plan = Mapping.VrmSpringBoneToJiggleMapper.Map(chain);
+
+            Assert.That(plan.Parameters.AngleLimitToggle, Is.True);
+            Assert.That(plan.Parameters.AngleLimit.Value.Value, Is.EqualTo(0.5f).Within(1e-5f),
+                "45 degrees is half of jiggle's 90 degree range.");
+            Assert.That(plan.Diagnostics.HasCode("vrm.angleLimit.cone"), Is.True);
+
+            VrmSpringChainData hinge = Chain(
+                new VrmSpringJointData { AngleLimitType = 2 },
+                new VrmSpringJointData());
+            Assert.That(Mapping.VrmSpringBoneToJiggleMapper.Map(hinge).Diagnostics
+                .HasCode("vrm.angleLimit.dropped"), Is.True);
+        }
+
+        [Test]
+        public void ACentreTransformBecomesFullIgnoreRootMotion()
+        {
+            VrmSpringChainData chain = Chain(new VrmSpringJointData(), new VrmSpringJointData());
+            chain.CenterFileId = 77L;
+
+            JiggleRigPlan plan = Mapping.VrmSpringBoneToJiggleMapper.Map(chain);
+
+            Assert.That(plan.Parameters.IgnoreRootMotion, Is.EqualTo(1f));
+            Assert.That(plan.Diagnostics.HasCode("vrm.center"), Is.True);
+        }
+
+        [Test]
+        public void AVrm0ClipIsMatchedByItsPresetNotItsName()
+        {
+            // UniVRM identifies a 0.x clip by its preset; BlendShapeName is whatever the author
+            // typed, often Japanese.
+            VrmExpressionData vowel = new VrmExpressionData
+            {
+                Name = "あ", Role = VrmExpressionRole.Viseme, PresetName = "A",
+            };
+            Assert.That(Mapping.VrmExpressionToVisemeMapper.TryGetSlot(vowel, out int slot), Is.True);
+            Assert.That(slot, Is.EqualTo(10));
+
+            VrmExpressionData blink = new VrmExpressionData
+            {
+                Name = "まばたき", Role = VrmExpressionRole.Blink, PresetName = "Blink",
+            };
+            Assert.That(Mapping.VrmExpressionToVisemeMapper.IsBlink(blink), Is.True);
         }
 
         [Test]

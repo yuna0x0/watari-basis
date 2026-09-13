@@ -323,6 +323,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (VrcConstraintDocumentReader.TryGetKind(kind, out VrcConstraintKind constraintKind))
                 {
                     plan.ConstraintsFound++;
+                    if (!document.IsEnabled)
+                    {
+                        plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "constraint.disabled",
+                            $"A {constraintKind} constraint was disabled, so it drove nothing. "
+                            + "None was written.");
+                        continue;
+                    }
+
                     PlannedConstraint constraint =
                         PlanConstraint(document, constraintKind, resolver, plan);
                     if (constraint != null)
@@ -391,12 +399,28 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (kind == SourceComponentKind.DynamicBone)
                 {
                     plan.DynamicBonesFound++;
+                    if (!document.IsEnabled)
+                    {
+                        plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "dynamicbone.disabled",
+                            "A Dynamic Bone was disabled, so it simulated nothing. No rig was "
+                            + "written.");
+                        continue;
+                    }
+
                     PlanDynamicBone(document, resolver, colliders, profile, plan, source);
                     continue;
                 }
 
                 if (kind == SourceComponentKind.VrcHeadChop)
                 {
+                    if (!document.IsEnabled)
+                    {
+                        plan.HeadChopsFound++;
+                        plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "headChop.disabled",
+                            "A VRC Head Chop was disabled, so it hid nothing. None was written.");
+                        continue;
+                    }
+
                     PlannedHeadChop headChop = PlanHeadChop(document, resolver, plan);
                     if (headChop != null)
                     {
@@ -446,6 +470,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
 
                 plan.PhysBonesFound++;
+                if (!document.IsEnabled)
+                {
+                    plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "physbone.disabled",
+                        "A PhysBone was disabled, so it simulated nothing. No rig was written.");
+                    continue;
+                }
+
                 PlannedJiggleRig rig =
                     PlanOne(document, resolver, colliders, profile, plan);
                 if (rig == null)
@@ -483,10 +514,26 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 SourceHost = host,
             };
 
+            // Basis always scales the humanoid Head itself and skips any head chop entry naming
+            // it, so a factor of 1 on Head (how VRChat content keeps the head visible) is lost.
+            Animator animator = host.GetComponentInParent<Animator>(true);
+            Transform head = animator != null && animator.isHuman
+                ? animator.GetBoneTransform(HumanBodyBones.Head)
+                : null;
+
             foreach (HeadChopTargetPlan target in mapped.Targets)
             {
                 if (resolver.TryResolveTransform(target.TransformFileId, out Transform bone))
                 {
+                    if (head != null && bone == head)
+                    {
+                        mapped.Diagnostics.Add(DiagnosticSeverity.Dropped, "headChop.head.ignored",
+                            $"The head chop names the humanoid Head with scale {target.Scale}. "
+                            + "Basis scales the Head itself in first person and ignores head chop "
+                            + "entries for it, so this entry was dropped.");
+                        continue;
+                    }
+
                     planned.SourceTargets.Add(new PlannedHeadChopTarget
                     {
                         Transform = bone,
@@ -516,9 +563,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "modularAvatar.hierarchy",
                     $"{plan.ModularAvatarHierarchyFound} Modular Avatar components rearrange the "
-                    + "hierarchy: merged armatures, bone proxies, mesh settings and blendshape "
-                    + "sync. Those run on Basis, so they are left to Modular Avatar rather than "
-                    + "converted.");
+                    + "hierarchy or the meshes: merged armatures, bone proxies, mesh settings and "
+                    + "the like. They are left to Modular Avatar, which applies them at Basis "
+                    + "build time when it and the Basis NDMF platform are installed. Blendshape "
+                    + "Sync and Parameters have VRChat-only passes and do nothing on Basis.");
             }
 
             if (plan.ModularAvatarMenuFound > 0)
@@ -688,6 +736,20 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 plan.CollidersFound++;
 
+                if (!document.IsEnabled)
+                {
+                    // Both sources skip a disabled collider, so rigs that list it get nothing.
+                    colliders[document.FileId] = new PlannedJiggleCollider
+                    {
+                        Plan = colliderPlan,
+                        Disabled = true,
+                    };
+                    plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "collider.disabled",
+                        "A collider component was disabled, so nothing collided with it. It was "
+                        + "left off the rigs that list it.");
+                    continue;
+                }
+
                 if (!resolver.TryResolveTransform(transformFileId, out Transform transform))
                 {
                     colliderPlan.Diagnostics.Add(DiagnosticSeverity.Warning,
@@ -758,6 +820,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
                             VrmDocumentReader.ReadColliderGroup(document, false);
                         break;
                     case SourceComponentKind.VrmSpringBone:
+                        if (!document.IsEnabled)
+                        {
+                            plan.Diagnostics.Add(DiagnosticSeverity.Mapped,
+                                "vrm.springBone.disabled",
+                                "A VRMSpringBone was disabled, so it simulated nothing. No rig "
+                                + "was written for its chains.");
+                            continue;
+                        }
+
                         chains.AddRange(VrmDocumentReader.ReadSpringBone0X(document));
                         break;
                     case SourceComponentKind.Vrm10Instance:
@@ -1633,6 +1704,19 @@ namespace yuna0x0.Basis.Convert.Pipeline
             {
                 if (resolver.TryResolveTransform(excludedFileId, out Transform excluded))
                 {
+                    // Jiggle's bone cache skips an excluded root and then looks it up, which
+                    // throws in the editor and aborts the conversion. The source ignored the
+                    // root's own motion; the rig's motionless root is the nearest thing.
+                    if (excluded == planned.SourceRootBone)
+                    {
+                        rigPlan.ExcludeRoot = true;
+                        rigPlan.Diagnostics.Add(DiagnosticSeverity.Approximated,
+                            "physics.excludedRoot",
+                            "The root bone was in its own ignore list. The rig keeps the root "
+                            + "motionless instead of excluding it.");
+                        continue;
+                    }
+
                     planned.SourceExcludedTransforms.Add(excluded);
                 }
                 else
@@ -1653,7 +1737,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     continue;
                 }
 
-                if (collider.SourceTransform != null)
+                if (collider.SourceTransform != null && !collider.Disabled)
                 {
                     planned.Colliders.Add(collider);
                 }
@@ -1868,11 +1952,19 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 ClipEffects effects = AnimationClipReader.Read(layer.Clip);
                 if (effects.AnimatedRotationPaths.Count == 0)
                 {
+                    if (effects.AnimatedCurves > 0)
+                    {
+                        plan.MotionDiagnostics.Add(DiagnosticSeverity.Dropped, "motion.notRotation",
+                            $"'{layer.LayerName}' plays on its own and animates something other "
+                            + "than rotation. A baked motion holds rotation only, so it was "
+                            + "dropped.");
+                    }
+
                     continue;
                 }
 
                 AuthoredMotionPlan motion = MotionToAuthoredMapper.MapAmbient(
-                    layer.LayerName, layer.Loop, effects);
+                    layer.LayerName, layer.Loop, effects, layer.Speed);
 
                 foreach (ConversionDiagnostic diagnostic in motion.Diagnostics)
                 {
@@ -1958,7 +2050,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
 
                 PlannedVixxyControl planned = new PlannedVixxyControl { Plan = control };
-                bool resolved = true;
+                List<VixxyActivationPlan> kept = new List<VixxyActivationPlan>();
 
                 foreach (VixxyActivationPlan activation in control.Activations)
                 {
@@ -1966,30 +2058,47 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     // no transform to look up. The slot is kept so the two lists stay in step.
                     if (activation.MotionIndex >= 0)
                     {
+                        kept.Add(activation);
                         planned.SourceTargets.Add(null);
                         continue;
                     }
 
+                    // Unity ignores a binding to a missing object, so the control keeps its
+                    // other targets.
                     Transform target = root.Find(activation.Path);
                     if (target == null)
                     {
                         plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.targetMissing",
                             $"'{control.MenuName}' switches {activation.Path}, which is not in "
-                            + "this avatar. The clip was authored against a different hierarchy.");
-                        resolved = false;
-                        break;
+                            + "this avatar. That object was left out of the control.");
+                        continue;
                     }
 
                     // Whatever the toggle did not animate stays as the avatar was authored.
                     VixxyAuthoredDefaults.Apply(activation, target.gameObject.activeSelf);
 
+                    // Every choice the same is a no-op on VRChat. Vixxy reads only the ON entry
+                    // of a two-choice activation, so it would switch the object off instead.
+                    if (AllEqual(activation.Choices))
+                    {
+                        continue;
+                    }
+
+                    kept.Add(activation);
                     planned.SourceTargets.Add(target);
                 }
 
-                if (resolved)
+                control.Activations = kept;
+
+                if (control.Activations.Count == 0 && control.Subjects.Count == 0)
                 {
-                    resolved = ResolveSubjects(plan, control, planned, root);
+                    plan.ToggleDiagnostics.Add(DiagnosticSeverity.Dropped, "vixxy.nothingToSwitch",
+                        $"'{control.MenuName}' changed nothing that exists on this avatar, so no "
+                        + "control was written.");
+                    continue;
                 }
+
+                bool resolved = ResolveSubjects(plan, control, planned, root);
 
                 if (resolved)
                 {
@@ -2004,7 +2113,47 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.rebuilt",
                     $"{plan.VixxyControls.Count} menu toggles were rebuilt as Vixxy controls, "
                     + "each with a menu item. The rest are listed above with why they were not.");
+                WarnIfCommsMissing(plan);
             }
+        }
+
+        private static bool AllEqual(bool[] choices)
+        {
+            for (int i = 1; i < choices.Length; i++)
+            {
+                if (choices[i] != choices[0])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// A Vixxy control inside an avatar is initialised by HVRAvatarComms, which the
+        /// HVR.Networking prefab carries. Without it every control is inert.
+        /// </summary>
+        private static void WarnIfCommsMissing(AvatarConversionPlan plan)
+        {
+            if (plan.SourceRoot == null || plan.ToggleDiagnostics.HasCode("vixxy.commsMissing"))
+            {
+                return;
+            }
+
+            // Matched by name: HVRAvatarComms derives from a Basis Framework type this assembly
+            // does not reference, and only its presence matters here.
+            foreach (Component component in plan.SourceRoot.GetComponentsInChildren<Component>(true))
+            {
+                if (component != null && component.GetType().Name == "HVRAvatarComms")
+                {
+                    return;
+                }
+            }
+
+            plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.commsMissing",
+                "The avatar carries no HVR Avatar Comms. Vixxy controls are initialised through "
+                + "it, so add HVR Basis Comms's HVR.Networking prefab to the avatar.");
         }
 
         /// <summary>
@@ -2272,6 +2421,19 @@ namespace yuna0x0.Basis.Convert.Pipeline
                         : null);
             }
 
+            // A VRM rotation or roll constraint copies the source's turn away from its rest
+            // pose, so the destination is unchanged while the source rests. A Basis rotation
+            // constraint takes the source's rotation itself, so the offset between the two rest
+            // poses is written as the rotation offset to keep the authored pose at rest.
+            if (source.Kind != VrmConstraintKind.Aim
+                && planned.SourceTransforms.Count > 0
+                && planned.SourceTransforms[0] != null)
+            {
+                Transform from = planned.SourceTransforms[0];
+                constraintPlan.RotationOffset =
+                    (Quaternion.Inverse(from.rotation) * host.rotation).eulerAngles;
+            }
+
             return planned;
         }
 
@@ -2289,6 +2451,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     $"A {kind} constraint at &{document.FileId} could not be tied to a transform "
                     + "and was skipped.");
                 return null;
+            }
+
+            // TargetTransform names a Transform and m_GameObject a GameObject, so the mapper
+            // cannot tell a target that is the constraint's own object from a real retarget.
+            if (resolver.TryResolveTransform(source.OwnerGameObjectFileId, out Transform owner)
+                && owner == host)
+            {
+                constraintPlan.Diagnostics.RemoveAll(d => d.Code == "constraint.retargeted");
             }
 
             PlannedConstraint planned = new PlannedConstraint
@@ -2322,6 +2492,43 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return planned;
         }
 
+        private static int CountChildren(Transform bone, HashSet<Transform> ignored)
+        {
+            int count = 0;
+            for (int i = 0; i < bone.childCount; i++)
+            {
+                if (!ignored.Contains(bone.GetChild(i)))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>Bones below the root with two or more children, ignored subtrees left out.</summary>
+        private static int CountBranchesBelow(Transform root, HashSet<Transform> ignored)
+        {
+            int branches = 0;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (ignored.Contains(child))
+                {
+                    continue;
+                }
+
+                if (CountChildren(child, ignored) >= 2)
+                {
+                    branches++;
+                }
+
+                branches += CountBranchesBelow(child, ignored);
+            }
+
+            return branches;
+        }
+
         private static PlannedJiggleRig PlanOne(
             UnityYamlDocument document,
             PrefabObjectResolver resolver,
@@ -2339,19 +2546,43 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return null;
             }
 
-            // VRChat treats an empty Root Transform as "this object".
+            // VRChat treats an empty Root Transform as "this object". A set one that cannot be
+            // resolved is not the same case, so nothing is written for it.
             Transform rootBone = host;
             if (source.RootTransformFileId != 0L
                 && !resolver.TryResolveTransform(source.RootTransformFileId, out rootBone))
             {
-                rootBone = host;
+                plan.Unresolved++;
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "physbone.rootUnresolved",
                     $"The Root Transform of the PhysBone on {host.name} could not be resolved. "
-                    + "Fell back to the object the component sits on.");
+                    + "The PhysBone was skipped.");
+                return null;
             }
 
-            JiggleRigPlan rigPlan = PhysBoneToJiggleMapper.Map(source, profile);
+            HashSet<Transform> ignored = new HashSet<Transform>();
+            foreach (long ignoredFileId in source.IgnoreTransformFileIds)
+            {
+                if (resolver.TryResolveTransform(ignoredFileId, out Transform ignoredTransform))
+                {
+                    ignored.Add(ignoredTransform);
+                }
+            }
+
+            JiggleRigPlan rigPlan = PhysBoneToJiggleMapper.Map(
+                source, profile, CountChildren(rootBone, ignored));
             rigPlan.Preset = JigglePresetLibrary.GuessFrom(rootBone.name);
+
+            if (source.MultiChildType == PhysBoneMultiChildType.Ignore)
+            {
+                int branches = CountBranchesBelow(rootBone, ignored);
+                if (branches > 0)
+                {
+                    rigPlan.Diagnostics.Add(DiagnosticSeverity.Approximated,
+                        "physbone.multiChildType.ignoreBranches",
+                        $"{branches} bone(s) below the root have several children. PhysBone "
+                        + "leaves such bones still under Ignore; jiggle swings them.");
+                }
+            }
 
             PlannedJiggleRig planned = new PlannedJiggleRig
             {

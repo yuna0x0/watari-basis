@@ -39,6 +39,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public JiggleColliderPlan Plan;
         public Transform SourceTransform;
 
+        /// <summary>
+        /// The source component was disabled. Both PhysBone and Dynamic Bone skip such a
+        /// collider, so rigs referencing it get nothing and no warning.
+        /// </summary>
+        public bool Disabled;
+
         /// <summary>The prefab this was read from, which its transform belongs to.</summary>
         public ConversionSource Source;
     }

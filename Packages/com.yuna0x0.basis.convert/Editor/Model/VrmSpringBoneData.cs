@@ -44,6 +44,12 @@ namespace yuna0x0.Basis.Convert.Model
         /// is written: it marks where the chain ends rather than how it behaves.
         /// </summary>
         public bool HasParameters = true;
+
+        /// <summary>VRM 1.0 joint angle limit: 0 none, 1 cone, 2 hinge, 3 spherical.</summary>
+        public int AngleLimitType;
+
+        /// <summary>Half-angle of a cone limit, in radians. UniVRM's default is pi, no limit.</summary>
+        public float Pitch = Mathf.PI;
     }
 
     /// <summary>One VRM spring chain, from either format.</summary>

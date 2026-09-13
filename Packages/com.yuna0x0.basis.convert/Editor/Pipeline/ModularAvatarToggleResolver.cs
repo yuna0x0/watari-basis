@@ -59,7 +59,20 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             foreach (MaMenuItemData item in items)
             {
-                if (!item.IsToggle || string.IsNullOrEmpty(item.Parameter))
+                if (!item.IsToggle)
+                {
+                    continue;
+                }
+
+                // Modular Avatar assigns a parameter to a toggle that names none, from the
+                // object's name (ParameterAssignerPass, AUTOMATIC_PARAMETER_PREFIX).
+                if (string.IsNullOrEmpty(item.Parameter)
+                    && resolver.TryResolveTransform(item.OwnerGameObjectFileId, out Transform owner))
+                {
+                    item.Parameter = AutomaticParameterPrefix + owner.name;
+                }
+
+                if (string.IsNullOrEmpty(item.Parameter))
                 {
                     continue;
                 }
@@ -111,8 +124,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                         {
                             Name = ChoiceName(group.Value, state.Value, layer),
                             Value = state.Value,
-                            Effects = Rebase(
-                                AnimationClipReader.Read(state.Clip), animator.Prefix),
+                            Effects = Rebase(ToggleResolver.EffectsOf(state), animator.Prefix),
                             Clip = state.Clip,
                         });
                     }
@@ -124,6 +136,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             return resolved;
         }
+
+        /// <summary>Modular Avatar's prefix for parameters it assigns at build time.</summary>
+        public const string AutomaticParameterPrefix = "__MA/AutoParam/";
 
         private static bool Already(List<ModularAvatarToggle> resolved, string parameter)
         {
@@ -175,39 +190,103 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 ResolvedToggle toggle = new ResolvedToggle
                 {
-                    MenuName = string.IsNullOrEmpty(item.Name) ? item.Parameter : item.Name,
+                    MenuName = MenuNameOf(item, resolver),
                     Parameter = item.Parameter,
                     LayerName = "Object Toggle",
+                    Saved = item.IsSaved,
+                    NetworkSynced = item.IsSynced,
+                    // ParameterAssignerPass: a lone default item with an automatic value starts
+                    // on; a default item with an authored value starts at that value.
+                    DefaultValue = item.IsDefault ? (item.AutomaticValue ? 1f : item.Value) : 0f,
                 };
 
-                ClipEffects whenOn = new ClipEffects();
+                // Inverted means the component acts while the menu item is off, and leaves the
+                // scene state alone while it is on (ReactionRule.InitiallyActive ^ Inverted).
+                ClipEffects acting = new ClipEffects();
                 foreach (MaToggledObject switched in data.Objects)
                 {
-                    // Inverted means the component acts while its object is inactive, which
-                    // swaps which side of the menu item switches things.
-                    bool active = data.Inverted ? !switched.Active : switched.Active;
-
-                    // Modular Avatar resolves these against the avatar root, not against the
-                    // component: AvatarObjectReference.Get walks up to the avatar and calls
-                    // Find on the path. So the path is used as written, and a path that names
-                    // something outside this prefab is reported rather than guessed at.
-                    string path = switched.Path;
-
-                    if (active)
+                    string path = PathOf(switched, resolver, source);
+                    if (path == null)
                     {
-                        whenOn.Activated.Add(path);
+                        continue;
+                    }
+
+                    if (switched.Active)
+                    {
+                        acting.Activated.Add(path);
                     }
                     else
                     {
-                        whenOn.Deactivated.Add(path);
+                        acting.Deactivated.Add(path);
                     }
                 }
 
-                toggle.Choices.Add(new ResolvedChoice {Name = "OFF", Value = 0});
-                toggle.Choices.Add(new ResolvedChoice {Name = "ON", Value = 1, Effects = whenOn});
+                if (data.Inverted)
+                {
+                    toggle.Choices.Add(new ResolvedChoice {Name = "OFF", Value = 0, Effects = acting});
+                    toggle.Choices.Add(new ResolvedChoice {Name = "ON", Value = 1});
+                }
+                else
+                {
+                    toggle.Choices.Add(new ResolvedChoice {Name = "OFF", Value = 0});
+                    toggle.Choices.Add(new ResolvedChoice {Name = "ON", Value = 1, Effects = acting});
+                }
 
                 resolved.Add(new ModularAvatarToggle {Source = source, Toggle = toggle});
             }
+        }
+
+        /// <summary>Modular Avatar shows the label, else the object's name (ModularAvatarMenuItem).</summary>
+        private static string MenuNameOf(MaMenuItemData item, PrefabObjectResolver resolver)
+        {
+            if (!string.IsNullOrEmpty(item.Label))
+            {
+                return item.Label;
+            }
+
+            if (resolver.TryResolveTransform(item.OwnerGameObjectFileId, out Transform owner))
+            {
+                return owner.name;
+            }
+
+            return string.IsNullOrEmpty(item.Name) ? item.Parameter : item.Name;
+        }
+
+        /// <summary>
+        /// The path of a toggled object within this prefab. Modular Avatar prefers the object
+        /// reference, then a path from the avatar root. Inside a prefab that path starts with the
+        /// prefab's own root name when the outfit was authored under an avatar.
+        /// </summary>
+        private static string PathOf(
+            MaToggledObject switched, PrefabObjectResolver resolver, ConversionSource source)
+        {
+            Transform root = source.Root.transform;
+
+            if (switched.TargetObjectFileId != 0L
+                && resolver.TryResolveTransform(switched.TargetObjectFileId, out Transform target)
+                && target.IsChildOf(root))
+            {
+                return target == root ? null : PathWithin(root, target);
+            }
+
+            string path = switched.Path;
+            if (string.IsNullOrEmpty(path) || path == "$$$AVATAR_ROOT$$$")
+            {
+                return null;
+            }
+
+            if (root.Find(path) != null)
+            {
+                return path;
+            }
+
+            string prefix = root.name + "/";
+            if (path.StartsWith(prefix) && root.Find(path.Substring(prefix.Length)) != null)
+            {
+                return path.Substring(prefix.Length);
+            }
+
+            return path;
         }
 
         private static MaMenuItemData MenuItemOn(

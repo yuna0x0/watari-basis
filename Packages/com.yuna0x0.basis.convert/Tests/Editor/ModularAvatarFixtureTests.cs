@@ -40,7 +40,9 @@ namespace yuna0x0.Basis.Convert.Tests
                 "A menu item and an object toggle on one object describe a toggle completely.");
 
             ResolvedToggle toggle = plan.ModularAvatarToggles[0].Toggle;
-            Assert.That(toggle.MenuName, Is.EqualTo("Scarf"));
+            Assert.That(toggle.MenuName, Is.EqualTo("Scarf Toggle"),
+                "Modular Avatar labels an item by its label, else its object's name, never "
+                + "Control.name.");
             Assert.That(toggle.Parameter, Is.EqualTo("Scarf"));
             Assert.That(toggle.WhenOn.Deactivated, Does.Contain("Scarf"),
                 "The component switches the scarf off while the menu item is on.");

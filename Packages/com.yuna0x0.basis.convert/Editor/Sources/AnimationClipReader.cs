@@ -102,6 +102,10 @@ namespace yuna0x0.Basis.Convert.Sources
                 return effects;
             }
 
+            // Material swaps and other object references are curves too, of a kind a Vixxy
+            // control cannot hold. GetCurveBindings does not list them.
+            effects.OtherCurves += AnimationUtility.GetObjectReferenceCurveBindings(clip).Length;
+
             foreach (EditorCurveBinding binding in AnimationUtility.GetCurveBindings(clip))
             {
                 AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);

@@ -17,9 +17,62 @@ Notable changes to this package. The format follows
   `dynamicbone.gravity.direction` is gone.
 - Blend Weight folds into the angle limit (`dynamicbone.blendWeight`); Blend Weight 0 writes no
   rig.
+- A PhysBone Hinge limit is reported as Approximated (`physbone.limitType.hinge`), gravity as
+  Approximated, and falloff curves as Approximated (`physbone.curves.domain`): VRChat samples
+  them by bone index, jiggle by distance from the root. `physbone.isAnimated` is Mapped.
+- A PhysBone with radius 0 is locked from grabbing, as VRChat never grabs it.
+- Max Stretch is dropped (`physbone.maxStretch.dropped`); it bounded bone length, not grab reach.
+- A PhysBone whose Root Transform cannot be resolved is skipped instead of rooted on its object.
+- Disabled PhysBones, Dynamic Bones, colliders, VRChat constraints and head chops write nothing,
+  as they did nothing on the source: `physbone.disabled`, `dynamicbone.disabled`,
+  `collider.disabled`, `constraint.disabled`, `headChop.disabled`.
+- Basis constraints are always locked; VRChat forces Locked on in play. `constraint.locked`.
+- A lone constraint source below full weight and an Aim with World Up Type None are reported:
+  `constraint.source.weight.normalized`, `constraint.worldUp.none`.
+- The rig check requires Chest and Neck, as the Basis validator does, and warns about unmapped
+  shoulders: `rig.recommendedBones`.
+- A VRM 1.0 cone angle limit becomes a jiggle angle limit; hinge and spherical limits are
+  reported: `vrm.angleLimit.cone`, `vrm.angleLimit.dropped`. A chain's centre transform becomes
+  full ignore root motion: `vrm.center`. VRM gravity is reported as a fit: `vrm.gravity`.
+- VRM rigs no longer inherit a preset's angle limit, stretch, soften, air drag or root stretch.
+- Vixxy controls carry the parameter's `saved` and `networkSynced` flags as remember and
+  networked. A two-state control with a value other than 1 is written as 0 and 1:
+  `vixxy.values.normalized`. An avatar without HVR Avatar Comms is warned about:
+  `vixxy.commsMissing`.
+- A menu toggle keeps its other targets when one object is missing, and an activation that
+  changes nothing is left out.
+- A clip that plays on its own and does not loop now plays once and holds, as in the animator.
+  Layers animating something other than rotation are reported: `motion.notRotation`. State speed
+  carries over.
+- Modular Avatar menu items without a parameter take the one Modular Avatar assigns; the menu
+  label, default, saved and synced flags are read; an inverted Object Toggle acts while the item
+  is off; targets resolve by object reference before path. `Menu Install Target` is recognised.
 
 ### Fixed
 
+- A VRM 1.0 chain's tail joint fed its parameters into the curves; UniVRM never reads them.
+- A VRM rotation or roll constraint snapped the bone to the source's orientation at rest.
+- VRM 0.x visemes and blink are matched by preset, not by the clip's free-text name.
+- Upward VRM gravity was zeroed. The obsolete `VRMLookAt` driver is removed with the others.
+- A menu toggle that swapped materials was rebuilt without the swap and without a diagnostic.
+- A VRC Look At constraint rolled the wrong way on Basis. Roll is negated.
+- The at-rest pose read from a VRC constraint was overwritten by the transform's current pose.
+- A constraint whose Target Transform was its own transform was reported as retargeted.
+- Blink was written from stale eyelid settings when Eye Look was disabled:
+  `descriptor.eyeLook.disabled`. An unset blink slot no longer becomes shape -1.
+- A head chop entry naming the humanoid Head is dropped and reported; Basis ignores it:
+  `headChop.head.ignored`.
+- A PhysBone root with one child stayed still after conversion whatever Multi Child Type said.
+  VRChat simulates such a root; the rig now does too. `physbone.multiChildType.oneChild`,
+  `physbone.multiChildType.ignoreBranches`.
+- The spring falloff curve was applied to drag, which runs the other way, inverting the falloff.
+  It is dropped: `physbone.springCurve.dropped`.
+- The pre-rename keys `isGrabbable` and `isPoseable` are read when the current ones are absent.
+- The rig's serialized version is set outright; the preset's stale version ran an upgrade on it.
+- The root particle no longer inherits a preset's root stretch.
+- A rig whose root bone was in its own ignore list aborted the conversion in the editor. The
+  root is kept motionless instead: `physics.excludedRoot`. A rig whose preset fails to load takes
+  jiggle's defaults.
 - A Dynamic Bone with no root wrote a rig on its own object and jiggled everything below it.
   It now writes nothing: `dynamicbone.noRoot`. An unresolvable root skips that chain.
 - A Dynamic Bone with radius 0 and colliders lost collision. It now collides at radius 0.01:

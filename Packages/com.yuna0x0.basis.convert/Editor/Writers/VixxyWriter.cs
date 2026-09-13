@@ -57,6 +57,13 @@ namespace yuna0x0.Basis.Convert.Writers
             component.defaultValue = plan.DefaultValue;
 
             SerializedObject serialized = new SerializedObject(component);
+
+            SerializedProperty networked = serialized.FindProperty("networked");
+            if (networked != null)
+            {
+                networked.boolValue = plan.NetworkSynced;
+            }
+
             SerializedProperty activations = serialized.FindProperty("activations");
 
             int written = 0;
@@ -304,6 +311,15 @@ namespace yuna0x0.Basis.Convert.Writers
             if (linked != null)
             {
                 linked.objectReferenceValue = control;
+            }
+
+            // A parameter VRChat did not save starts at its default every session.
+            SerializedProperty remember = serialized.FindProperty("remember");
+            if (remember != null)
+            {
+                remember.enumValueIndex = (int)(plan.Saved
+                    ? HVRVixxyRememberScope.RememberInThisAvatar
+                    : HVRVixxyRememberScope.DoNotRemember);
             }
 
             serialized.ApplyModifiedPropertiesWithoutUndo();

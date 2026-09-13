@@ -24,6 +24,8 @@ namespace yuna0x0.Basis.Convert.Mapping
                 Parameter = toggle.Parameter,
                 IsSlider = toggle.IsSlider,
                 DefaultValue = toggle.DefaultValue,
+                Saved = toggle.Saved,
+                NetworkSynced = toggle.NetworkSynced,
             };
 
             foreach (ResolvedChoice choice in toggle.Choices)
@@ -42,6 +44,20 @@ namespace yuna0x0.Basis.Convert.Mapping
                         + "control cannot hold, such as a transform. Rebuild it by hand.");
                     return plan;
                 }
+            }
+
+            // Basis's menu treats a two-choice control as a toggle only when its values are 0
+            // and 1. An Int parameter toggled to another value is the same control.
+            if (!toggle.IsSlider && plan.ChoiceValues.Count == 2
+                && (plan.ChoiceValues[0] != 0 || plan.ChoiceValues[1] != 1))
+            {
+                int onValue = plan.ChoiceValues[1];
+                plan.DefaultValue = Mathf.Approximately(toggle.DefaultValue, onValue) ? 1f : 0f;
+                plan.ChoiceValues[0] = 0;
+                plan.ChoiceValues[1] = 1;
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.values.normalized",
+                    $"'{toggle.MenuName}' switched its parameter to {onValue}. The control uses "
+                    + "0 and 1 so Basis presents it as a toggle.");
             }
 
             MapMotions(toggle, plan);

@@ -91,8 +91,10 @@ tens of gigabytes and slow to rebuild.
 ## Constraints that are easy to violate
 
 - **Editor-only.** Basis validates loaded avatars against an allow-list of component types, and
-  nothing of ours is on it. Persistent state goes on a GameObject tagged `EditorOnly`, which the
-  Basis build pipeline strips. See `agent/decisions/0004`.
+  nothing of ours is on it. The converter keeps no state on the avatar; a repeated conversion is
+  recognised from the components it wrote (`agent/decisions/0007`). Anything that ever has to
+  persist goes on a GameObject tagged `EditorOnly`, which the Basis build pipeline strips
+  (`agent/decisions/0004`).
 - **Report, do not omit.** Anything the converter approximates or cannot carry over produces a
   diagnostic with a stable code.
 - **Keep the layers apart.** Readers take text, mappers take plain data, only writers touch

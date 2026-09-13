@@ -36,10 +36,16 @@ namespace yuna0x0.Basis.Convert.Mapping
         public static bool TryGetSlot(VrmExpressionData expression, out int slot)
         {
             slot = -1;
-            return expression != null
-                   && expression.Role == VrmExpressionRole.Viseme
-                   && !string.IsNullOrEmpty(expression.Name)
-                   && Slots.TryGetValue(expression.Name.Trim(), out slot);
+            if (expression == null || expression.Role != VrmExpressionRole.Viseme)
+            {
+                return false;
+            }
+
+            // A 0.x clip is identified by its preset; its name is whatever the author typed.
+            string key = string.IsNullOrEmpty(expression.PresetName)
+                ? expression.Name
+                : expression.PresetName;
+            return !string.IsNullOrEmpty(key) && Slots.TryGetValue(key.Trim(), out slot);
         }
 
         /// <summary>
@@ -48,10 +54,15 @@ namespace yuna0x0.Basis.Convert.Mapping
         /// </summary>
         public static bool IsBlink(VrmExpressionData expression)
         {
-            return expression != null
-                   && expression.Role == VrmExpressionRole.Blink
-                   && string.Equals(expression.Name?.Trim(), "blink",
-                       StringComparison.OrdinalIgnoreCase);
+            if (expression == null || expression.Role != VrmExpressionRole.Blink)
+            {
+                return false;
+            }
+
+            string key = string.IsNullOrEmpty(expression.PresetName)
+                ? expression.Name
+                : expression.PresetName;
+            return string.Equals(key?.Trim(), "blink", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

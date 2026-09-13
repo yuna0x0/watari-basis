@@ -22,8 +22,8 @@ namespace yuna0x0.Basis.Convert.Writers
     /// are the exception: the list is private and goes through <c>SetSources</c>.
     /// </para>
     /// <para>
-    /// The rest pose has to be captured after the sources are attached, since the constraint
-    /// records where the transform sits relative to them.
+    /// The at-rest pose comes from the plan, which read it from the source component. Basis's
+    /// own CaptureRest would replace it with the transform's current local pose.
     /// </para>
     /// </summary>
     public static class BasisConstraintWriter
@@ -69,7 +69,6 @@ namespace yuna0x0.Basis.Convert.Writers
                 ApplyParentOffsets(parent, plan);
             }
 
-            component.CaptureRest();
             EditorUtility.SetDirty(component);
 
             return component;

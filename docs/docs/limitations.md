@@ -17,8 +17,8 @@ Everything here is also reported by the tool. This is the same information in on
   Basis has nowhere to keep them.
 - **Two-axis and four-axis puppets.**
 - **Animation that moves or scales something over time.** Only rotation is baked, so a toggle
-  or a layer that animates anything else over time is reported rather than half converted. See
-  [Authored motion](what-converts/authored-motion.md).
+  or a layer that animates anything else over time is reported rather than half converted
+  (`vixxy.notSimple`, `motion.notRotation`). See [Authored motion](what-converts/authored-motion.md).
 - **Expression parameters as a system.** Vixxy controls hold their own state, so there is no
   parameter list to recreate.
 - **Custom animation layers**, gestures, sitting and IK poses.

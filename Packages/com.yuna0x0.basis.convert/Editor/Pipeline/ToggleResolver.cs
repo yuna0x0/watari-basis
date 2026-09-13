@@ -62,6 +62,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// </summary>
         public float DefaultValue;
 
+        /// <summary>Whether the parameter persisted across sessions. Vixxy remembers by default.</summary>
+        public bool Saved = true;
+
+        /// <summary>Whether the parameter was synced to other players. Vixxy networks by default.</summary>
+        public bool NetworkSynced = true;
+
         public bool IsSelector => Choices.Count > 2;
 
         public ClipEffects WhenOff
@@ -180,6 +186,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 toggle.GuardedBy.AddRange(layer.GuardedBy);
                 toggle.DefaultValue = DefaultOf(inventory, layer.Parameter);
+                ApplyParameterFlags(inventory, layer.Parameter, toggle);
 
                 foreach (FxParameterState state in layer.States)
                 {
@@ -187,7 +194,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     {
                         Name = ChoiceName(controls, state.Value, layer),
                         Value = state.Value,
-                        Effects = AnimationClipReader.Read(state.Clip),
+                        Effects = EffectsOf(state),
                         Clip = state.Clip,
                     });
                 }
@@ -201,6 +208,33 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// <summary>
         /// What the avatar declares the parameter defaults to, or zero when it declares nothing.
         /// </summary>
+        /// <summary>A blend tree state cannot be read as a constant, so it is marked unreadable.</summary>
+        public static ClipEffects EffectsOf(FxParameterState state)
+        {
+            return state.MotionUnreadable
+                ? new ClipEffects { OtherCurves = 1 }
+                : AnimationClipReader.Read(state.Clip);
+        }
+
+        private static void ApplyParameterFlags(
+            VrcExpressionInventory inventory, string parameter, ResolvedToggle toggle)
+        {
+            if (inventory == null)
+            {
+                return;
+            }
+
+            foreach (VrcExpressionParameter declared in inventory.Parameters)
+            {
+                if (declared.Name == parameter)
+                {
+                    toggle.Saved = declared.Saved;
+                    toggle.NetworkSynced = declared.NetworkSynced;
+                    return;
+                }
+            }
+        }
+
         private static float DefaultOf(VrcExpressionInventory inventory, string parameter)
         {
             if (inventory == null)
@@ -266,6 +300,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     IsSlider = true,
                     DefaultValue = DefaultOf(inventory, layer.Parameter),
                 };
+                ApplyParameterFlags(inventory, layer.Parameter, toggle);
 
                 // The two ends of the range. Vixxy interpolates between a control's choices, so
                 // the ends describe the whole sweep; a tree with motions in between is

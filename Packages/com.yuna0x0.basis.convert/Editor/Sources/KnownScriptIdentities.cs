@@ -99,6 +99,7 @@ namespace yuna0x0.Basis.Convert.Sources
         MaMenuItem,
         MaMenuInstaller,
         MaMenuGroup,
+        MaMenuInstallTarget,
         MaMergeAnimator,
         MaMergeBlendTree,
 
@@ -243,6 +244,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 { ("3b29d45007c5493d926d2cd45a489529", LooseScriptFileId), SourceComponentKind.MaMenuItem },
                 { ("7ef83cb0c23d4d7c9d41021e544a1978", LooseScriptFileId), SourceComponentKind.MaMenuInstaller },
                 { ("97e46a47dd8a425eb4ce9411defe313d", LooseScriptFileId), SourceComponentKind.MaMenuGroup },
+                { ("1fad1419b52a42ae89b0df52eb861e47", LooseScriptFileId), SourceComponentKind.MaMenuInstallTarget },
                 { ("1bb122659f724ebf85fe095ac02dc339", LooseScriptFileId), SourceComponentKind.MaMergeAnimator },
                 { ("229dd561ca024a6588e388160921a70f", LooseScriptFileId), SourceComponentKind.MaMergeBlendTree },
 

@@ -159,6 +159,8 @@ namespace yuna0x0.Basis.Convert.Sources
                 GravityDir = Vector(serialized, "m_gravityDir", Vector3.down),
                 DragForce = Float(serialized, "m_dragForce", 0.4f),
                 Radius = Float(serialized, "m_jointRadius", 0.02f),
+                AngleLimitType = Int(serialized, "m_anglelimitType", 0),
+                Pitch = Float(serialized, "m_pitch", Mathf.PI),
             };
         }
 
@@ -644,7 +646,11 @@ namespace yuna0x0.Basis.Convert.Sources
 
             for (int i = 0; i < list.arraySize; i++)
             {
-                ids.Add(IdOf(list.GetArrayElementAtIndex(i).objectReferenceValue));
+                long id = IdOf(list.GetArrayElementAtIndex(i).objectReferenceValue);
+                if (id != 0L)
+                {
+                    ids.Add(id);
+                }
             }
 
             return ids;

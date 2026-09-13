@@ -42,10 +42,11 @@ made with an older UniVRM.
 ## UniVRM's runtime is removed
 
 A converted VRM keeps UniVRM's data components, but its runtime drivers come off: `Vrm10Instance`
-for 1.0, and `VRMSpringBone`, `VRMBlendShapeProxy` and the look-at components for 0.x. Left in
-place they write every expression blendshape each frame, zeros included, simulate their own
-spring bones and aim the eyes, so the Vixxy controls and jiggle rigs would be undone every frame.
-Basis strips them at build in any case. Undo restores them: `vrm.runtimeRemoved`.
+for 1.0, and `VRMSpringBone`, `VRMBlendShapeProxy` and the look-at components for 0.x.
+`Vrm10Instance` writes every expression blendshape each frame, zeros included, and runs the spring
+bones, constraints and look-at; `VRMSpringBone` simulates from its own update. The Vixxy controls
+and jiggle rigs would be undone every frame. Basis strips them at build in any case. Undo restores
+them: `vrm.runtimeRemoved`.
 
 ## What carries across
 
@@ -53,9 +54,11 @@ Basis strips them at build in any case. Undo restores them: `vrm.runtimeRemoved`
 |---|---|
 | Drag force | Drag, on the same 0 to 1 scale |
 | Joint radius / hit radius | Collision radius, both in metres |
-| Gravity power and direction | Gravity, the downward part of it |
+| Gravity power and direction | Gravity multiplier, the vertical part, as a fit: VRM adds a per-step force |
 | Collider groups | The rig's colliders |
 | Stiffness force | Stiffness, as a fit rather than a conversion |
+| Centre transform | Ignore root motion, fully, measured at the rig's root bone |
+| Cone angle limit (1.0) | Angle limit, capped at 90 degrees. Hinge and spherical limits are dropped |
 
 **Parameters that differ along a chain become a curve.** VRM 1.0 carries a value per joint, and
 Basis evaluates its parameters over distance from the chain root, which is the same axis. A chain
@@ -122,8 +125,9 @@ allows both.
 VRM 1.0 has three node constraints, and each becomes a Basis constraint on the object it sits on.
 
 - **Rotation** becomes a Basis rotation constraint. VRM copies how far the source has turned from
-  its rest pose; a Basis constraint takes the source's rotation itself. The two agree while both
-  objects sit as they were authored and differ if the source's rest pose changes.
+  its rest pose; a Basis constraint takes the source's rotation itself, with a rotation offset so
+  the authored pose holds while the source rests. The two differ if the source's rest pose
+  changes.
 - **Aim** becomes a Basis aim constraint, pointing the same local axis at the same source. Basis
   also holds an up direction, which VRM does not state, so the scene's up is used and the roll
   around the aim may differ.

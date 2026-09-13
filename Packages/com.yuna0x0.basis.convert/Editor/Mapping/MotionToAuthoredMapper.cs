@@ -19,7 +19,8 @@ namespace yuna0x0.Basis.Convert.Mapping
     public static class MotionToAuthoredMapper
     {
         /// <summary>Motion from a layer with nothing steering it, which plays from load.</summary>
-        public static AuthoredMotionPlan MapAmbient(string label, bool loop, ClipEffects effects)
+        public static AuthoredMotionPlan MapAmbient(
+            string label, bool loop, ClipEffects effects, float speed = 1f)
         {
             AuthoredMotionPlan plan = Map(label, loop, effects);
             if (plan.Paths.Count == 0)
@@ -27,17 +28,20 @@ namespace yuna0x0.Basis.Convert.Mapping
                 return plan;
             }
 
+            plan.Speed = speed;
+
             plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "motion.baked",
                 $"'{plan.Label}' plays without anything switching it on, so it was rebuilt as an "
                 + $"authored motion turning {plan.Paths.Count} transforms. Basis replays it from "
                 + "a clip baked at conversion time rather than from an animator.");
 
+            // A state with nothing to leave it stays active, but a clip that does not loop holds
+            // its last frame in Unity, and Basis's authored motion does the same.
             if (!loop)
             {
-                plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "motion.notLooping",
-                    $"'{plan.Label}' was not authored to loop, but an animator layer with nothing "
-                    + "to leave it plays its state indefinitely. The motion loops.");
-                plan.Loop = true;
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "motion.notLooping",
+                    $"'{plan.Label}' was not authored to loop. It plays once and holds its last "
+                    + "frame, as it did in the animator.");
             }
 
             return plan;

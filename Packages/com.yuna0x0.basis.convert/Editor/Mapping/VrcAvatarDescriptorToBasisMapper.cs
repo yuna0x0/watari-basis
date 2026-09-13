@@ -135,18 +135,40 @@ namespace yuna0x0.Basis.Convert.Mapping
 
         private static void MapBlink(VrcAvatarDescriptorData source, BasisAvatarPlan plan)
         {
+            // Enable Eye Look is the master switch. The SDK keeps the eyelid settings serialized
+            // when it is off, so they are not evidence of a blink.
+            if (!source.EnableEyeLook)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "descriptor.eyeLook.disabled",
+                    "Eye Look was disabled, so the avatar did not blink. Blink was left unset.");
+                return;
+            }
+
             switch (source.EyelidType)
             {
                 case VrcEyelidType.Blendshapes:
-                    plan.BlinkMeshFileId = source.EyelidsSkinnedMeshFileId;
-
-                    // The array is blink, looking up, looking down. Basis has blink only.
-                    if (source.EyelidsBlendshapes.Count > 0)
+                    // The array is blink, looking up, looking down, -1 for unset. Basis has
+                    // blink only.
+                    int blink = source.EyelidsBlendshapes.Count > 0 ? source.EyelidsBlendshapes[0] : -1;
+                    if (blink >= 0)
                     {
-                        plan.BlinkBlendShapeIndices.Add(source.EyelidsBlendshapes[0]);
+                        plan.BlinkMeshFileId = source.EyelidsSkinnedMeshFileId;
+                        plan.BlinkBlendShapeIndices.Add(blink);
+                    }
+                    else
+                    {
+                        plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "descriptor.eyelids.none",
+                            "Eyelids were set to blendshapes but no blink shape was chosen, so "
+                            + "blink was left unset.");
                     }
 
-                    if (source.EyelidsBlendshapes.Count > 1)
+                    bool lookShapes = false;
+                    for (int i = 1; i < source.EyelidsBlendshapes.Count; i++)
+                    {
+                        lookShapes |= source.EyelidsBlendshapes[i] >= 0;
+                    }
+
+                    if (lookShapes)
                     {
                         plan.Diagnostics.Add(DiagnosticSeverity.Dropped,
                             "descriptor.eyelids.lookUpDown",

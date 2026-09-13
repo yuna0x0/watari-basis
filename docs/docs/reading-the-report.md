@@ -56,32 +56,39 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `physbone.unresolved` | Warning | The PhysBone could not be tied to a transform and was skipped. |
-| `physbone.rootUnresolved` | Warning | The Root Transform could not be resolved. The rig sits on the component's object instead. |
+| `physbone.disabled` | Mapped | The component was disabled and simulated nothing. No rig was written. |
+| `physbone.rootUnresolved` | Warning | The Root Transform could not be resolved. The PhysBone was skipped. |
 | `physbone.radius.collisionRadius` | Mapped | Radius became collision radius, with its curve. |
 | `physbone.radius.negative` | Warning | A negative radius was clamped to 0 and collision left off. |
-| `physbone.gravity` | Mapped | Gravity carried over, with its curve. |
+| `physbone.gravity` | Approximated | Gravity became the gravity multiplier, with its curve. PhysBone blends toward down; jiggle scales world gravity. |
 | `physbone.gravityFalloff.dropped` | Dropped | Gravity Falloff has no equivalent, so gravity applies evenly. |
 | `physbone.pull.stiffness` | Approximated | Pull, and Stiffness under Advanced, were fitted onto jiggle stiffness. |
 | `physbone.stiffnessCurve.dropped` | Dropped | The stiffness curve was dropped. Jiggle stiffness took the pull curve. |
 | `physbone.spring.drag` | Approximated | Spring was fitted onto drag. |
+| `physbone.springCurve.dropped` | Dropped | Drag runs opposite to spring, so the curve would have inverted the falloff. |
+| `physbone.curves.domain` | Approximated | Curves carried over. PhysBone samples them by bone index, jiggle by distance from the root. |
 | `physbone.immobile.ignoreRootMotion` | Mapped | Immobile became ignore root motion. |
 | `physbone.immobileCurve.dropped` | Dropped | The immobile curve was dropped. Ignore root motion is a single value. |
 | `physbone.immobileType.world` | Approximated | Immobile Type World damps scene movement only. Ignore root motion also damps animated motion. |
 | `physbone.limitType.none` | Mapped | No angle limit on either side. |
 | `physbone.limitType.angle` | Mapped | The angle limit became a jiggle angle limit. |
+| `physbone.limitType.hinge` | Approximated | The hinge angle became a cone. Nothing keeps the bone on one plane. |
 | `physbone.limitType.polar` | Approximated | Separate pitch and yaw limits became one cone, using the wider angle. |
 | `physbone.limitType.tooWide` | Approximated | The limit was wider than jiggle physics can express, so no limit was written rather than a tighter one. |
 | `physbone.limitRotation.dropped` | Dropped | Limit Rotation was dropped. A jiggle limit is centred on the rest pose. |
-| `physbone.maxStretch.maxGrabStretch` | Mapped | Max Stretch became max grab stretch. |
-| `physbone.maxSquish.dropped` | Dropped | Jiggle bones stretch but do not compress. |
+| `physbone.stretchMotion.stretch` | Mapped | Stretch Motion became stretch, with its curve. |
+| `physbone.maxStretch.dropped` | Dropped | Nothing bounds how far a bone may lengthen. |
+| `physbone.maxSquish.dropped` | Dropped | Nothing bounds how far a bone may shorten. |
 | `physbone.endpointPosition.dropped` | Dropped | Jiggle derives its own chain endpoint. |
+| `physbone.multiChildType.oneChild` | Mapped | The root has one child and is simulated on both sides. Multi Child Type does not apply. |
 | `physbone.multiChildType.ignore` | Mapped | Multi Child Type Ignore became a motionless root. |
+| `physbone.multiChildType.ignoreBranches` | Approximated | Bones below the root with several children stay still in VRChat under Ignore. Jiggle swings them. |
 | `physbone.multiChildType.blended` | Approximated | A shared root moved by its chains cannot be expressed, so the root was left motionless. |
 | `physbone.allowCollision.off` | Approximated | Allow Collision off excluded other players' hands. Basis registers every avatar's hands, arms and feet as global colliders and a rig cannot opt out. The listed colliders still apply. |
-| `physbone.allowGrabbing` | Mapped | Grabbing kept its setting. |
+| `physbone.allowGrabbing` | Mapped | Grabbing kept its setting. Radius 0 is not grabbable in VRChat and locks the rig. |
 | `physbone.allowPosing.dropped` | Dropped | Jiggle bones spring back when released. |
 | `physbone.snapToHand.dropped` | Dropped | No equivalent. |
-| `physbone.isAnimated` | Warning | Something animated the PhysBone's settings. The rig is static. |
+| `physbone.isAnimated` | Mapped | The rest pose followed animation. Jiggle always does. |
 | `physbone.parameter.dropped` | Dropped | The animator parameter prefix has nothing to feed on Basis. |
 | `mapping.clamped` | Warning | A fitted value fell outside its range and was clamped. |
 
@@ -90,6 +97,7 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `dynamicbone.unresolved` | Warning | The component could not be tied to a transform and was skipped. |
+| `dynamicbone.disabled` | Mapped | The component was disabled and simulated nothing. No rig was written. |
 | `dynamicbone.noRoot` | Warning | The component names no root, or has Blend Weight 0, and simulates nothing. No rig was written. |
 | `dynamicbone.rootUnresolved` | Warning | A root could not be resolved. That chain was skipped. |
 | `dynamicbone.multipleRoots` | Mapped | The component drives several chains. Each became its own rig with the same settings. |
@@ -120,8 +128,12 @@ on the case; the usual one is given.
 | `vrm.radius` | Mapped | Joint radius became collision radius, both in metres. |
 | `vrm.stiffness` | Approximated | Stiffness force, which has no upper bound, was fitted onto jiggle stiffness. |
 | `vrm.stiffness.clamped` | Approximated | A stiffness force above 1 was written as fully stiff. |
-| `vrm.gravity.direction` | Approximated | Gravity did not point straight down. Only the downward part was kept. |
-| `vrm.center.dropped` | Dropped | The chain named a centre transform, which has no equivalent. |
+| `vrm.gravity` | Approximated | Gravity power became the gravity multiplier. VRM adds a per-step force; jiggle scales world gravity. |
+| `vrm.gravity.direction` | Approximated | Gravity did not point straight down. Only the vertical part was kept. |
+| `vrm.angleLimit.cone` | Approximated | A cone limit became a jiggle angle limit, capped at 90 degrees. |
+| `vrm.angleLimit.dropped` | Dropped | A hinge or spherical limit has no jiggle shape. |
+| `vrm.center` | Approximated | The chain named a centre transform. The rig ignores root motion fully, measured at its root bone. |
+| `vrm.springBone.disabled` | Mapped | A VRMSpringBone was disabled and simulated nothing. No rig was written. |
 | `vrm.branchesExcluded` | Mapped | Bones under the chain that the spring did not name were excluded, so they stay still. |
 
 ### Colliders
@@ -129,6 +141,8 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `collider.limit` | Warning | More colliders were referenced than a jiggle rig holds. The extras were dropped. |
+| `physics.excludedRoot` | Approximated | The root bone was in its own ignore list. The rig keeps the root motionless instead. |
+| `collider.disabled` | Mapped | The collider component was disabled. Rigs that list it get nothing, as on the source. |
 | `collider.transform.unresolved` | Warning | A collider could not be tied to a transform. Rigs referencing it do not collide with it. |
 | `physics.collider.unresolved` | Warning | A referenced collider or collider group was not in the file. |
 | `physics.excludedTransform.unresolved` | Warning | An excluded transform could not be resolved. |
@@ -149,15 +163,19 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `constraint.unresolved` | Warning | The constraint could not be tied to a transform and was skipped. |
+| `constraint.disabled` | Mapped | The component was disabled and drove nothing. None was written. |
+| `constraint.locked` | Mapped | Locked was off. VRChat ignores that in play, so the Basis constraint is locked. |
 | `constraint.retargeted` | Approximated | The constraint drove another transform. It was written onto the transform it drives. |
 | `constraint.noSources` | Warning | The constraint has no sources. It was created anyway. |
 | `constraint.source.empty` | Warning | A source slot had no transform and was dropped. |
 | `constraint.source.unresolved` | Warning | A source could not be resolved and was dropped. |
 | `constraint.source.overflow` | Warning | Sources past the sixteenth sit in an overflow list that is not read yet. |
+| `constraint.source.weight.normalized` | Approximated | A lone source below full weight follows fully on Basis, which normalises source weights. |
+| `constraint.worldUp.none` | Approximated | World Up Type None leaves roll free in VRChat. Basis uses the scene's up. |
 | `constraint.weight.clamped` | Warning | The weight was outside 0 to 1 and was clamped. |
 | `constraint.solveInLocalSpace.dropped` | Dropped | Basis constraints solve in world space. |
 | `constraint.freezeToWorld.dropped` | Dropped | No equivalent. |
-| `vrm.constraint.rotation` | Approximated | A VRM rotation constraint copies a delta from rest. A Basis one follows the rotation itself. |
+| `vrm.constraint.rotation` | Approximated | A VRM rotation constraint copies a delta from rest. A Basis one follows the rotation itself, offset so the authored pose holds at rest. |
 | `vrm.constraint.aim` | Approximated | A VRM aim constraint states no up direction, so the scene's up is used. |
 | `vrm.constraint.roll` | Approximated | Nothing in Basis copies rotation about one axis, so this became a rotation constraint limited to it. |
 | `vrm.constraint.noSource` | Warning | The constraint names no source. It was created anyway. |
@@ -174,13 +192,16 @@ on the case; the usual one is given.
 | `descriptor.visemeMesh.missing` | Warning | Lip sync was set to blendshapes with no mesh assigned. |
 | `descriptor.visemesUnset` | Warning | Nothing named the visemes or blink. Assign them on the Basis Avatar by hand. |
 | `descriptor.lipSync.unsupported` | Dropped | Lip sync was not blendshape based. Basis drives visemes from blendshapes only. |
-| `descriptor.eyelids.none` | Mapped | No eyelid setup, so blink is unset. |
+| `descriptor.eyeLook.disabled` | Mapped | Eye Look was disabled, so blink is unset. |
+| `descriptor.eyelids.none` | Mapped | No eyelid setup or no blink shape chosen, so blink is unset. |
 | `descriptor.eyelids.bones` | Dropped | Eyelids were driven by bones. Basis blinks with a blendshape. |
 | `descriptor.eyelids.lookUpDown` | Dropped | The looking up and down eyelid shapes have no equivalent. |
 | `descriptor.viewPosition.sideways` | Dropped | The sideways part of the view position. Basis stores height and forward offset. |
 | `descriptor.animationLayers` | Dropped | Custom animation layers were assigned. Basis has no playable layers. |
 | `descriptor.expressionsMenu` | Dropped | The expression menu as a structure. Its toggles are rebuilt as Vixxy controls; see the menu codes. |
 | `descriptor.expressionParameters` | Dropped | Expression parameters as a list. Vixxy controls carry their own state. |
+| `headChop.disabled` | Mapped | The component was disabled and hid nothing. None was written. |
+| `headChop.head.ignored` | Dropped | An entry named the humanoid Head. Basis scales the Head itself and ignores such entries. |
 | `headChop.condition.dropped` | Approximated | A head chop bone was scaled away only in VR or only on desktop. Basis scales it away in both. |
 | `headChop.target.unresolved` | Warning | A head chop bone could not be resolved and was dropped. |
 | `contacts.dropped` | Dropped | VRChat contacts were found. Basis has no contact system. |
@@ -197,13 +218,15 @@ on the case; the usual one is given.
 | `expressions.togglesResolved` | Mapped | How many animator layers were traced from the menu and how many became controls. |
 | `vixxy.rebuilt` | Mapped | The count of menu toggles rebuilt as Vixxy controls, each with a menu item. |
 | `vixxy.notSimple` | Dropped | The toggle animates over time or drives something a Vixxy control cannot hold. |
-| `vixxy.nothingToSwitch` | Dropped | The toggle switched nothing. |
+| `vixxy.nothingToSwitch` | Dropped | The toggle switched nothing that exists on this avatar. |
+| `vixxy.values.normalized` | Mapped | A two-state control used a value other than 1. It was written as 0 and 1 so Basis presents a toggle. |
+| `vixxy.commsMissing` | Warning | No HVR Avatar Comms on the avatar. Vixxy controls initialise through it; add the HVR.Networking prefab. |
 | `vixxy.puppetEnds` | Approximated | A radial puppet blended through motions between its ends. A slider interpolates in a straight line. |
 | `vixxy.builtinGuard` | Approximated | The layer also waited on a VRChat parameter such as `IsLocal`. The control switches whenever it is used. |
 | `vixxy.materialBlock` | Approximated | The control sets material properties on a renderer with several materials. Vixxy sets them per renderer, so all are affected. |
-| `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar. |
+| `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar. That object was left out. |
 | `vixxy.rendererMissing` | Warning | The control sets a renderer or blendshape that is not in this avatar. |
-| `modularAvatar.hierarchy` | Mapped | Modular Avatar components that rearrange the hierarchy. They run on Basis and are left alone. |
+| `modularAvatar.hierarchy` | Mapped | Modular Avatar components that rearrange the hierarchy or meshes. Left to Modular Avatar, which applies them at Basis build time when installed with the Basis NDMF platform. |
 | `modularAvatar.menus` | Dropped | Modular Avatar menu and animator components. See [Modular Avatar](what-converts/modular-avatar.md). |
 | `modularAvatar.togglesRebuilt` | Mapped | How many Modular Avatar menu toggles became Vixxy controls. |
 | `modularAvatar.vrchatOnly` | Dropped | Modular Avatar components that act on VRChat's own systems. |
@@ -214,7 +237,8 @@ on the case; the usual one is given.
 |---|---|---|
 | `motion.baked` | Mapped | An animator layer that plays on its own was rebuilt as authored motion. |
 | `motion.switched` | Mapped | A menu toggle animated over time, so it was rebuilt as a motion the control switches on. |
-| `motion.notLooping` | Approximated | The clip was not authored to loop, but its layer played it indefinitely. The motion loops. |
+| `motion.notLooping` | Mapped | The clip was not authored to loop. It plays once and holds its last frame. |
+| `motion.notRotation` | Dropped | A layer playing on its own animates something other than rotation, which a baked motion cannot hold. |
 | `motion.rotationOnly` | Dropped | The layer also animates something other than rotation, which a baked motion clip cannot hold. |
 | `motion.noFolder` | Warning | There was nowhere inside the project to write the baked clip, so no motion was written. |
 | `motion.nothingToBake` | Warning | The clip turns nothing that exists on this avatar. |
@@ -252,11 +276,12 @@ on the case; the usual one is given.
 |---|---|---|
 | `rig.noAnimator` | Warning | No Animator with an avatar. Set the model's Animation Type to Humanoid. |
 | `rig.notHumanoid` | Warning | The rig is not a valid humanoid. |
-| `rig.missingBones` | Warning | Bones Basis maps for full-body IK are missing from the humanoid mapping. |
-| `rig.bonesComplete` | Mapped | Every bone Basis maps is present. |
+| `rig.missingBones` | Warning | Bones the Basis validator requires are missing from the humanoid mapping, Chest and Neck included. |
+| `rig.bonesComplete` | Mapped | Every bone the Basis validator requires is mapped. |
+| `rig.recommendedBones` | Warning | A shoulder is unmapped. Basis places it from a fallback table and its validator warns. |
 | `rig.eyesMapped` | Mapped | Both eye bones are mapped. |
 | `rig.eyesMissing` | Warning | One or both eye bones are unmapped. Basis calibrates gaze from both. |
-| `rig.jawMapped` | Warning | A Jaw bone is mapped. The Basis setup guide asks for it to be cleared, and the window offers to. |
+| `rig.jawMapped` | Warning | A Jaw bone is mapped. Basis does not drive it, and the window offers to clear it. |
 | `rig.twistBones` | Mapped | How many arm bones have a twist child Basis will pick up. |
 | `rig.twistBonesAbsent` | Mapped | Arm bones without a twist child. Basis applies no twist there. |
 

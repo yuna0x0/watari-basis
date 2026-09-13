@@ -4,8 +4,9 @@ sidebar_position: 7
 
 # Modular Avatar
 
-[Modular Avatar](https://modular-avatar.nadena.dev/) runs on Basis, and much of what it does
-needs no conversion. Its components are read here so the parts that cannot work on Basis are
+[Modular Avatar](https://modular-avatar.nadena.dev/) applies its components at Basis build time
+when it, NDMF and the Basis NDMF platform are installed in the project, and much of what it does
+then needs no conversion. Its components are read here so the parts that cannot work on Basis are
 handled rather than silently doing nothing.
 
 Modular Avatar does not need to be installed for this. Its components are read from the prefab
@@ -14,9 +15,11 @@ reported as what it is rather than as an unknown script.
 
 ## Left to Modular Avatar
 
-`Merge Armature`, `Bone Proxy`, `Mesh Settings`, `Blendshape Sync`, `Parameters` and the rest of
-the components that rearrange the hierarchy or the meshes do platform-independent work. They
-are reported as left alone rather than as unrecognised, and nothing is written for them.
+`Merge Armature`, `Bone Proxy`, `Mesh Settings` and the rest of the components that rearrange
+the hierarchy or the meshes do platform-independent work. They are reported as left alone rather
+than as unrecognised, and nothing is written for them. `Blendshape Sync` and `Parameters` are
+listed with them but their build passes are VRChat-only in Modular Avatar 1.18.7, so they do
+nothing on Basis.
 
 ## Rebuilt
 
@@ -31,11 +34,13 @@ controls, on the same terms as [menu toggles](menu-toggles.md) from the avatar's
 `Object Toggle` needs no animator at all. It switches objects while its own object is active, and
 a menu item on that object makes it active, so the two together say what a toggle and its clips
 say. Objects it does not name keep the state the avatar was authored with, which is the
-same rule everywhere else.
+same rule everywhere else. An inverted toggle acts while the menu item is off. A menu item with no
+parameter gets the one Modular Avatar assigns at build, from the object's name, and its default,
+saved and synced flags carry onto the control.
 
 Paths inside a merged animator's clips are relative to the object the animator was merged at, and
-are rebased before anything is resolved. Paths in an `Object Toggle` are not: Modular Avatar
-resolves those against the avatar root, so they are used as written.
+are rebased before anything is resolved. An `Object Toggle` entry is resolved by its object
+reference first, then by its path, which Modular Avatar records from the avatar root.
 
 ## Reported, not rebuilt
 

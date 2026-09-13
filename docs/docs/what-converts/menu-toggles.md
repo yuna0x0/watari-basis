@@ -63,4 +63,6 @@ is reported as `vixxy.puppetEnds`.
   parameter list to recreate, and anything driven by parameters outside a toggle has to be
   rebuilt by hand.
 
-A toggle that cannot be rebuilt is reported and left alone rather than partly converted.
+A toggle that cannot be rebuilt is reported and left alone rather than partly converted. The one
+exception is an object the clip names that this avatar does not have: the control is written
+without it and the report says so (`vixxy.targetMissing`).

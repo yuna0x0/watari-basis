@@ -1,7 +1,9 @@
 using System.IO;
 using NUnit.Framework;
+using yuna0x0.Basis.Convert.Mapping;
 using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Pipeline;
+using yuna0x0.Basis.Convert.Sources;
 
 namespace yuna0x0.Basis.Convert.Tests
 {
@@ -119,5 +121,29 @@ namespace yuna0x0.Basis.Convert.Tests
 
             return null;
         }
-    }
+    
+        [Test]
+        public void ATwoStateControlWithAnotherOnValueIsWrittenAsZeroAndOne()
+        {
+            // HVRVixxyControl.IsRegularToggle needs values exactly 0 and 1, and Basis's menu
+            // presents anything else as a selector.
+            ResolvedToggle toggle = new ResolvedToggle
+            {
+                MenuName = "Hat",
+                Parameter = "Outfit",
+                DefaultValue = 2f,
+            };
+            toggle.Choices.Add(new ResolvedChoice { Name = "OFF", Value = 0, Effects = new ClipEffects() });
+            toggle.Choices.Add(new ResolvedChoice { Name = "ON", Value = 2, Effects = new ClipEffects() });
+            toggle.Choices[1].Effects.Activated.Add("Hat");
+
+            VixxyControlPlan plan = ToggleToVixxyMapper.Map(toggle);
+
+            Assert.That(plan.ChoiceValues, Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(plan.DefaultValue, Is.EqualTo(1f), "The default was the ON value.");
+            Assert.That(plan.Diagnostics.HasCode("vixxy.values.normalized"), Is.True);
+            Assert.That(plan.Saved, Is.True);
+            Assert.That(plan.NetworkSynced, Is.True);
+        }
+}
 }

@@ -56,7 +56,12 @@ namespace yuna0x0.Basis.Convert.Writers
             JiggleRig component = Undo.AddComponent<JiggleRig>(rig.Host);
             Undo.SetCurrentGroupName(undoName);
 
-            CopyPreset(rig.Plan.Preset, component);
+            if (!CopyPreset(rig.Plan.Preset, component))
+            {
+                // hasSerializedData is set below, which stops JiggleRig.OnValidate from filling
+                // in defaults, so a missing preset would leave every unplanned parameter at 0.
+                component.SetInputParameters(JiggleTreeInputParameters.Default());
+            }
 
             // Structure first, through SerializedObject, because these fields are private and
             // have no setter. Applying runs OnValidate, which needs the root bone in place to
@@ -83,18 +88,19 @@ namespace yuna0x0.Basis.Convert.Writers
             return component;
         }
 
-        private static void CopyPreset(JigglePreset preset, JiggleRig target)
+        private static bool CopyPreset(JigglePreset preset, JiggleRig target)
         {
             JiggleRig source = JigglePresetLibrary.TryLoad(preset);
             if (source == null)
             {
-                return;
+                return false;
             }
 
             // Copies the serialized fields wholesale, which is the only way to start from the
             // preset's tuning without restating every parameter here. Everything the source data
             // determines is overwritten immediately afterwards.
             EditorUtility.CopySerialized(source, target);
+            return true;
         }
 
         private static void WriteRigData(SerializedObject serialized, ResolvedJiggleRig rig)
@@ -102,11 +108,9 @@ namespace yuna0x0.Basis.Convert.Writers
             // JiggleRigData.OnValidate refuses to touch data that never claimed to be serialized,
             // and the version string drives its upgrade path.
             serialized.FindProperty(DataPath + "hasSerializedData").boolValue = true;
-            SerializedProperty version = serialized.FindProperty(DataPath + "serializedVersion");
-            if (string.IsNullOrEmpty(version.stringValue))
-            {
-                version.stringValue = "v0.0.2";
-            }
+            // Presets carry v0.0.0, whose upgrade rescales the collision radius. The values
+            // written here are already current, so the version is set outright.
+            serialized.FindProperty(DataPath + "serializedVersion").stringValue = "v0.0.2";
 
             serialized.FindProperty(DataPath + "rootBone").objectReferenceValue = rig.RootBone;
             serialized.FindProperty(DataPath + "excludeRoot").boolValue = rig.Plan.ExcludeRoot;

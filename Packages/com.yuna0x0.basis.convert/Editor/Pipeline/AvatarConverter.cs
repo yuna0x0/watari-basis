@@ -187,6 +187,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             "VRMSpringBone",
             "VRMBlendShapeProxy",
             "VRMLookAtHead",
+            "VRMLookAt",
             "VRMLookAtBoneApplyer",
             "VRMLookAtBlendShapeApplyer",
         };

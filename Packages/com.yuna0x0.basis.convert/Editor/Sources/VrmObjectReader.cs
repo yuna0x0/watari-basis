@@ -491,6 +491,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 && preset >= 0 && preset < Vrm0Roles.Length)
             {
                 expression.Role = Vrm0Roles[preset];
+                expression.PresetName = Vrm0PresetNames.Names[preset];
             }
 
             // A 0.x binding's weight is already on Unity's scale: UniVRM passes it straight to

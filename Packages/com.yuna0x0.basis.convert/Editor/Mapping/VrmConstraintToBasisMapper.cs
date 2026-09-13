@@ -67,8 +67,8 @@ namespace yuna0x0.Basis.Convert.Mapping
                 default:
                     plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrm.constraint.rotation",
                         "A rotation constraint copies how far the source has turned from its "
-                        + "rest pose. A Basis constraint takes the source's rotation itself, so "
-                        + "the two agree while both sit as they were authored and differ if the "
+                        + "rest pose. A Basis constraint takes the source's rotation itself, "
+                        + "offset so the authored pose holds at rest. The two differ if the "
                         + "source's rest pose changes.");
                     break;
             }

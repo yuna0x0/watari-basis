@@ -24,7 +24,8 @@ namespace yuna0x0.Basis.Convert.Tests
             string viewPosition = "{x: 0, y: 1.208, z: 0.08}",
             int lipSync = 3,
             int eyelidType = 2,
-            string eyelidsBlob = "1d000000ffffffffffffffff")
+            string eyelidsBlob = "1d000000ffffffffffffffff",
+            int enableEyeLook = 1)
         {
             List<string> lines = new List<string>
             {
@@ -42,7 +43,7 @@ namespace yuna0x0.Basis.Convert.Tests
                 lines.Add($"  - {name}");
             }
 
-            lines.Add("  enableEyeLook: 1");
+            lines.Add($"  enableEyeLook: {enableEyeLook}");
             lines.Add("  customEyeLookSettings:");
             lines.Add("    eyeMovement:");
             lines.Add("      confidence: 0.5");
@@ -122,11 +123,34 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void BlinkTakesTheFirstEyelidBlendshapeAndReportsTheRest()
         {
-            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor());
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(eyelidsBlob: "1d0000001e000000ffffffff"));
 
             Assert.That(plan.BlinkMeshFileId, Is.EqualTo(66L));
             Assert.That(plan.BlinkBlendShapeIndices, Is.EqualTo(new[] { 29 }));
             Assert.That(plan.Diagnostics.HasCode("descriptor.eyelids.lookUpDown"), Is.True);
+        }
+
+        [Test]
+        public void UnsetLookShapesAreNotReportedAsDropped()
+        {
+            // The blob is blink, looking up, looking down; -1 means unset.
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor());
+
+            Assert.That(plan.BlinkBlendShapeIndices, Is.EqualTo(new[] { 29 }));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyelids.lookUpDown"), Is.False);
+        }
+
+        [Test]
+        public void DisabledEyeLookLeavesBlinkUnset()
+        {
+            // The SDK keeps eyelid settings serialized when Enable Eye Look is off.
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(enableEyeLook: 0));
+
+            Assert.That(plan.BlinkBlendShapeIndices, Is.Empty);
+            Assert.That(plan.BlinkMeshFileId, Is.Zero);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.disabled"), Is.True);
         }
 
         [Test]

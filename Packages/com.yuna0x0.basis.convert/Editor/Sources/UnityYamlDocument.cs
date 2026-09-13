@@ -183,6 +183,12 @@ namespace yuna0x0.Basis.Convert.Sources
             return UnityYamlValues.TryParseInt(GetTopLevelValue(key), out value);
         }
 
+        /// <summary>
+        /// The component's <c>m_Enabled</c> flag. Absent means enabled, which is what Unity
+        /// writes for types without one.
+        /// </summary>
+        public bool IsEnabled => !TryGetBool("m_Enabled", out bool enabled) || enabled;
+
         public bool TryGetBool(string key, out bool value)
         {
             value = false;

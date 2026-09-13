@@ -17,6 +17,12 @@ namespace yuna0x0.Basis.Convert.Sources
         public float Threshold;
 
         public AnimationClip Clip;
+
+        /// <summary>
+        /// The state held a motion that is not a clip, a blend tree. Nothing constant can be read
+        /// from it, so the choice is not rebuildable.
+        /// </summary>
+        public bool MotionUnreadable;
     }
 
     /// <summary>
@@ -82,6 +88,9 @@ namespace yuna0x0.Basis.Convert.Sources
         public string LayerName = string.Empty;
         public string StateName = string.Empty;
         public AnimationClip Clip;
+
+        /// <summary>The state's playback speed. Basis replays the baked clip at this rate.</summary>
+        public float Speed = 1f;
 
         /// <summary>Whether the clip was authored to loop, which most ambient motion is.</summary>
         public bool Loop;
@@ -274,6 +283,7 @@ namespace yuna0x0.Basis.Convert.Sources
                     StateName = state.name,
                     Clip = clip,
                     Loop = clip.isLooping,
+                    Speed = state.speed,
                 });
             }
 
@@ -453,10 +463,12 @@ namespace yuna0x0.Basis.Convert.Sources
 
             foreach (int value in values)
             {
+                Motion motion = byValue[value].motion;
                 read.States.Add(new FxParameterState
                 {
                     Value = value,
-                    Clip = byValue[value].motion as AnimationClip,
+                    Clip = motion as AnimationClip,
+                    MotionUnreadable = motion != null && !(motion is AnimationClip),
                 });
             }
 

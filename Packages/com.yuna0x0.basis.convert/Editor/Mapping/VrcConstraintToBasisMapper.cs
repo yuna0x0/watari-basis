@@ -29,9 +29,18 @@ namespace yuna0x0.Basis.Convert.Mapping
                 HostFileId = source.OwnerGameObjectFileId,
                 Kind = KindOf(source.Kind),
                 Active = source.IsActive,
-                Locked = source.Locked,
+                // VRChat forces Locked on in play mode. Basis unlocked returns the axes a
+                // constraint does not drive to the captured rest pose, so only locked matches.
+                Locked = true,
                 Weight = Mathf.Clamp01(source.GlobalWeight),
             };
+
+            if (!source.Locked)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "constraint.locked",
+                    "Locked was off. VRChat ignores that in play mode, so the Basis constraint "
+                    + "is locked.");
+            }
 
             if (source.GlobalWeight < 0f || source.GlobalWeight > 1f)
             {
@@ -91,6 +100,16 @@ namespace yuna0x0.Basis.Convert.Mapping
                     + $"{plan.Sources.Count} could be read. VRChat keeps anything past the "
                     + "sixteenth in an overflow list this does not read yet, so those were not "
                     + "carried over.");
+            }
+
+            // Basis divides the blend by the total weight, so a lone source counts in full.
+            // VRChat blends toward the offset by the source's weight.
+            if (plan.Sources.Count == 1 && !Mathf.Approximately(plan.Sources[0].Weight, 1f))
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Approximated,
+                    "constraint.source.weight.normalized",
+                    $"The only source had weight {plan.Sources[0].Weight}. Basis normalises "
+                    + "source weights, so a lone source follows fully.");
             }
 
             if (plan.Sources.Count == 0)
@@ -154,6 +173,14 @@ namespace yuna0x0.Basis.Convert.Mapping
                     plan.AimVector = source.AimAxis;
                     plan.UpVector = source.UpAxis;
                     plan.WorldUpType = (ConstraintWorldUp)source.WorldUp;
+                    if (plan.WorldUpType == ConstraintWorldUp.None)
+                    {
+                        plan.Diagnostics.Add(DiagnosticSeverity.Approximated,
+                            "constraint.worldUp.none",
+                            "World Up Type was None, which leaves roll free in VRChat. Basis "
+                            + "treats None as the scene's up.");
+                    }
+
                     plan.WorldUpVector = source.WorldUpVector;
                     plan.WorldUpTransformFileId = source.WorldUpTransformFileId;
                     plan.RotationAtRest = source.RotationAtRest;
@@ -163,7 +190,9 @@ namespace yuna0x0.Basis.Convert.Mapping
                     break;
 
                 case VrcConstraintKind.LookAt:
-                    plan.Roll = source.Roll;
+                    // VRChat applies roll as a rotation of -Roll about the look axis; Basis
+                    // applies +Roll about the same axis.
+                    plan.Roll = -source.Roll;
                     plan.UseUpObject = source.UseUpTransform;
                     plan.WorldUpTransformFileId = source.WorldUpTransformFileId;
                     plan.RotationAtRest = source.RotationAtRest;

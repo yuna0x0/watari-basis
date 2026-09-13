@@ -87,7 +87,8 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(data.Stiffness.Value, Is.EqualTo(0.2f).Within(1e-6f));
             Assert.That(data.MaxAngleX.Value, Is.EqualTo(45f).Within(1e-6f));
             Assert.That(data.GrabMovement, Is.EqualTo(0.5f).Within(1e-6f));
-            Assert.That(data.LimitType, Is.EqualTo(PhysBoneLimitType.Angle));
+            Assert.That(data.LimitType, Is.EqualTo(PhysBoneLimitType.None),
+                "The SDK field has no initializer, so an absent key is None.");
             Assert.That(data.AllowCollision, Is.True);
             Assert.That(data.AllowGrabbing, Is.True);
         }

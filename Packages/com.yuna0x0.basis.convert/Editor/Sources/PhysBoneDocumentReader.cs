@@ -38,7 +38,7 @@ namespace yuna0x0.Basis.Convert.Sources
             data.ImmobileType = (PhysBoneImmobileType)ReadEnum(
                 document, "immobileType", (int)PhysBoneImmobileType.AllMotion);
             data.LimitType = (PhysBoneLimitType)ReadEnum(
-                document, "limitType", (int)PhysBoneLimitType.Angle);
+                document, "limitType", (int)PhysBoneLimitType.None);
 
             if (document.TryGetVector3("endpointPosition", out Vector3 endpoint))
             {
@@ -64,8 +64,11 @@ namespace yuna0x0.Basis.Convert.Sources
             data.StretchMotion = ReadCurved(document, "stretchMotion", "stretchMotionCurve", 0f);
 
             data.AllowCollision = ReadBool(document, "allowCollision", true);
-            data.AllowGrabbing = ReadBool(document, "allowGrabbing", true);
-            data.AllowPosing = ReadBool(document, "allowPosing", true);
+            // isGrabbable and isPoseable are the pre-rename keys ([FormerlySerializedAs]).
+            data.AllowGrabbing = ReadBool(document, "allowGrabbing",
+                ReadBool(document, "isGrabbable", true));
+            data.AllowPosing = ReadBool(document, "allowPosing",
+                ReadBool(document, "isPoseable", true));
             data.SnapToHand = ReadBool(document, "snapToHand", false);
             data.IsAnimated = ReadBool(document, "isAnimated", false);
             data.ResetWhenDisabled = ReadBool(document, "resetWhenDisabled", false);
