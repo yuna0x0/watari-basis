@@ -1,7 +1,7 @@
 {
   "name": "com.yuna0x0.basis.convert",
   "displayName": "Watari (Converter for Basis)",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Converts VRChat, VRM and Dynamic Bone components on an avatar into their Basis equivalents: jiggle physics, constraints, the avatar descriptor, HVR Vixxy controls and authored motion.",
   "unity": "6000.5",
   "author": {
