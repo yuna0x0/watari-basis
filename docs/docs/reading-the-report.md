@@ -77,7 +77,7 @@ on the case; the usual one is given.
 | `physbone.endpointPosition.dropped` | Dropped | Jiggle derives its own chain endpoint. |
 | `physbone.multiChildType.ignore` | Mapped | Multi Child Type Ignore became a motionless root. |
 | `physbone.multiChildType.blended` | Approximated | A shared root moved by its chains cannot be expressed, so the root was left motionless. |
-| `physbone.allowCollision.off` | Mapped | Collision is off on the rig too. |
+| `physbone.allowCollision.off` | Approximated | Allow Collision off excluded other players' hands. Basis registers every avatar's hands, arms and feet as global colliders and a rig cannot opt out. The listed colliders still apply. |
 | `physbone.allowGrabbing` | Mapped | Grabbing kept its setting. |
 | `physbone.allowPosing.dropped` | Dropped | Jiggle bones spring back when released. |
 | `physbone.snapToHand.dropped` | Dropped | No equivalent. |
@@ -90,17 +90,23 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `dynamicbone.unresolved` | Warning | The component could not be tied to a transform and was skipped. |
-| `dynamicbone.rootUnresolved` | Warning | A root could not be resolved. The rig sits on the component's object instead. |
+| `dynamicbone.noRoot` | Warning | The component names no root, or has Blend Weight 0, and simulates nothing. No rig was written. |
+| `dynamicbone.rootUnresolved` | Warning | A root could not be resolved. That chain was skipped. |
 | `dynamicbone.multipleRoots` | Mapped | The component drives several chains. Each became its own rig with the same settings. |
 | `dynamicbone.radius.collisionRadius` | Mapped | Radius became collision radius, with its curve. |
-| `dynamicbone.damping.drag` | Mapped | Damping became drag, with its curve. |
-| `dynamicbone.elasticity.stiffness` | Approximated | Elasticity and stiffness were fitted onto jiggle stiffness. |
-| `dynamicbone.inert.ignoreRootMotion` | Mapped | Inert became ignore root motion. |
-| `dynamicbone.gravity` | Mapped | Gravity became a gravity multiplier. |
-| `dynamicbone.gravity.direction` | Approximated | Gravity did not point straight down. Only the downward part was kept. |
+| `dynamicbone.radius.zero` | Approximated | Radius 0 with colliders. Dynamic Bone collides points; jiggle needs a radius, so 0.01 was written. |
+| `dynamicbone.damping.drag` | Mapped | Damping became drag and air drag, with its curve. |
+| `dynamicbone.elasticity.stiffness` | Approximated | Elasticity became stiffness by its square root; both are a per-tick fraction toward the pose. |
+| `dynamicbone.stiffness.angleLimit` | Approximated | Stiffness caps deviation at 2·asin(1−s) degrees and became an angle limit of that angle. |
+| `dynamicbone.stiffness.tooWide` | Approximated | The cap is wider than 90 degrees. No angle limit was written. |
+| `dynamicbone.stiffnessCurve.dropped` | Dropped | The angle limit does not follow the stiffness curve. |
+| `dynamicbone.blendWeight` | Approximated | Blend Weight below 1 stiffens the chain toward rigid. Folded into the angle limit. |
+| `dynamicbone.updateRate` | Approximated | Update Rate other than 60 scales elasticity. Folded into stiffness. |
+| `dynamicbone.inert.ignoreRootMotion` | Mapped | Inert became ignore root motion, measured at the rig root instead of the component. |
+| `dynamicbone.inertCurve.dropped` | Dropped | Ignore root motion is one value per rig. |
+| `dynamicbone.gravity` | Approximated | Dynamic Bone gravity is per tick without a time step and cancelled at rest. The preset's gravity was kept. |
 | `dynamicbone.force.dropped` | Dropped | A constant force has no equivalent. |
-| `dynamicbone.blendWeight.dropped` | Dropped | No overall blend between animation and simulation. |
-| `dynamicbone.endpoint.dropped` | Dropped | Jiggle derives its own chain endpoint. |
+| `dynamicbone.endpoint.dropped` | Dropped | End length other than 1, or an end offset. Jiggle's own tip matches End Length 1. |
 | `dynamicbone.freezeAxis.dropped` | Dropped | Nothing flattens a chain's motion onto a plane. |
 | `dynamicbone.friction.dropped` | Dropped | Friction after touching a collider is not modelled apart from drag. |
 

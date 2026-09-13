@@ -1584,17 +1584,26 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return;
             }
 
-            foreach (JiggleRigPlan rigPlan in DynamicBoneToJiggleMapper.Map(bone, profile))
+            List<JiggleRigPlan> rigPlans = DynamicBoneToJiggleMapper.Map(bone, profile);
+            if (rigPlans.Count == 0)
             {
-                Transform rootBone = host;
-                if (rigPlan.RootBoneFileId != 0L
-                    && !resolver.TryResolveTransform(rigPlan.RootBoneFileId, out rootBone))
+                string reason = Mathf.Approximately(bone.BlendWeight, 0f)
+                    ? "has Blend Weight 0, so it simulates nothing"
+                    : "names no root, so it simulates nothing";
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "dynamicbone.noRoot",
+                    $"The Dynamic Bone on {host.name} {reason}. No rig was written.");
+                return;
+            }
+
+            foreach (JiggleRigPlan rigPlan in rigPlans)
+            {
+                if (!resolver.TryResolveTransform(rigPlan.RootBoneFileId, out Transform rootBone))
                 {
-                    rootBone = host;
-                    rigPlan.Diagnostics.Add(DiagnosticSeverity.Warning,
+                    plan.Diagnostics.Add(DiagnosticSeverity.Warning,
                         "dynamicbone.rootUnresolved",
-                        $"A root of the Dynamic Bone on {host.name} could not be resolved. Fell "
-                        + "back to the object the component sits on.");
+                        $"A root of the Dynamic Bone on {host.name} could not be resolved. That "
+                        + "chain was skipped.");
+                    continue;
                 }
 
                 rigPlan.Preset = JigglePresetLibrary.GuessFrom(rootBone.name);

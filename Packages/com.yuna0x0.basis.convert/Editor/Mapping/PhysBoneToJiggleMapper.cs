@@ -152,7 +152,10 @@ namespace yuna0x0.Basis.Convert.Mapping
                 radius = 0f;
             }
 
-            bool collides = source.AllowCollision && radius > 0f;
+            // Allow Collision governs collision with colliders not listed on the component, which
+            // VRChat documents as other players' hands. The listed colliders apply regardless, so
+            // the toggle depends on the radius alone.
+            bool collides = radius > 0f;
             parameters.CollisionRadius = new JiggleCurvedFloatPlan(radius, source.Radius.Curve);
             parameters.CollisionToggle = collides;
 
@@ -161,10 +164,13 @@ namespace yuna0x0.Basis.Convert.Mapping
                 log.Add(DiagnosticSeverity.Mapped, "physbone.radius.collisionRadius",
                     $"radius {radius} became collisionRadius, with its curve if it had one.");
             }
-            else if (!source.AllowCollision)
+
+            if (!source.AllowCollision && collides)
             {
-                log.Add(DiagnosticSeverity.Mapped, "physbone.allowCollision.off",
-                    "Allow Collision was off, so collision is off on the jiggle rig too.");
+                log.Add(DiagnosticSeverity.Approximated, "physbone.allowCollision.off",
+                    "Allow Collision was off, which excluded other players' hands. Basis "
+                    + "registers every avatar's hands, arms and feet as global jiggle colliders "
+                    + "and a rig cannot opt out, so this rig collides with them.");
             }
         }
 

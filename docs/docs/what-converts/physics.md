@@ -22,19 +22,28 @@ rig of its own with the component's settings.
 - The root bone, the transforms the source ignored, and grab settings.
 - Per-bone falloff curves. Both VRChat and jiggle physics evaluate them over the normalised
   distance from the root, so a curve maps onto a curve rather than being flattened to a number.
-- Gravity, radius, stretch, and how immobile the root is.
+- Gravity, radius, stretch, and how immobile the root is, for PhysBones. Dynamic Bone gravity is
+  not comparable and is reported: `dynamicbone.gravity`.
 - Colliders: sphere, capsule and plane, with the same three shapes on both sides. A capsule's
   height is measured end to end on the source side and between the cap centres on the Basis
   side, and is converted between the two.
 
 ## What is fitted
 
-Two settings do not mean the same thing on both sides and are fits rather than conversions:
+Two PhysBone settings do not mean the same thing on both sides and are fits rather than
+conversions:
 
 - **Stiffness**, from VRChat's pull and stiffness.
 - **Drag**, from VRChat's spring.
 
 Both are exposed under **Advanced** in the window, as weights to adjust before rescanning.
+
+Dynamic Bone is derived rather than fitted. Elasticity is a per-tick fraction toward the pose,
+which jiggle squares, so stiffness is its square root, scaled by Update Rate over 60. Dynamic Bone
+stiffness caps how far a bone may leave its pose, and becomes jiggle's angle limit at the same
+angle; caps wider than 90 degrees are left off. Damping becomes both drag and air drag. Blend
+Weight tightens the cap, and 0 switches the component off, so no rig is written.
+
 Everything else is a direct mapping.
 
 Values the source does not determine are taken from the jiggle physics package's own presets.

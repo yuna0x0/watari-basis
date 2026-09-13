@@ -6,6 +6,33 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Dynamic Bone elasticity becomes jiggle stiffness by its square root, scaled by Update Rate,
+  and Dynamic Bone stiffness becomes an angle limit of `2·asin(1−s)` degrees. The PhysBone fit
+  weights no longer apply to Dynamic Bone. `dynamicbone.stiffness.angleLimit`,
+  `dynamicbone.stiffness.tooWide`, `dynamicbone.updateRate`.
+- Dynamic Bone damping becomes air drag as well as drag.
+- Dynamic Bone gravity is reported and left to the preset. `dynamicbone.gravity` is Approximated;
+  `dynamicbone.gravity.direction` is gone.
+- Blend Weight folds into the angle limit (`dynamicbone.blendWeight`); Blend Weight 0 writes no
+  rig.
+
+### Fixed
+
+- A Dynamic Bone with no root wrote a rig on its own object and jiggled everything below it.
+  It now writes nothing: `dynamicbone.noRoot`. An unresolvable root skips that chain.
+- A Dynamic Bone with radius 0 and colliders lost collision. It now collides at radius 0.01:
+  `dynamicbone.radius.zero`.
+- The stiffness and inert distribution curves were dropped without a diagnostic:
+  `dynamicbone.stiffnessCurve.dropped`, `dynamicbone.inertCurve.dropped`.
+- End Length 1 with no offset matches jiggle's own tip and is no longer reported as dropped.
+- A second capsule radius within 0.01 of the first no longer reports a taper, matching
+  Dynamic Bone.
+- A PhysBone with Allow Collision off kept its listed colliders in VRChat but lost collision on
+  the jiggle rig. Collision now follows the radius alone. `physbone.allowCollision.off` is
+  Approximated: Basis's global hand, arm and foot colliders cannot be excluded per rig.
+
 ## [0.5.8] - 2026-09-07
 
 ### Changed

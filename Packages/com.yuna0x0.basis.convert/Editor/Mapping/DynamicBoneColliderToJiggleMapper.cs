@@ -31,6 +31,15 @@ namespace yuna0x0.Basis.Convert.Mapping
                 CapsuleAxis = (JiggleCapsuleAxis)source.Direction,
             };
 
+            // Dynamic Bone tapers only when the second radius is set and differs by at least
+            // 0.01, and then tests the sphere case against the larger radius.
+            bool tapered = !source.IsPlane
+                && source.Radius2 > 0f
+                && Mathf.Abs(source.Radius - source.Radius2) >= 0.01f;
+            float shapeRadius = tapered
+                ? Mathf.Max(plan.Radius, Mathf.Max(0f, source.Radius2))
+                : plan.Radius;
+
             if (source.IsPlane)
             {
                 plan.Shape = JiggleColliderShape.Plane;
@@ -44,7 +53,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                         + "transform, or parent the collider to one that faces the right way.");
                 }
             }
-            else if (plan.Height > plan.Radius * 2f)
+            else if (plan.Height > shapeRadius * 2f)
             {
                 plan.Shape = JiggleColliderShape.Capsule;
                 plan.Height -= plan.Radius * 2f;
@@ -62,9 +71,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                     + "only push bones out.");
             }
 
-            if (!source.IsPlane
-                && source.Radius2 > 0f
-                && !Mathf.Approximately(source.Radius2, source.Radius))
+            if (tapered)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "collider.taper.dropped",
                     $"This capsule tapered from {source.Radius} to {source.Radius2}. Jiggle "

@@ -153,15 +153,31 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
-        public void CollisionStaysOffWhenTheSourceDisabledIt()
+        public void AllowCollisionOffKeepsTheListedCollidersActive()
         {
+            // Allow Collision only excludes other players' hands. A skirt with Allow Collision off
+            // and two leg colliders listed still collides with those legs in VRChat.
             PhysBoneData source = Bone();
             source.Radius = new PhysBoneCurvedFloat(0.05f);
             source.AllowCollision = false;
 
             JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
 
+            Assert.That(plan.Parameters.CollisionToggle, Is.True);
+            Assert.That(plan.Diagnostics.HasCode("physbone.allowCollision.off"), Is.True);
+        }
+
+        [Test]
+        public void AllowCollisionOffWithoutRadiusIsNotReported()
+        {
+            PhysBoneData source = Bone();
+            source.Radius = new PhysBoneCurvedFloat(0f);
+            source.AllowCollision = false;
+
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+
             Assert.That(plan.Parameters.CollisionToggle, Is.False);
+            Assert.That(plan.Diagnostics.HasCode("physbone.allowCollision.off"), Is.False);
         }
 
         [Test]

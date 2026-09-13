@@ -36,7 +36,10 @@ namespace yuna0x0.Basis.Convert.Model
         public long DocumentFileId;
         public long OwnerGameObjectFileId;
 
-        /// <summary>Single chain root. Dynamic Bone falls back to the object itself when unset.</summary>
+        /// <summary>
+        /// Single chain root. Dynamic Bone simulates nothing when neither this nor
+        /// <see cref="RootFileIds"/> is set.
+        /// </summary>
         public long RootFileId;
 
         /// <summary>
@@ -51,6 +54,12 @@ namespace yuna0x0.Basis.Convert.Model
         public PhysBoneCurvedFloat Inert = new PhysBoneCurvedFloat(0f);
         public PhysBoneCurvedFloat Friction = new PhysBoneCurvedFloat(0f);
         public PhysBoneCurvedFloat Radius = new PhysBoneCurvedFloat(0f);
+
+        /// <summary>
+        /// Ticks per second. Dynamic Bone scales elasticity and force by this over 60, so a
+        /// component at 120 returns to its pose twice as fast as one at 60.
+        /// </summary>
+        public float UpdateRate = 60f;
 
         public float EndLength;
         public Vector3 EndOffset;

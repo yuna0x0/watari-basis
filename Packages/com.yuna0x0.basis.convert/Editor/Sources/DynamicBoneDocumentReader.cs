@@ -33,6 +33,11 @@ namespace yuna0x0.Basis.Convert.Sources
             data.Friction = ReadCurved(document, "m_Friction", "m_FrictionDistrib", 0f);
             data.Radius = ReadCurved(document, "m_Radius", "m_RadiusDistrib", 0f);
 
+            if (document.TryGetFloat("m_UpdateRate", out float updateRate))
+            {
+                data.UpdateRate = updateRate;
+            }
+
             if (document.TryGetFloat("m_EndLength", out float endLength))
             {
                 data.EndLength = endLength;
