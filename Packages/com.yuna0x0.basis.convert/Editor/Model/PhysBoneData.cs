@@ -99,6 +99,9 @@ namespace yuna0x0.Basis.Convert.Model
         public PhysBoneCurvedFloat Immobile;
 
         public bool AllowCollision;
+
+        /// <summary>Allow Collision was Other: decided per player by a filter.</summary>
+        public bool AllowCollisionFiltered;
         public PhysBoneCurvedFloat Radius;
         public List<long> ColliderFileIds = new List<long>();
 
@@ -108,6 +111,9 @@ namespace yuna0x0.Basis.Convert.Model
         public Vector3 LimitRotation;
 
         public bool AllowGrabbing;
+
+        /// <summary>Allow Grabbing was Other: decided per player by a filter.</summary>
+        public bool AllowGrabbingFiltered;
         public bool AllowPosing;
         public bool SnapToHand;
         public float GrabMovement;

@@ -27,6 +27,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public int VixxyControlsWritten;
         public int AuthoredMotionsWritten;
 
+        /// <summary>Blendshapes set for Modular Avatar Shape Changers with no menu item.</summary>
+        public int ShapeConstantsWritten;
+
         /// <summary>Baked motion clips written to the project, which an undo does not remove.</summary>
         public List<string> MotionAssets = new List<string>();
         public List<JiggleRig> Written = new List<JiggleRig>();
@@ -34,7 +37,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         public int TotalWritten =>
             RigsWritten + ConstraintsWritten + VixxyControlsWritten + AuthoredMotionsWritten
-            + HeadChopsWritten + (DescriptorWritten ? 1 : 0);
+            + HeadChopsWritten + ShapeConstantsWritten + (DescriptorWritten ? 1 : 0);
         public int TotalSkipped => RigsSkipped + ConstraintsSkipped;
     }
 
@@ -159,6 +162,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             WriteDescriptor(plan, roots, target, undoName, result);
             WriteHeadChops(plan, roots, target, undoName, result);
+            WriteShapeConstants(plan, roots, target, undoName, result);
 
             // Motions are written first because a control that switches one has to hold the
             // component, and the component does not exist until it is written.
@@ -223,6 +227,45 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 + $"converted avatar ({string.Join(", ", names)}). They drove the expressions, "
                 + "spring bones and look-at every frame over what was written. Undo restores "
                 + "them; Basis strips them at build in any case.");
+        }
+
+        /// <summary>
+        /// Sets each shape constant on its renderer. A plain property write: undo restores the
+        /// weight, and a second conversion writes the same value again.
+        /// </summary>
+        private static void WriteShapeConstants(
+            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
+            Transform target, string undoName, ConversionResult result)
+        {
+            foreach (ModularAvatarShapeConstant constant in plan.SelectedShapeConstants())
+            {
+                Transform translated = !string.IsNullOrEmpty(constant.LivePath)
+                    ? target.Find(constant.LivePath)
+                    : null;
+                if (translated == null
+                    && !TryTranslate(plan, roots, target, constant.Source, constant.Renderer,
+                        out translated))
+                {
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
+                        $"The renderer for the Shape Changer on {constant.Origin} has no "
+                        + "counterpart in the target hierarchy and was skipped.");
+                    continue;
+                }
+
+                SkinnedMeshRenderer skinned = translated.GetComponent<SkinnedMeshRenderer>();
+                int index = skinned != null && skinned.sharedMesh != null
+                    ? skinned.sharedMesh.GetBlendShapeIndex(constant.ShapeName)
+                    : -1;
+                if (index < 0)
+                {
+                    continue;
+                }
+
+                Undo.RecordObject(skinned, undoName);
+                skinned.SetBlendShapeWeight(index, constant.Value);
+                EditorUtility.SetDirty(skinned);
+                result.ShapeConstantsWritten++;
+            }
         }
 
         private static void WriteHeadChops(

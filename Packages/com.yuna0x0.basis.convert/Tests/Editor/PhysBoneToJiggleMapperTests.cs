@@ -243,6 +243,22 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void PerPlayerPermissionsAreReported()
+        {
+            // AdvancedBool.Other defers to a filter jiggle cannot express.
+            PhysBoneData source = Bone();
+            source.Radius = new PhysBoneCurvedFloat(0.05f);
+            source.AllowGrabbing = true;
+            source.AllowGrabbingFiltered = true;
+            source.AllowCollisionFiltered = true;
+
+            List<ConversionDiagnostic> log = PhysBoneToJiggleMapper.Map(source).Diagnostics;
+
+            Assert.That(log.HasCode("physbone.allowGrabbing.filtered"), Is.True);
+            Assert.That(log.HasCode("physbone.allowCollision.filtered"), Is.True);
+        }
+
+        [Test]
         public void HingeIsApproximatedAndCurvesAreReported()
         {
             PhysBoneData source = Bone();

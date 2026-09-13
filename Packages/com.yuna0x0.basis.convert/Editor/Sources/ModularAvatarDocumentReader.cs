@@ -19,6 +19,33 @@ namespace yuna0x0.Basis.Convert.Sources
         /// which are children of the object holding the component, with this set to 0.
         /// </summary>
         public int PathMode;
+
+        /// <summary>
+        /// The object relative paths are measured from, when set. Modular Avatar falls back to
+        /// the component's own object.
+        /// </summary>
+        public string RelativePathRootPath = string.Empty;
+        public long RelativePathRootFileId;
+    }
+
+    /// <summary>One entry of a Shape Changer: a blendshape on a renderer, set or deleted.</summary>
+    public sealed class MaChangedShape
+    {
+        public string Path = string.Empty;
+        public long TargetObjectFileId;
+        public string ShapeName = string.Empty;
+
+        /// <summary>Delete removes the vertices the shape moves at build; Set writes the value.</summary>
+        public bool IsDelete;
+        public float Value;
+    }
+
+    /// <summary>A Shape Changer: blendshapes changed while its object is active.</summary>
+    public sealed class MaShapeChangerData
+    {
+        public long OwnerGameObjectFileId;
+        public bool Inverted;
+        public List<MaChangedShape> Shapes = new List<MaChangedShape>();
     }
 
     /// <summary>A menu entry Modular Avatar installs into the avatar's expression menu.</summary>
@@ -111,6 +138,22 @@ namespace yuna0x0.Basis.Convert.Sources
                 data.LayerType = layerType;
             }
 
+            if (document.TryGetTopLevelBlock("relativePathRoot", out List<string> rootBlock))
+            {
+                foreach (string line in rootBlock)
+                {
+                    string trimmed = line.Trim();
+                    if (trimmed.StartsWith("referencePath:"))
+                    {
+                        data.RelativePathRootPath = ValueOf(trimmed);
+                    }
+                    else if (trimmed.StartsWith("targetObject:"))
+                    {
+                        data.RelativePathRootFileId = FileIdIn(trimmed);
+                    }
+                }
+            }
+
             if (document.TryGetInt("pathMode", out int pathMode))
             {
                 data.PathMode = pathMode;
@@ -200,6 +243,87 @@ namespace yuna0x0.Basis.Convert.Sources
         /// Reads an Object Toggle's list. Each entry is an object reference by path and the
         /// state it is switched to, which is the same shape a menu toggle's clip produces.
         /// </summary>
+        /// <summary>
+        /// Reads a Shape Changer's list. Each entry names a renderer by object reference or
+        /// path, a blendshape, and whether it is set to a value or deleted.
+        /// </summary>
+        public static MaShapeChangerData ReadShapeChanger(UnityYamlDocument document)
+        {
+            MaShapeChangerData data = new MaShapeChangerData();
+
+            if (document.TryGetTopLevelFileIdReference("m_GameObject", out long owner))
+            {
+                data.OwnerGameObjectFileId = owner;
+            }
+
+            if (document.TryGetBool("m_inverted", out bool inverted))
+            {
+                data.Inverted = inverted;
+            }
+
+            if (!document.TryGetTopLevelBlock("m_shapes", out List<string> block))
+            {
+                return data;
+            }
+
+            MaChangedShape current = null;
+            foreach (string line in block)
+            {
+                string trimmed = line.Trim();
+
+                if (trimmed.StartsWith("- Object:") || trimmed == "-")
+                {
+                    current = new MaChangedShape();
+                    data.Shapes.Add(current);
+                    continue;
+                }
+
+                if (current == null)
+                {
+                    continue;
+                }
+
+                if (trimmed.StartsWith("referencePath:"))
+                {
+                    current.Path = ValueOf(trimmed);
+                }
+                else if (trimmed.StartsWith("targetObject:"))
+                {
+                    current.TargetObjectFileId = FileIdIn(trimmed);
+                }
+                else if (trimmed.StartsWith("ShapeName:"))
+                {
+                    current.ShapeName = ValueOf(trimmed);
+                }
+                else if (trimmed.StartsWith("ChangeType:"))
+                {
+                    current.IsDelete = ValueOf(trimmed) == "0";
+                }
+                else if (trimmed.StartsWith("Value:")
+                         && float.TryParse(ValueOf(trimmed),
+                             System.Globalization.NumberStyles.Float,
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             out float value))
+                {
+                    current.Value = value;
+                }
+            }
+
+            return data;
+        }
+
+        private static long FileIdIn(string trimmed)
+        {
+            int at = trimmed.IndexOf("fileID:");
+            if (at < 0)
+            {
+                return 0L;
+            }
+
+            string digits = trimmed.Substring(at + 7).Trim().TrimEnd('}').Trim();
+            return long.TryParse(digits, out long id) ? id : 0L;
+        }
+
         public static MaObjectToggleData ReadObjectToggle(UnityYamlDocument document)
         {
             MaObjectToggleData data = new MaObjectToggleData();
@@ -243,12 +367,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 }
                 else if (trimmed.StartsWith("targetObject:"))
                 {
-                    int at = trimmed.IndexOf("fileID:");
-                    if (at >= 0)
-                    {
-                        string digits = trimmed.Substring(at + 7).Trim().TrimEnd('}').Trim();
-                        long.TryParse(digits, out current.TargetObjectFileId);
-                    }
+                    current.TargetObjectFileId = FileIdIn(trimmed);
                 }
                 else if (trimmed.StartsWith("Active:"))
                 {

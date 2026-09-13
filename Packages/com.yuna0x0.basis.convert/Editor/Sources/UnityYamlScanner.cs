@@ -19,6 +19,7 @@ namespace yuna0x0.Basis.Convert.Sources
     {
         public const int ClassIdGameObject = 1;
         public const int ClassIdMonoBehaviour = 114;
+        public const int ClassIdPrefabInstance = 1001;
 
         private static readonly Regex HeaderPattern = new Regex(
             @"^--- !u!(?<class>\d+) &(?<file>-?\d+)(?<stripped>\s+stripped)?\s*$",

@@ -191,7 +191,14 @@ namespace yuna0x0.Basis.Convert.Mapping
                     $"radius {radius} became collisionRadius, with its curve if it had one.");
             }
 
-            if (!source.AllowCollision && collides)
+            if (source.AllowCollisionFiltered && collides)
+            {
+                log.Add(DiagnosticSeverity.Approximated, "physbone.allowCollision.filtered",
+                    "Allow Collision was decided per player by a filter. Basis registers every "
+                    + "avatar's hands, arms and feet as global jiggle colliders and a rig cannot "
+                    + "opt out, so this rig collides with all of them.");
+            }
+            else if (!source.AllowCollision && collides)
             {
                 log.Add(DiagnosticSeverity.Approximated, "physbone.allowCollision.off",
                     "Allow Collision was off, which excluded other players' hands. Basis "
@@ -296,6 +303,13 @@ namespace yuna0x0.Basis.Convert.Mapping
             // VRChat skips grabbing when the radius is 0, whatever Allow Grabbing says.
             bool grabbable = source.AllowGrabbing && source.Radius.Value > 0f;
             plan.LockFromGrabbing = !grabbable;
+            if (grabbable && source.AllowGrabbingFiltered)
+            {
+                log.Add(DiagnosticSeverity.Approximated, "physbone.allowGrabbing.filtered",
+                    "Allow Grabbing was decided per player by a filter. Jiggle grabs for "
+                    + "everyone or no one, so the rig is grabbable by all.");
+            }
+
             log.Add(DiagnosticSeverity.Mapped, "physbone.allowGrabbing",
                 grabbable
                     ? "Grabbing stays enabled."

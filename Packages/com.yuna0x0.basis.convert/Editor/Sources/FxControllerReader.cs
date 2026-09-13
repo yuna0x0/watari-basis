@@ -92,6 +92,9 @@ namespace yuna0x0.Basis.Convert.Sources
         /// <summary>The state's playback speed. Basis replays the baked clip at this rate.</summary>
         public float Speed = 1f;
 
+        /// <summary>A parameter drives the state's time: a slider through the clip, not a motion.</summary>
+        public bool MotionTime;
+
         /// <summary>Whether the clip was authored to loop, which most ambient motion is.</summary>
         public bool Loop;
     }
@@ -284,6 +287,7 @@ namespace yuna0x0.Basis.Convert.Sources
                     Clip = clip,
                     Loop = clip.isLooping,
                     Speed = state.speed,
+                    MotionTime = state.timeParameterActive,
                 });
             }
 

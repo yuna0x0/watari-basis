@@ -223,6 +223,21 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void ADownwardForceBecomesGravityWhenGravityIsUnset()
+        {
+            // Dynamic Bone adds the force per tick: 0.001 per tick at 60 Hz is 3.6 m/s².
+            DynamicBoneData data = ReadBone();
+            data.Gravity = Vector3.zero;
+            data.Force = new Vector3(0f, -0.001f, 0f);
+
+            JiggleRigPlan plan = DynamicBoneToJiggleMapper.Map(data)[0];
+
+            Assert.That(plan.Parameters.Gravity.Value.Value, Is.EqualTo(3.6f / 9.81f).Within(1e-4f));
+            Assert.That(plan.Diagnostics.HasCode("dynamicbone.force.gravity"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("dynamicbone.force.dropped"), Is.False);
+        }
+
+        [Test]
         public void DroppedDistributionCurvesAreReported()
         {
             DynamicBoneData data = ReadBone(

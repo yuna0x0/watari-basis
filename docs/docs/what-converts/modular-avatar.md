@@ -42,10 +42,18 @@ Paths inside a merged animator's clips are relative to the object the animator w
 are rebased before anything is resolved. An `Object Toggle` entry is resolved by its object
 reference first, then by its path, which Modular Avatar records from the avatar root.
 
+## Shape Changers with no menu item
+
+An outfit's `Shape Changer` usually sits on an always-active part and shrinks the avatar's body
+under it. Modular Avatar bakes such a rule at build as a constant. The conversion writes those
+blendshape values onto the renderers: a Set entry as its value, a Delete entry as the shape at
+100, since nothing here removes vertices. `modularAvatar.shapeChanger.applied`,
+`modularAvatar.shapeChanger.missing`.
+
 ## Reported, not rebuilt
 
-- `Shape Changer`, `Material Setter` and `Material Swap` react to a menu item, and are listed
-  with the menu components as `modularAvatar.menus`.
+- `Shape Changer` under a menu item, `Material Setter` and `Material Swap` react to a menu item,
+  and are listed as `modularAvatar.shapeChanger.menu` and `modularAvatar.menus`.
 - Components that act on VRChat's own systems, its colliders, its head chop, its MMD layers.
   There is nothing for them to act on under Basis, and they are reported as
   `modularAvatar.vrchatOnly`.

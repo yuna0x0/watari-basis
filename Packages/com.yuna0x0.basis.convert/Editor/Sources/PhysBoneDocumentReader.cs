@@ -63,7 +63,12 @@ namespace yuna0x0.Basis.Convert.Sources
             data.MaxSquish = ReadCurved(document, "maxSquish", "maxSquishCurve", 0f);
             data.StretchMotion = ReadCurved(document, "stretchMotion", "stretchMotionCurve", 0f);
 
+            // AdvancedBool: 0 False, 1 True, 2 Other, where Other defers to a per-player filter.
             data.AllowCollision = ReadBool(document, "allowCollision", true);
+            data.AllowCollisionFiltered = document.TryGetInt("allowCollision", out int collisionRaw)
+                && collisionRaw == 2;
+            data.AllowGrabbingFiltered = document.TryGetInt("allowGrabbing", out int grabRaw)
+                && grabRaw == 2;
             // isGrabbable and isPoseable are the pre-rename keys ([FormerlySerializedAs]).
             data.AllowGrabbing = ReadBool(document, "allowGrabbing",
                 ReadBool(document, "isGrabbable", true));

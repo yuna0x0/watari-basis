@@ -32,6 +32,7 @@ on the case; the usual one is given.
 | `avatar.missing` | Warning | The prefab file the selection points at does not exist. |
 | `avatar.notLoaded` | Warning | The file did not load as a prefab. |
 | `source.severalPrefabs` | Mapped | The avatar is built from several prefabs. Each was read from its own file. |
+| `source.overridesApplied` | Mapped | Property overrides from prefab variants and nested prefab instances were applied before reading. |
 | `source.prefabVariant` | Mapped | The avatar is a prefab variant, so the prefab it inherits from was read as well. |
 | `source.inheritedUnreadable` | Warning | A prefab this one inherits from could not be read, so what it carries was not converted. |
 | `source.modelRead` | Mapped | The prefab was saved from an imported `.vrm` without unpacking, so its components were read from that file. |
@@ -85,6 +86,8 @@ on the case; the usual one is given.
 | `physbone.multiChildType.ignoreBranches` | Approximated | Bones below the root with several children stay still in VRChat under Ignore. Jiggle swings them. |
 | `physbone.multiChildType.blended` | Approximated | A shared root moved by its chains cannot be expressed, so the root was left motionless. |
 | `physbone.allowCollision.off` | Approximated | Allow Collision off excluded other players' hands. Basis registers every avatar's hands, arms and feet as global colliders and a rig cannot opt out. The listed colliders still apply. |
+| `physbone.allowGrabbing.filtered` | Approximated | Allow Grabbing was decided per player. Jiggle grabs for everyone or no one. |
+| `physbone.allowCollision.filtered` | Approximated | Allow Collision was decided per player. Basis's global colliders cannot be excluded per rig. |
 | `physbone.allowGrabbing` | Mapped | Grabbing kept its setting. Radius 0 is not grabbable in VRChat and locks the rig. |
 | `physbone.allowPosing.dropped` | Dropped | Jiggle bones spring back when released. |
 | `physbone.snapToHand.dropped` | Dropped | No equivalent. |
@@ -113,6 +116,7 @@ on the case; the usual one is given.
 | `dynamicbone.inert.ignoreRootMotion` | Mapped | Inert became ignore root motion, measured at the rig root instead of the component. |
 | `dynamicbone.inertCurve.dropped` | Dropped | Ignore root motion is one value per rig. |
 | `dynamicbone.gravity` | Approximated | Dynamic Bone gravity is per tick without a time step and cancelled at rest. The preset's gravity was kept. |
+| `dynamicbone.force.gravity` | Approximated | A force straight down with no gravity became a gravity multiplier, from 60 ticks a second. |
 | `dynamicbone.force.dropped` | Dropped | A constant force has no equivalent. |
 | `dynamicbone.endpoint.dropped` | Dropped | End length other than 1, or an end offset. Jiggle's own tip matches End Length 1. |
 | `dynamicbone.freezeAxis.dropped` | Dropped | Nothing flattens a chain's motion onto a plane. |
@@ -225,10 +229,16 @@ on the case; the usual one is given.
 | `vixxy.builtinGuard` | Approximated | The layer also waited on a VRChat parameter such as `IsLocal`. The control switches whenever it is used. |
 | `vixxy.materialBlock` | Approximated | The control sets material properties on a renderer with several materials. Vixxy sets them per renderer, so all are affected. |
 | `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar. That object was left out. |
+| `vixxy.rootActivation` | Warning | The control switches the avatar root, which Vixxy refuses. That object was left out. |
+| `vixxy.overlap` | Warning | Two controls set the same object, blendshape or property. The control used last wins on Basis. |
+| `fx.layersUnread` | Dropped | FX layers nothing read, by name. Only menu-steered layers and layers that play on their own are read. |
 | `vixxy.rendererMissing` | Warning | The control sets a renderer or blendshape that is not in this avatar. |
 | `modularAvatar.hierarchy` | Mapped | Modular Avatar components that rearrange the hierarchy or meshes. Left to Modular Avatar, which applies them at Basis build time when installed with the Basis NDMF platform. |
 | `modularAvatar.menus` | Dropped | Modular Avatar menu and animator components. See [Modular Avatar](what-converts/modular-avatar.md). |
 | `modularAvatar.togglesRebuilt` | Mapped | How many Modular Avatar menu toggles became Vixxy controls. |
+| `modularAvatar.shapeChanger.applied` | Mapped or Approximated | Blendshapes set by Shape Changers with no menu item are written onto their renderers. A Delete entry becomes the shape at 100. |
+| `modularAvatar.shapeChanger.missing` | Warning | A Shape Changer names a renderer or blendshape this avatar does not have. |
+| `modularAvatar.shapeChanger.menu` | Dropped | Shape Changers under a menu item or on an inactive object follow the menu and are not rebuilt. |
 | `modularAvatar.vrchatOnly` | Dropped | Modular Avatar components that act on VRChat's own systems. |
 
 ### Authored motion
@@ -238,6 +248,7 @@ on the case; the usual one is given.
 | `motion.baked` | Mapped | An animator layer that plays on its own was rebuilt as authored motion. |
 | `motion.switched` | Mapped | A menu toggle animated over time, so it was rebuilt as a motion the control switches on. |
 | `motion.notLooping` | Mapped | The clip was not authored to loop. It plays once and holds its last frame. |
+| `motion.motionTime` | Dropped | A state scrubbed by a parameter through motion time. Rebuild it as a slider by hand. |
 | `motion.notRotation` | Dropped | A layer playing on its own animates something other than rotation, which a baked motion cannot hold. |
 | `motion.rotationOnly` | Dropped | The layer also animates something other than rotation, which a baked motion clip cannot hold. |
 | `motion.noFolder` | Warning | There was nowhere inside the project to write the baked clip, so no motion was written. |

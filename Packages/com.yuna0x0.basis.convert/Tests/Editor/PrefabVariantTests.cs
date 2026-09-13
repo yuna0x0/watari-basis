@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Pipeline;
+using yuna0x0.Basis.Convert.Sources;
 
 namespace yuna0x0.Basis.Convert.Tests
 {
@@ -198,6 +200,77 @@ namespace yuna0x0.Basis.Convert.Tests
                 Assert.That(rig.SourceRootBone.IsChildOf(variantAsset.transform), Is.True,
                     $"{rig.SourceRootBone.name} resolved outside the variant being converted.");
             }
+        }
+
+        /// <summary>
+        /// A variant's own file holds only overrides. One on the inherited PhysBone has to reach
+        /// the reader, or the variant converts with the base's numbers.
+        /// </summary>
+        [Test]
+        public void AVariantsOverrideOnAnInheritedComponentIsApplied()
+        {
+            string baseGuid = AssetDatabase.AssetPathToGUID(_basePath);
+            string yaml = File.ReadAllText(_variantPath);
+            const string list = "    m_Modifications:\n";
+            int at = yaml.IndexOf(list, System.StringComparison.Ordinal);
+            Assert.That(at, Is.GreaterThanOrEqualTo(0), "The variant has no modification list.");
+
+            yaml = yaml.Insert(at + list.Length,
+                $"    - target: {{fileID: 8100000000000000001, guid: {baseGuid}, type: 3}}\n"
+                + "      propertyPath: pull\n"
+                + "      value: 0.9\n"
+                + "      objectReference: {fileID: 0}\n");
+            File.WriteAllText(_variantPath, yaml);
+            AssetDatabase.ImportAsset(_variantPath, ImportAssetOptions.ForceSynchronousImport);
+
+            AvatarConversionPlan plan = AvatarConversionPlanner.Plan(_variantPath);
+
+            Assert.That(plan.Rigs.Count, Is.EqualTo(1));
+            Assert.That(plan.OverridesApplied, Is.GreaterThanOrEqualTo(1));
+            Assert.That(plan.Rigs[0].Plan.Parameters.Stiffness.Value.Value,
+                Is.EqualTo(0.9f).Within(1e-4f),
+                "pull 0.9 from the variant, not 0.3 from the base, drives the stiffness fit.");
+            Assert.That(plan.Diagnostics.HasCode("source.overridesApplied"), Is.True);
+        }
+
+        [Test]
+        public void OverridePathsReachNestedListEntriesAndGrowLists()
+        {
+            List<string> lines = new List<string>
+            {
+                "  m_Enabled: 1",
+                "  pull: 0.3",
+                "  m_shapes:",
+                "  - Object:",
+                "      referencePath: Body",
+                "      targetObject: {fileID: 0}",
+                "    ShapeName: A",
+                "    ChangeType: 1",
+                "    Value: 50",
+                "  colliders:",
+                "  - {fileID: 11}",
+                "  m_threshold: 0.01",
+            };
+
+            Assert.That(PrefabOverrides.SetPath(lines, "pull", "0.9"), Is.True);
+            Assert.That(lines[1], Is.EqualTo("  pull: 0.9"));
+
+            Assert.That(PrefabOverrides.SetPath(lines, "m_shapes.Array.data[0].ShapeName", "B"), Is.True);
+            Assert.That(lines[6], Is.EqualTo("    ShapeName: B"));
+
+            Assert.That(PrefabOverrides.SetPath(
+                lines, "m_shapes.Array.data[0].Object.targetObject", "{fileID: 42}"), Is.True);
+            Assert.That(lines[5], Is.EqualTo("      targetObject: {fileID: 42}"));
+
+            // Unity grows a list by repeating its last entry, then overrides fields of the copy.
+            Assert.That(PrefabOverrides.SetPath(lines, "m_shapes.Array.size", "2"), Is.True);
+            Assert.That(PrefabOverrides.SetPath(lines, "m_shapes.Array.data[1].ShapeName", "C"), Is.True);
+            Assert.That(lines[9], Is.EqualTo("  - Object:"));
+            Assert.That(lines[12], Is.EqualTo("    ShapeName: C"));
+            Assert.That(lines[6], Is.EqualTo("    ShapeName: B"), "The first entry is untouched.");
+
+            Assert.That(PrefabOverrides.SetPath(lines, "colliders.Array.data[0]", "{fileID: 99}"), Is.True);
+            Assert.That(lines, Does.Contain("  - {fileID: 99}"));
         }
 
         [Test]

@@ -75,6 +75,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             plan.Sources.AddRange(sources);
             plan.SourceAssetPath = sources[0].AssetPath;
             plan.SourceRoot = sources[0].Root;
+            plan.HierarchyRoot = hierarchyRoot;
 
             HashSet<string> unknownIdentities = new HashSet<string>();
             foreach (ConversionSource source in sources)
@@ -96,10 +97,39 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return plan;
         }
 
+        private static void Register(
+            AvatarConversionPlan plan, string assetPath, List<UnityYamlDocument> documents)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+            {
+                return;
+            }
+
+            guid = guid.ToLowerInvariant();
+            if (!plan.DocumentsByGuid.TryGetValue(guid, out Dictionary<long, UnityYamlDocument> byId))
+            {
+                byId = new Dictionary<long, UnityYamlDocument>();
+                plan.DocumentsByGuid[guid] = byId;
+            }
+
+            foreach (UnityYamlDocument document in documents)
+            {
+                byId[document.FileId] = document;
+            }
+        }
+
         /// <summary>Names the prefabs a variant inherits from, since they were read too.</summary>
         private static void ReportVariantSources(
             AvatarConversionPlan plan, List<ConversionSource> sources)
         {
+            if (plan.OverridesApplied > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "source.overridesApplied",
+                    $"{plan.OverridesApplied} property overrides from prefab variants and nested "
+                    + "prefab instances were applied to the prefabs they modify before reading.");
+            }
+
             foreach (ConversionSource source in sources)
             {
                 string basePath = source.BaseAssetPath();
@@ -154,6 +184,32 @@ namespace yuna0x0.Basis.Convert.Pipeline
             JiggleMappingProfile profile, HashSet<string> unknownIdentities)
         {
             List<UnityYamlDocument> documents = UnityYamlScanner.ScanFile(source.AssetPath);
+
+            // A variant's file holds only overrides; the prefabs above it hold the data. Both
+            // are scanned first so the overrides land on the inherited documents before any
+            // reader sees them. Overrides in a prefab that nests this one arrived with that
+            // prefab, which is read first, so they are already waiting.
+            List<(string path, List<UnityYamlDocument> documents)> inheritedFiles =
+                new List<(string, List<UnityYamlDocument>)>();
+            foreach (string inherited in source.InheritedAssetPaths())
+            {
+                inheritedFiles.Add((inherited, UnityYamlScanner.ScanFile(inherited)));
+            }
+
+            Register(plan, source.AssetPath, documents);
+            foreach ((string path, List<UnityYamlDocument> inheritedDocuments) in inheritedFiles)
+            {
+                Register(plan, path, inheritedDocuments);
+            }
+
+            for (int i = inheritedFiles.Count - 1; i >= 0; i--)
+            {
+                plan.Modifications.AddRange(PrefabOverrides.Read(inheritedFiles[i].documents));
+            }
+
+            plan.Modifications.AddRange(PrefabOverrides.Read(documents));
+            plan.OverridesApplied += PrefabOverrides.Apply(plan.Modifications, plan.DocumentsByGuid);
+
             PrefabObjectResolver resolver =
                 PrefabObjectResolver.Create(source.AssetPath, documents);
 
@@ -177,9 +233,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 ReadDocuments(plan, source, profile, unknownIdentities, documents, resolver);
             }
 
-            foreach (string inherited in source.InheritedAssetPaths())
+            foreach ((string inherited, List<UnityYamlDocument> inheritedDocuments) in inheritedFiles)
             {
-                List<UnityYamlDocument> inheritedDocuments = UnityYamlScanner.ScanFile(inherited);
                 PrefabObjectResolver inheritedResolver =
                     PrefabObjectResolver.CreateForInherited(
                         source.AssetPath, inherited, inheritedDocuments);
@@ -294,6 +349,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             plan.ModularAvatarToggles.AddRange(
                 ModularAvatarToggleResolver.Resolve(documents, resolver, source));
+            plan.ShapeConstants.AddRange(ModularAvatarToggleResolver.ResolveShapeConstants(
+                documents, resolver, source,
+                plan.SourceRoot != null ? plan.SourceRoot.transform : null,
+                plan.Sources.Count > 0 ? plan.Sources[0] : source,
+                plan.HierarchyRoot != null ? plan.HierarchyRoot.transform : null));
 
             // VRM chains are read in a pass of their own: a spring names joint components that
             // sit anywhere in the file, so they cannot be resolved as the documents go past.
@@ -374,6 +434,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (KnownScriptIdentities.IsHandledByModularAvatar(kind))
                 {
                     plan.ModularAvatarHierarchyFound++;
+                    continue;
+                }
+
+                if (kind == SourceComponentKind.MaShapeChanger)
+                {
+                    plan.ModularAvatarShapeChangersFound++;
                     continue;
                 }
 
@@ -635,6 +701,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
             // Clothing has no descriptor and no expression menu of its own, so this is not part
             // of reading one: what Modular Avatar installs stands on its own.
             BuildModularAvatarControls(plan);
+            ReportShapeConstants(plan);
+            ReportOverlaps(plan);
 
             // Only meaningful once the descriptor is known: a prop has physics but no rig, and
             // asking it for a humanoid mapping would be noise.
@@ -1896,6 +1964,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             ResolveAmbientMotion(plan, fxGuid);
 
             plan.Toggles = ToggleResolver.Resolve(plan.Expressions, fxGuid);
+            ReportUnreadLayers(plan, fxGuid);
             if (plan.Toggles.Count == 0)
             {
                 return;
@@ -1939,6 +2008,69 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// that is what a baked Basis motion clip holds.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Names the FX layers nothing here read: gesture and locomotion layers, layers built on
+        /// sub-state machines or Direct blend trees, layers steered by parameters outside the
+        /// menu. Silence would read as though they had been handled.
+        /// </summary>
+        private static void ReportUnreadLayers(AvatarConversionPlan plan, string fxGuid)
+        {
+            AnimatorController controller = ToggleResolver.LoadController(fxGuid);
+            if (controller == null)
+            {
+                return;
+            }
+
+            HashSet<string> read = new HashSet<string>();
+            foreach (ResolvedToggle toggle in plan.Toggles)
+            {
+                read.Add(toggle.LayerName);
+            }
+
+            foreach (PlannedAuthoredMotion motion in plan.AuthoredMotions)
+            {
+                read.Add(motion.Plan.Label);
+            }
+
+            // Layers the motion pass named in a diagnostic were read too, if only to be dropped.
+            foreach (ConversionDiagnostic diagnostic in plan.MotionDiagnostics)
+            {
+                int start = diagnostic.Message.IndexOf('\'');
+                int end = start >= 0 ? diagnostic.Message.IndexOf('\'', start + 1) : -1;
+                if (start >= 0 && end > start)
+                {
+                    read.Add(diagnostic.Message.Substring(start + 1, end - start - 1));
+                }
+            }
+
+            List<string> unread = new List<string>();
+            foreach (AnimatorControllerLayer layer in controller.layers)
+            {
+                if (!read.Contains(layer.name))
+                {
+                    unread.Add(layer.name);
+                }
+            }
+
+            if (unread.Count == 0)
+            {
+                return;
+            }
+
+            const int shown = 8;
+            string names = "'" + string.Join("', '",
+                unread.GetRange(0, Mathf.Min(shown, unread.Count))) + "'";
+            if (unread.Count > shown)
+            {
+                names += $" and {unread.Count - shown} more";
+            }
+
+            plan.ToggleDiagnostics.Add(DiagnosticSeverity.Dropped, "fx.layersUnread",
+                $"{unread.Count} of {controller.layers.Length} FX layers were not read: {names}. "
+                + "Only layers a menu toggle or radial steers, and layers that play on their "
+                + "own, are read.");
+        }
+
         private static void ResolveAmbientMotion(AvatarConversionPlan plan, string fxGuid)
         {
             AnimatorController controller = ToggleResolver.LoadController(fxGuid);
@@ -1949,6 +2081,16 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             foreach (AmbientMotionLayer layer in FxControllerReader.FindAmbientLayers(controller))
             {
+                // A state whose time is driven by a parameter is a slider, not a motion: the
+                // parameter scrubs through the clip.
+                if (layer.MotionTime)
+                {
+                    plan.MotionDiagnostics.Add(DiagnosticSeverity.Dropped, "motion.motionTime",
+                        $"'{layer.LayerName}' scrubs its clip with a parameter (motion time). "
+                        + "Nothing here reads that; rebuild it as a Vixxy slider by hand.");
+                    continue;
+                }
+
                 ClipEffects effects = AnimationClipReader.Read(layer.Clip);
                 if (effects.AnimatedRotationPaths.Count == 0)
                 {
@@ -2001,6 +2143,122 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// Turns the toggles Modular Avatar would install into Vixxy controls. Each belongs to
         /// the prefab it came from, and its paths are resolved inside that prefab.
         /// </summary>
+        /// <summary>
+        /// Checks each shape constant against the renderer it was resolved to, and sums up.
+        /// </summary>
+        private static void ReportShapeConstants(AvatarConversionPlan plan)
+        {
+            int applied = 0;
+            int deleted = 0;
+
+            foreach (ModularAvatarShapeConstant constant in plan.ShapeConstants)
+            {
+                if (constant.Renderer == null)
+                {
+                    continue;
+                }
+
+                SkinnedMeshRenderer skinned = constant.Renderer.GetComponent<SkinnedMeshRenderer>();
+                if (skinned == null || skinned.sharedMesh == null
+                    || skinned.sharedMesh.GetBlendShapeIndex(constant.ShapeName) < 0)
+                {
+                    constant.Diagnostics.Add(DiagnosticSeverity.Warning,
+                        "modularAvatar.shapeChanger.missing",
+                        $"The Shape Changer on {constant.Origin} sets {constant.ShapeName} on "
+                        + $"{constant.Renderer.name}, which has no such blendshape. Skipped.");
+                    constant.Renderer = null;
+                    continue;
+                }
+
+                applied++;
+                if (constant.IsDelete)
+                {
+                    deleted++;
+                }
+            }
+
+            if (applied > 0)
+            {
+                plan.Diagnostics.Add(
+                    deleted > 0 ? DiagnosticSeverity.Approximated : DiagnosticSeverity.Mapped,
+                    "modularAvatar.shapeChanger.applied",
+                    $"{applied} blendshapes set by Modular Avatar Shape Changers with no menu "
+                    + "item are written onto their renderers, as its build pass would."
+                    + (deleted > 0
+                        ? $" {deleted} of them deleted vertices at build; the shape is set to 100 "
+                            + "instead."
+                        : string.Empty));
+            }
+
+            if (plan.ModularAvatarShapeChangersFound > 0 && plan.ShapeConstants.Count == 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "modularAvatar.shapeChanger.menu",
+                    $"{plan.ModularAvatarShapeChangersFound} Modular Avatar Shape Changers sit "
+                    + "under a menu item or on an inactive object. Those follow the menu and are "
+                    + "not rebuilt.");
+            }
+        }
+
+        /// <summary>
+        /// Two controls touching the same object, shape or property fight: in VRChat the later
+        /// FX layer wins every frame, on Basis the control used last wins.
+        /// </summary>
+        private static void ReportOverlaps(AvatarConversionPlan plan)
+        {
+            Dictionary<string, List<string>> owners = new Dictionary<string, List<string>>();
+
+            void Note(string key, string control)
+            {
+                if (!owners.TryGetValue(key, out List<string> names))
+                {
+                    names = new List<string>();
+                    owners[key] = names;
+                }
+
+                if (!names.Contains(control))
+                {
+                    names.Add(control);
+                }
+            }
+
+            foreach (PlannedVixxyControl planned in plan.VixxyControls)
+            {
+                VixxyControlPlan control = planned.Plan;
+                foreach (VixxyActivationPlan activation in control.Activations)
+                {
+                    if (activation.MotionIndex < 0)
+                    {
+                        Note("object " + activation.Path, control.MenuName);
+                    }
+                }
+
+                foreach (VixxySubjectPlan subject in control.Subjects)
+                {
+                    foreach (VixxyBlendShapePlan shape in subject.BlendShapes)
+                    {
+                        Note($"blendshape {shape.ShapeName} on {subject.Path}", control.MenuName);
+                    }
+
+                    foreach (VixxyMaterialPropertyPlan property in subject.MaterialProperties)
+                    {
+                        Note($"{property.PropertyName} on {subject.Path}", control.MenuName);
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<string, List<string>> entry in owners)
+            {
+                if (entry.Value.Count < 2)
+                {
+                    continue;
+                }
+
+                plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.overlap",
+                    $"'{string.Join("', '", entry.Value)}' all set {entry.Key}. On Basis the "
+                    + "control used last wins; in VRChat the later FX layer did.");
+            }
+        }
+
         private static void BuildModularAvatarControls(AvatarConversionPlan plan)
         {
             int before = plan.VixxyControls.Count;
@@ -2060,6 +2318,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     {
                         kept.Add(activation);
                         planned.SourceTargets.Add(null);
+                        continue;
+                    }
+
+                    // Vixxy refuses to toggle the avatar root (CannotToggleRootGameObject).
+                    if (string.IsNullOrEmpty(activation.Path) || root.Find(activation.Path) == root)
+                    {
+                        plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.rootActivation",
+                            $"'{control.MenuName}' switches the avatar root itself, which Vixxy "
+                            + "refuses. That object was left out of the control.");
                         continue;
                     }
 

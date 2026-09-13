@@ -6,6 +6,24 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Modular Avatar Shape Changers with no menu item are applied: their blendshape values are
+  written onto the renderers, as Modular Avatar's build pass would. A Delete entry becomes the
+  shape at 100. `modularAvatar.shapeChanger.applied`, `modularAvatar.shapeChanger.missing`.
+- The FX layers nothing read are listed by name: `fx.layersUnread`. States scrubbed by a
+  parameter are reported: `motion.motionTime`.
+- Two controls setting the same object, blendshape or property are reported: `vixxy.overlap`.
+  A control switching the avatar root is reported: `vixxy.rootActivation`.
+- PhysBone permissions decided per player are reported: `physbone.allowGrabbing.filtered`,
+  `physbone.allowCollision.filtered`.
+- A Dynamic Bone force straight down, with no gravity, becomes the gravity multiplier:
+  `dynamicbone.force.gravity`.
+- A Merge Animator's relative path root is honoured.
+- Property overrides from prefab variants and nested prefab instances are applied to the
+  prefabs they modify before reading: `source.overridesApplied`. A variant that retunes a
+  PhysBone or renames a shape converts with its own values.
+
 ## [0.6.0] - 2026-09-14
 
 ### Changed

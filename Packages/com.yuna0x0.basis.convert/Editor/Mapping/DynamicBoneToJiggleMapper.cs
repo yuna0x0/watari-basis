@@ -250,6 +250,19 @@ namespace yuna0x0.Basis.Convert.Mapping
         {
             if (source.Gravity == Vector3.zero)
             {
+                // A constant force straight down is gravity without the rest-pose cancelling:
+                // added per tick, so F per tick at 60 ticks a second is F·3600 m/s².
+                if (ForceIsStraightDown(source))
+                {
+                    float multiplier = -source.Force.y * ReferenceUpdateRate * ReferenceUpdateRate / 9.81f;
+                    parameters.Gravity = new JiggleCurvedFloatPlan(multiplier);
+                    log.Add(DiagnosticSeverity.Approximated, "dynamicbone.force.gravity",
+                        $"force {source.Force} points straight down and became a jiggle gravity "
+                        + $"multiplier of {multiplier:0.###}, from {ReferenceUpdateRate} ticks a "
+                        + "second.");
+                    return;
+                }
+
                 parameters.Gravity = new JiggleCurvedFloatPlan(0f);
                 return;
             }
@@ -258,6 +271,13 @@ namespace yuna0x0.Basis.Convert.Mapping
                 $"gravity {source.Gravity} was not carried over. Dynamic Bone adds it per tick "
                 + "without a time step and cancels it at the rest pose; jiggle scales world "
                 + "gravity. The preset's gravity was kept.");
+        }
+
+        private static bool ForceIsStraightDown(DynamicBoneData source)
+        {
+            return source.Force.y < 0f
+                && Mathf.Approximately(source.Force.x, 0f)
+                && Mathf.Approximately(source.Force.z, 0f);
         }
 
         private static void ReportUnmappable(
@@ -270,7 +290,8 @@ namespace yuna0x0.Basis.Convert.Mapping
                     + "was folded into stiffness; the rig runs at jiggle's own rate.");
             }
 
-            if (source.Force != Vector3.zero)
+            if (source.Force != Vector3.zero
+                && !(source.Gravity == Vector3.zero && ForceIsStraightDown(source)))
             {
                 log.Add(DiagnosticSeverity.Dropped, "dynamicbone.force.dropped",
                     $"The constant force {source.Force} was dropped. Jiggle has gravity but no "

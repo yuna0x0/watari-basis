@@ -235,6 +235,9 @@ namespace yuna0x0.Basis.Convert.UI
                 + (_plan.SelectedHeadChopCount > 0
                     ? $", {_plan.SelectedHeadChopCount} head chops"
                     : "")
+                + (_plan.SelectedShapeConstantCount > 0
+                    ? $", {_plan.SelectedShapeConstantCount} blendshape values"
+                    : "")
                 + (_plan.DescriptorSelected ? ", Basis Avatar." : ".");
 
             EditorGUILayout.HelpBox(summary,
@@ -1148,6 +1151,9 @@ namespace yuna0x0.Basis.Convert.UI
                 + $"{_result.VixxyControlsWritten} Vixxy controls, "
                 + $"{_result.AuthoredMotionsWritten} authored motions"
                 + (_result.HeadChopsWritten > 0 ? $", {_result.HeadChopsWritten} head chops" : "")
+                + (_result.ShapeConstantsWritten > 0
+                    ? $", {_result.ShapeConstantsWritten} blendshape values"
+                    : "")
                 + (_result.DescriptorWritten ? ", Basis Avatar." : "."));
 
             if (_result.VrmRuntimeRemoved > 0)

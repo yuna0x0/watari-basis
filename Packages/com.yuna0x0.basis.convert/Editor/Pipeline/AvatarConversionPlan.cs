@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using yuna0x0.Basis.Convert.Model;
+using yuna0x0.Basis.Convert.Sources;
 using yuna0x0.Basis.Convert.Writers;
 
 namespace yuna0x0.Basis.Convert.Pipeline
@@ -194,6 +195,20 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public GameObject SourceRoot;
 
         /// <summary>
+        /// The hierarchy that was planned when it was a scene object rather than an asset, or
+        /// null. Clothing dropped into a scene under the avatar exists only here.
+        /// </summary>
+        public GameObject HierarchyRoot;
+
+        /// <summary>Every scanned file's documents by the file's guid, for variant overrides.</summary>
+        internal Dictionary<string, Dictionary<long, UnityYamlDocument>> DocumentsByGuid =
+            new Dictionary<string, Dictionary<long, UnityYamlDocument>>();
+
+        /// <summary>Overrides read from every scanned file so far, applied as files arrive.</summary>
+        internal List<PrefabModification> Modifications = new List<PrefabModification>();
+        public int OverridesApplied;
+
+        /// <summary>
         /// Every prefab this plan was read from, the avatar's own first. Each planned item
         /// records which one it came from, because its transforms are in that prefab's space.
         /// </summary>
@@ -243,6 +258,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         /// <summary>Menu toggles that can be rebuilt as Vixxy controls, with their targets.</summary>
         public List<PlannedVixxyControl> VixxyControls = new List<PlannedVixxyControl>();
+
+        /// <summary>
+        /// Blendshapes Modular Avatar Shape Changers set with no menu item behind them, which
+        /// its build pass would bake. Written straight onto the renderers.
+        /// </summary>
+        public List<ModularAvatarShapeConstant> ShapeConstants =
+            new List<ModularAvatarShapeConstant>();
+
+        public int ModularAvatarShapeChangersFound;
 
         /// <summary>
         /// Animation that plays unprompted, rebuilt as authored motion. Basis has no animator
@@ -406,6 +430,25 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
         }
 
+        /// <summary>Shape constants go with the toggles: both come from the same menu components.</summary>
+        public IEnumerable<ModularAvatarShapeConstant> SelectedShapeConstants()
+        {
+            if (!Options.Toggles)
+            {
+                yield break;
+            }
+
+            foreach (ModularAvatarShapeConstant constant in ShapeConstants)
+            {
+                if (constant.Renderer != null && IsIncluded(constant.Source))
+                {
+                    yield return constant;
+                }
+            }
+        }
+
+        public int SelectedShapeConstantCount => Tally(SelectedShapeConstants());
+
         public IEnumerable<PlannedVixxyControl> SelectedVixxyControls()
         {
             if (!Options.Toggles)
@@ -546,6 +589,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
             foreach (PlannedHeadChop chop in selectedOnly ? SelectedHeadChops() : HeadChops)
             {
                 foreach (ConversionDiagnostic diagnostic in chop.Plan.Diagnostics)
+                {
+                    yield return diagnostic;
+                }
+            }
+
+            foreach (ModularAvatarShapeConstant constant in ShapeConstants)
+            {
+                foreach (ConversionDiagnostic diagnostic in constant.Diagnostics)
                 {
                     yield return diagnostic;
                 }
