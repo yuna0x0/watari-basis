@@ -117,11 +117,6 @@ namespace yuna0x0.Basis.Convert.Writers
             serialized.FindProperty(DataPath + "lockFromGrabbing").boolValue =
                 rig.Plan.LockFromGrabbing;
 
-            if (rig.Plan.MaxGrabStretch.HasValue)
-            {
-                serialized.FindProperty(DataPath + "maxGrabStretch").floatValue =
-                    rig.Plan.MaxGrabStretch.Value;
-            }
 
             SerializedProperty excluded = serialized.FindProperty(DataPath + "excludedTransforms");
             excluded.arraySize = rig.ExcludedTransforms.Count;

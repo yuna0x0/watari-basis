@@ -236,9 +236,6 @@ on the case; the usual one is given.
 | `modularAvatar.hierarchy` | Mapped | Modular Avatar components that rearrange the hierarchy or meshes. Left to Modular Avatar, which applies them at Basis build time when installed with the Basis NDMF platform. |
 | `modularAvatar.menus` | Dropped | Modular Avatar menu and animator components. See [Modular Avatar](what-converts/modular-avatar.md). |
 | `modularAvatar.togglesRebuilt` | Mapped | How many Modular Avatar menu toggles became Vixxy controls. |
-| `modularAvatar.shapeChanger.applied` | Mapped or Approximated | Blendshapes set by Shape Changers with no menu item are written onto their renderers. A Delete entry becomes the shape at 100. |
-| `modularAvatar.shapeChanger.missing` | Warning | A Shape Changer names a renderer or blendshape this avatar does not have. |
-| `modularAvatar.shapeChanger.menu` | Dropped | Shape Changers under a menu item or on an inactive object follow the menu and are not rebuilt. |
 | `modularAvatar.vrchatOnly` | Dropped | Modular Avatar components that act on VRChat's own systems. |
 
 ### Authored motion

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
-using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Sources;
 
 namespace yuna0x0.Basis.Convert.Pipeline
@@ -16,33 +15,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
     }
 
     /// <summary>
-    /// A blendshape a Shape Changer sets while its object is active, with no menu item
-    /// switching it: a constant Modular Avatar would bake at build.
-    /// </summary>
-    public sealed class ModularAvatarShapeConstant
-    {
-        /// <summary>The renderer's object, in the hierarchy the constant was resolved against.</summary>
-        public Transform Renderer;
-        public string ShapeName = string.Empty;
-        public float Value;
-
-        /// <summary>The source deleted the vertices; the value is the shape at 100 instead.</summary>
-        public bool IsDelete;
-
-        /// <summary>The object holding the Shape Changer, for the report.</summary>
-        public string Origin = string.Empty;
-
-        /// <summary>The prefab the renderer belongs to, or null when found in the live hierarchy.</summary>
-        public ConversionSource Source;
-
-        /// <summary>
-        /// Path from the planned hierarchy's root, when the renderer was found there rather than
-        /// in a prefab asset: clothing dropped into the scene under the avatar.
-        /// </summary>
-        public string LivePath;
-        public List<ConversionDiagnostic> Diagnostics = new List<ConversionDiagnostic>();
-    }
-
     /// <summary>
     /// Finds the toggles a piece of clothing installs through Modular Avatar.
     /// <para>
@@ -170,113 +142,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public const string AutomaticParameterPrefix = "__MA/AutoParam/";
 
         /// <summary>
-        /// Shape Changers with no menu item on their object or above it. Modular Avatar's
-        /// reactive pass treats such a rule as a constant: applied when the object and every
-        /// ancestor is active (inverted when it is not), at build, on every platform. The
-        /// renderer is looked for under the avatar first, since an outfit's Shape Changer
-        /// usually shrinks the avatar's own body, then under the outfit.
-        /// </summary>
-        public static List<ModularAvatarShapeConstant> ResolveShapeConstants(
-            List<UnityYamlDocument> documents, PrefabObjectResolver resolver,
-            ConversionSource source, Transform avatarRoot, ConversionSource avatarSource,
-            Transform liveRoot = null)
-        {
-            List<ModularAvatarShapeConstant> constants = new List<ModularAvatarShapeConstant>();
-            if (documents == null || resolver == null || source?.Root == null)
-            {
-                return constants;
-            }
-
-            HashSet<long> toggleItemOwners = new HashSet<long>();
-            foreach (MaMenuItemData item in ReadMenuItems(documents))
-            {
-                if (item.IsToggle)
-                {
-                    toggleItemOwners.Add(item.OwnerGameObjectFileId);
-                }
-            }
-
-            Transform sourceRoot = source.Root.transform;
-
-            foreach (UnityYamlDocument document in documents)
-            {
-                if (!IsKind(document, SourceComponentKind.MaShapeChanger) || !document.IsEnabled)
-                {
-                    continue;
-                }
-
-                MaShapeChangerData data = ModularAvatarDocumentReader.ReadShapeChanger(document);
-                if (!resolver.TryResolveTransform(data.OwnerGameObjectFileId, out Transform owner))
-                {
-                    continue;
-                }
-
-                // Under a toggle item the change follows the menu, which is left to the menu
-                // path and reported there.
-                if (HasToggleItemAbove(owner, resolver, toggleItemOwners))
-                {
-                    continue;
-                }
-
-                bool active = ActiveUpTo(owner, avatarRoot != null ? avatarRoot : sourceRoot);
-                if (active == data.Inverted)
-                {
-                    continue;
-                }
-
-                foreach (MaChangedShape shape in data.Shapes)
-                {
-                    ModularAvatarShapeConstant constant = new ModularAvatarShapeConstant
-                    {
-                        ShapeName = shape.ShapeName,
-                        Value = shape.IsDelete ? 100f : shape.Value,
-                        IsDelete = shape.IsDelete,
-                        Origin = owner.name,
-                    };
-
-                    Transform renderer = null;
-                    if (shape.TargetObjectFileId != 0L
-                        && resolver.TryResolveTransform(shape.TargetObjectFileId, out Transform target))
-                    {
-                        renderer = target;
-                    }
-                    else if (!string.IsNullOrEmpty(shape.Path))
-                    {
-                        renderer = FindFrom(avatarRoot, shape.Path) ?? FindFrom(sourceRoot, shape.Path);
-                    }
-
-                    // The scene itself is the last resort: an outfit dropped under the avatar in
-                    // the scene is in neither prefab asset, only there.
-                    if (renderer == null && liveRoot != null && !string.IsNullOrEmpty(shape.Path))
-                    {
-                        Transform live = FindFrom(liveRoot, shape.Path);
-                        if (live != null)
-                        {
-                            constant.Renderer = live;
-                            constant.LivePath = PathWithin(liveRoot, live);
-                        }
-                    }
-
-                    if (renderer != null)
-                    {
-                        constant.Renderer = renderer;
-                        constant.Source = renderer.IsChildOf(sourceRoot) ? source : avatarSource;
-                    }
-                    else if (constant.Renderer == null)
-                    {
-                        constant.Diagnostics.Add(DiagnosticSeverity.Warning,
-                            "modularAvatar.shapeChanger.missing",
-                            $"The Shape Changer on {owner.name} names {shape.Path}, which is not "
-                            + "in this avatar. That change was skipped.");
-                    }
-
-                    constants.Add(constant);
-                }
-            }
-
-            return constants;
-        }
-
         private static Transform FindFrom(Transform root, string path)
         {
             if (root == null)
@@ -293,40 +158,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
             string prefix = root.name + "/";
             return path.StartsWith(prefix) ? root.Find(path.Substring(prefix.Length)) : null;
         }
-
-        private static bool ActiveUpTo(Transform transform, Transform root)
-        {
-            for (Transform walk = transform; walk != null; walk = walk.parent)
-            {
-                if (!walk.gameObject.activeSelf)
-                {
-                    return false;
-                }
-
-                if (walk == root)
-                {
-                    break;
-                }
-            }
-
-            return true;
-        }
-
-        private static bool HasToggleItemAbove(
-            Transform owner, PrefabObjectResolver resolver, HashSet<long> owners)
-        {
-            foreach (long fileId in owners)
-            {
-                if (resolver.TryResolveTransform(fileId, out Transform item)
-                    && (owner == item || owner.IsChildOf(item)))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private static bool Already(List<ModularAvatarToggle> resolved, string parameter)
         {
             foreach (ModularAvatarToggle toggle in resolved)

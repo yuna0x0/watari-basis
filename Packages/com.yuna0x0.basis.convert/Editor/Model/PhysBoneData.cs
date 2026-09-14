@@ -116,14 +116,12 @@ namespace yuna0x0.Basis.Convert.Model
         public bool AllowGrabbingFiltered;
         public bool AllowPosing;
         public bool SnapToHand;
-        public float GrabMovement;
 
         public PhysBoneCurvedFloat MaxStretch;
         public PhysBoneCurvedFloat MaxSquish;
         public PhysBoneCurvedFloat StretchMotion;
 
         public bool IsAnimated;
-        public bool ResetWhenDisabled;
         public string Parameter;
     }
 

@@ -66,7 +66,6 @@ namespace yuna0x0.Basis.Convert.Tests
             {
                 ExcludeRoot = true,
                 LockFromGrabbing = true,
-                MaxGrabStretch = 1.5f,
                 Parameters =
                 {
                     Stiffness = new JiggleCurvedFloatPlan(0.42f),
@@ -85,7 +84,6 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(data.hasSerializedData, Is.True);
             Assert.That(data.excludeRoot, Is.True);
             Assert.That(data.lockFromGrabbing, Is.True);
-            Assert.That(data.maxGrabStretch, Is.EqualTo(1.5f).Within(1e-6f));
 
             JiggleTreeInputParameters parameters = data.jiggleTreeInputParameters;
             Assert.That(parameters.advancedToggle, Is.True,

@@ -85,46 +85,5 @@ namespace yuna0x0.Basis.Convert.Tests
             }
         }
     
-        [Test]
-        public void AShapeChangerIsReadWithItsDeletesAndSets()
-        {
-            // The shape of a real outfit's component: a Delete entry (ChangeType 0) that removes
-            // vertices at build, and a Set entry with a value.
-            List<UnityYamlDocument> documents = UnityYamlScanner.Scan(new[]
-            {
-                "--- !u!114 &900",
-                "MonoBehaviour:",
-                "  m_GameObject: {fileID: 10}",
-                "  m_Enabled: 1",
-                "  m_Script: {fileID: 11500000, guid: 2db441f589c3407bb6fb5f02ff8ab541, type: 3}",
-                "  m_inverted: 0",
-                "  m_shapes:",
-                "  - Object:",
-                "      referencePath: Body",
-                "      targetObject: {fileID: 0}",
-                "    ShapeName: Shrink_Hip",
-                "    ChangeType: 0",
-                "    Value: 100",
-                "  - Object:",
-                "      referencePath: Body",
-                "      targetObject: {fileID: 42}",
-                "    ShapeName: Breast_small",
-                "    ChangeType: 1",
-                "    Value: 50",
-                "  m_threshold: 0.01",
-            });
-
-            MaShapeChangerData data = ModularAvatarDocumentReader.ReadShapeChanger(documents[0]);
-
-            Assert.That(data.OwnerGameObjectFileId, Is.EqualTo(10L));
-            Assert.That(data.Inverted, Is.False);
-            Assert.That(data.Shapes.Count, Is.EqualTo(2));
-            Assert.That(data.Shapes[0].Path, Is.EqualTo("Body"));
-            Assert.That(data.Shapes[0].ShapeName, Is.EqualTo("Shrink_Hip"));
-            Assert.That(data.Shapes[0].IsDelete, Is.True);
-            Assert.That(data.Shapes[1].TargetObjectFileId, Is.EqualTo(42L));
-            Assert.That(data.Shapes[1].IsDelete, Is.False);
-            Assert.That(data.Shapes[1].Value, Is.EqualTo(50f).Within(1e-6f));
-        }
 }
 }

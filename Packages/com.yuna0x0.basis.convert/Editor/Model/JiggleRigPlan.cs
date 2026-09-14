@@ -111,7 +111,6 @@ namespace yuna0x0.Basis.Convert.Model
 
         public bool ExcludeRoot;
         public bool LockFromGrabbing;
-        public float? MaxGrabStretch;
 
         public JigglePreset Preset = JigglePreset.Hair;
         public JiggleParameterPlan Parameters = new JiggleParameterPlan();

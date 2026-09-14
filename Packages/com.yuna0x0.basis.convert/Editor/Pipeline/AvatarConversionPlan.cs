@@ -195,11 +195,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public GameObject SourceRoot;
 
         /// <summary>
-        /// The hierarchy that was planned when it was a scene object rather than an asset, or
-        /// null. Clothing dropped into a scene under the avatar exists only here.
-        /// </summary>
-        public GameObject HierarchyRoot;
-
         /// <summary>Every scanned file's documents by the file's guid, for variant overrides.</summary>
         internal Dictionary<string, Dictionary<long, UnityYamlDocument>> DocumentsByGuid =
             new Dictionary<string, Dictionary<long, UnityYamlDocument>>();
@@ -260,13 +255,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public List<PlannedVixxyControl> VixxyControls = new List<PlannedVixxyControl>();
 
         /// <summary>
-        /// Blendshapes Modular Avatar Shape Changers set with no menu item behind them, which
-        /// its build pass would bake. Written straight onto the renderers.
-        /// </summary>
-        public List<ModularAvatarShapeConstant> ShapeConstants =
-            new List<ModularAvatarShapeConstant>();
-
-        public int ModularAvatarShapeChangersFound;
 
         /// <summary>
         /// Animation that plays unprompted, rebuilt as authored motion. Basis has no animator
@@ -429,26 +417,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
         }
-
-        /// <summary>Shape constants go with the toggles: both come from the same menu components.</summary>
-        public IEnumerable<ModularAvatarShapeConstant> SelectedShapeConstants()
-        {
-            if (!Options.Toggles)
-            {
-                yield break;
-            }
-
-            foreach (ModularAvatarShapeConstant constant in ShapeConstants)
-            {
-                if (constant.Renderer != null && IsIncluded(constant.Source))
-                {
-                    yield return constant;
-                }
-            }
-        }
-
-        public int SelectedShapeConstantCount => Tally(SelectedShapeConstants());
-
         public IEnumerable<PlannedVixxyControl> SelectedVixxyControls()
         {
             if (!Options.Toggles)
@@ -594,13 +562,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
 
-            foreach (ModularAvatarShapeConstant constant in ShapeConstants)
-            {
-                foreach (ConversionDiagnostic diagnostic in constant.Diagnostics)
-                {
-                    yield return diagnostic;
-                }
-            }
 
             foreach (ConversionDiagnostic diagnostic in RigDiagnostics)
             {

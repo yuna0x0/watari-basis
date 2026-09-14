@@ -76,11 +76,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 ReadBool(document, "isPoseable", true));
             data.SnapToHand = ReadBool(document, "snapToHand", false);
             data.IsAnimated = ReadBool(document, "isAnimated", false);
-            data.ResetWhenDisabled = ReadBool(document, "resetWhenDisabled", false);
 
-            data.GrabMovement = document.TryGetFloat("grabMovement", out float grabMovement)
-                ? grabMovement
-                : 0.5f;
 
             return data;
         }

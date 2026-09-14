@@ -6,13 +6,17 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- The application of Modular Avatar Shape Changers without a menu item, added in 0.7.0. Modular
+  Avatar bakes those itself at Basis build time when installed with the Basis NDMF platform.
+- The unused max grab stretch on rig plans, and the unused PhysBone grab movement and reset when
+  disabled fields.
+
 ## [0.7.0] - 2026-09-14
 
 ### Added
 
-- Modular Avatar Shape Changers with no menu item are applied: their blendshape values are
-  written onto the renderers, as Modular Avatar's build pass would. A Delete entry becomes the
-  shape at 100. `modularAvatar.shapeChanger.applied`, `modularAvatar.shapeChanger.missing`.
 - The FX layers nothing read are listed by name: `fx.layersUnread`. States scrubbed by a
   parameter are reported: `motion.motionTime`.
 - Two controls setting the same object, blendshape or property are reported: `vixxy.overlap`.

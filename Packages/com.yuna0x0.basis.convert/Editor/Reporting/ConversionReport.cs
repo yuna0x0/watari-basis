@@ -92,12 +92,10 @@ namespace yuna0x0.Basis.Convert.Reporting
             text.AppendLine($"- Colliders found: {plan.CollidersFound}");
             text.AppendLine($"- Constraints found: {plan.ConstraintsFound}");
             text.AppendLine($"- Head chops found: {plan.HeadChopsFound}");
-            text.AppendLine($"- Modular Avatar shape changers found: {plan.ModularAvatarShapeChangersFound}");
             text.AppendLine($"- Jiggle rigs planned: {plan.Rigs.Count}");
             text.AppendLine($"- Basis constraints planned: {plan.Constraints.Count}");
             text.AppendLine($"- Vixxy controls planned: {plan.VixxyControls.Count}");
             text.AppendLine($"- Authored motions planned: {plan.AuthoredMotions.Count}");
-            text.AppendLine($"- Blendshape values planned: {plan.SelectedShapeConstantCount}");
             text.AppendLine("- Avatar descriptor: "
                 + (plan.Descriptor == null
                     ? "none found"

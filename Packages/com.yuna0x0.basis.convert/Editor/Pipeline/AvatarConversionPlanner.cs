@@ -75,7 +75,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
             plan.Sources.AddRange(sources);
             plan.SourceAssetPath = sources[0].AssetPath;
             plan.SourceRoot = sources[0].Root;
-            plan.HierarchyRoot = hierarchyRoot;
 
             HashSet<string> unknownIdentities = new HashSet<string>();
             foreach (ConversionSource source in sources)
@@ -349,11 +348,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             plan.ModularAvatarToggles.AddRange(
                 ModularAvatarToggleResolver.Resolve(documents, resolver, source));
-            plan.ShapeConstants.AddRange(ModularAvatarToggleResolver.ResolveShapeConstants(
-                documents, resolver, source,
-                plan.SourceRoot != null ? plan.SourceRoot.transform : null,
-                plan.Sources.Count > 0 ? plan.Sources[0] : source,
-                plan.HierarchyRoot != null ? plan.HierarchyRoot.transform : null));
 
             // VRM chains are read in a pass of their own: a spring names joint components that
             // sit anywhere in the file, so they cannot be resolved as the documents go past.
@@ -434,12 +428,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (KnownScriptIdentities.IsHandledByModularAvatar(kind))
                 {
                     plan.ModularAvatarHierarchyFound++;
-                    continue;
-                }
-
-                if (kind == SourceComponentKind.MaShapeChanger)
-                {
-                    plan.ModularAvatarShapeChangersFound++;
                     continue;
                 }
 
@@ -701,7 +689,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
             // Clothing has no descriptor and no expression menu of its own, so this is not part
             // of reading one: what Modular Avatar installs stands on its own.
             BuildModularAvatarControls(plan);
-            ReportShapeConstants(plan);
             ReportOverlaps(plan);
 
             // Only meaningful once the descriptor is known: a prop has physics but no rig, and
@@ -2144,61 +2131,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// the prefab it came from, and its paths are resolved inside that prefab.
         /// </summary>
         /// <summary>
-        /// Checks each shape constant against the renderer it was resolved to, and sums up.
-        /// </summary>
-        private static void ReportShapeConstants(AvatarConversionPlan plan)
-        {
-            int applied = 0;
-            int deleted = 0;
-
-            foreach (ModularAvatarShapeConstant constant in plan.ShapeConstants)
-            {
-                if (constant.Renderer == null)
-                {
-                    continue;
-                }
-
-                SkinnedMeshRenderer skinned = constant.Renderer.GetComponent<SkinnedMeshRenderer>();
-                if (skinned == null || skinned.sharedMesh == null
-                    || skinned.sharedMesh.GetBlendShapeIndex(constant.ShapeName) < 0)
-                {
-                    constant.Diagnostics.Add(DiagnosticSeverity.Warning,
-                        "modularAvatar.shapeChanger.missing",
-                        $"The Shape Changer on {constant.Origin} sets {constant.ShapeName} on "
-                        + $"{constant.Renderer.name}, which has no such blendshape. Skipped.");
-                    constant.Renderer = null;
-                    continue;
-                }
-
-                applied++;
-                if (constant.IsDelete)
-                {
-                    deleted++;
-                }
-            }
-
-            if (applied > 0)
-            {
-                plan.Diagnostics.Add(
-                    deleted > 0 ? DiagnosticSeverity.Approximated : DiagnosticSeverity.Mapped,
-                    "modularAvatar.shapeChanger.applied",
-                    $"{applied} blendshapes set by Modular Avatar Shape Changers with no menu "
-                    + "item are written onto their renderers, as its build pass would."
-                    + (deleted > 0
-                        ? $" {deleted} of them deleted vertices at build; the shape is set to 100 "
-                            + "instead."
-                        : string.Empty));
-            }
-
-            if (plan.ModularAvatarShapeChangersFound > 0 && plan.ShapeConstants.Count == 0)
-            {
-                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "modularAvatar.shapeChanger.menu",
-                    $"{plan.ModularAvatarShapeChangersFound} Modular Avatar Shape Changers sit "
-                    + "under a menu item or on an inactive object. Those follow the menu and are "
-                    + "not rebuilt.");
-            }
-        }
-
         /// <summary>
         /// Two controls touching the same object, shape or property fight: in VRChat the later
         /// FX layer wins every frame, on Basis the control used last wins.
