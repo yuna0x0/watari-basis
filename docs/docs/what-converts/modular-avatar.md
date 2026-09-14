@@ -45,10 +45,11 @@ reference first, then by its path, which Modular Avatar records from the avatar 
 ## Shape Changers with no menu item
 
 An outfit's `Shape Changer` usually sits on an always-active part and shrinks the avatar's body
-under it. Modular Avatar bakes such a rule at build as a constant. The conversion writes those
-blendshape values onto the renderers: a Set entry as its value, a Delete entry as the shape at
-100, since nothing here removes vertices. `modularAvatar.shapeChanger.applied`,
-`modularAvatar.shapeChanger.missing`.
+under it. Modular Avatar bakes such a rule at build as a constant, on Basis as well when it is
+installed with the Basis NDMF platform. The conversion writes the same blendshape values onto the
+renderers, so the result is visible in the editor and holds without Modular Avatar: a Set entry
+as its value, a Delete entry as the shape at 100, since nothing here removes vertices.
+`modularAvatar.shapeChanger.applied`, `modularAvatar.shapeChanger.missing`.
 
 ## Reported, not rebuilt
 
