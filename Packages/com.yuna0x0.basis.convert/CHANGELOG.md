@@ -6,6 +6,13 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `physbone.immobile.ignoreRootMotion` is Approximated, not Mapped: ignore root motion cancels the
+  root's translation only, and a turning parent still swings the chain.
+- New `physbone.immobile.drift` warning for an immobile bone whose stiffness came out under 0.1:
+  on Basis it wanders when its parent turns. Values are unchanged; the fix is the rig's stiffness.
+
 ## [0.8.2] - 2026-09-14
 
 ### Changed

@@ -49,6 +49,32 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void AnImmobileBoneWithAlmostNoPullIsReportedAsDrifting()
+        {
+            // A wind-up key: immobile 1 so the avatar's movement never disturbs it, pull 0.01 so
+            // it stays where a hand leaves it. Jiggle cancels the root's translation only, and
+            // stiffness 0.01 never brings the chain back once the hips turn, so the key wandered
+            // off the doll on a real avatar.
+            PhysBoneData source = Bone(pull: 0.01f, spring: 0f);
+            source.Immobile = new PhysBoneCurvedFloat(1f);
+
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+
+            Assert.That(plan.Diagnostics.HasCode("physbone.immobile.drift"), Is.True);
+        }
+
+        [Test]
+        public void AnImmobileBoneWithOrdinaryPullIsNotReportedAsDrifting()
+        {
+            PhysBoneData source = Bone(pull: 0.4f);
+            source.Immobile = new PhysBoneCurvedFloat(1f);
+
+            JiggleRigPlan plan = PhysBoneToJiggleMapper.Map(source);
+
+            Assert.That(plan.Diagnostics.HasCode("physbone.immobile.drift"), Is.False);
+        }
+
+        [Test]
         public void FalloffCurvesCarryAcrossUntouched()
         {
             AnimationCurve curve = AnimationCurve.Linear(0f, 1f, 1f, 0f);

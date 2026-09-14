@@ -126,9 +126,23 @@ namespace yuna0x0.Basis.Convert.Mapping
             parameters.IgnoreRootMotion =
                 Clamp01(source.Immobile.Value, "jiggle.ignoreRootMotion", log);
 
-            log.Add(DiagnosticSeverity.Mapped, "physbone.immobile.ignoreRootMotion",
+            // Not the same thing. Immobile damps every movement that reaches the bone, position
+            // and rotation alike. Jiggle's ignoreRootMotion shifts the chain by the root's
+            // translation each step and nothing else, so a parent that turns still swings the
+            // chain, and only stiffness brings it back.
+            log.Add(DiagnosticSeverity.Approximated, "physbone.immobile.ignoreRootMotion",
                 $"immobile {source.Immobile.Value} became ignoreRootMotion "
-                + $"{parameters.IgnoreRootMotion}.");
+                + $"{parameters.IgnoreRootMotion}. Ignore root motion cancels the root's "
+                + "translation only; a turning parent still swings the chain.");
+
+            float stiffness = parameters.Stiffness.Value.Value;
+            if (parameters.IgnoreRootMotion >= 0.5f && stiffness < 0.1f)
+            {
+                log.Add(DiagnosticSeverity.Warning, "physbone.immobile.drift",
+                    $"immobile {source.Immobile.Value} with pull {source.Pull.Value}: on Basis "
+                    + $"the chain will wander when its parent turns, because stiffness {stiffness} "
+                    + "does not bring it back. Raise the rig's stiffness to hold it in place.");
+            }
 
             if (source.Immobile.HasCurve)
             {

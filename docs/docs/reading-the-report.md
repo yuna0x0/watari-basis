@@ -68,7 +68,8 @@ on the case; the usual one is given.
 | `physbone.spring.drag` | Approximated | Spring was fitted onto drag. |
 | `physbone.springCurve.dropped` | Dropped | Drag runs opposite to spring, so the curve would have inverted the falloff. |
 | `physbone.curves.domain` | Approximated | Curves carried over. PhysBone samples them by bone index, jiggle by distance from the root. |
-| `physbone.immobile.ignoreRootMotion` | Mapped | Immobile became ignore root motion. |
+| `physbone.immobile.ignoreRootMotion` | Approximated | Immobile became ignore root motion, which cancels the root's translation only. A turning parent still swings the chain. |
+| `physbone.immobile.drift` | Warning | Immobile 0.5 or more with a stiffness under 0.1. The chain will wander when its parent turns, because nothing brings it back. Raise the rig's stiffness. |
 | `physbone.immobileCurve.dropped` | Dropped | The immobile curve was dropped. Ignore root motion is a single value. |
 | `physbone.immobileType.world` | Approximated | Immobile Type World damps scene movement only. Ignore root motion also damps animated motion. |
 | `physbone.limitType.none` | Mapped | No angle limit on either side. |

@@ -21,7 +21,7 @@ rig of its own with the component's settings.
 
 - The root bone, the transforms the source ignored, and grab settings. A PhysBone with radius 0
   is not grabbable in VRChat, and the rig is locked from grabbing to match.
-- Radius, stretch motion, and how immobile the root is.
+- Radius and stretch motion.
 - Colliders: sphere, capsule and plane, with the same three shapes on both sides. A capsule's
   height is measured end to end on the source side and between the cap centres on the Basis
   side, and is converted between the two.
@@ -47,6 +47,10 @@ Approximated, and reported as such:
   becomes a motionless root, and bones further down with several children swing where VRChat
   held them still.
 - **Hinge limits** become a cone of the same angle.
+- **Immobile** becomes ignore root motion, which cancels the root's translation only. A parent
+  that turns still swings the chain, and stiffness is what brings it back: an immobile bone with
+  almost no pull, a wind-up key left where a hand turned it, wanders on Basis and is reported as
+  `physbone.immobile.drift`. Raising that rig's stiffness holds it in place.
 
 Dynamic Bone is derived rather than fitted. Elasticity is a per-tick fraction toward the pose,
 which jiggle squares, so stiffness is its square root, scaled by Update Rate over 60. Dynamic Bone
