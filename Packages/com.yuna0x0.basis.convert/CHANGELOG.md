@@ -10,118 +10,70 @@ Notable changes to this package. The format follows
 
 ### Fixed
 
-- A menu toggle whose clip also enabled or disabled a PhysBone or a renderer was dropped whole,
-  its object switches included. The control now drives the jiggle rig or renderer:
-  `vixxy.componentSwitch`. A switch on any other component is left out and reported:
-  `vixxy.componentSwitch.dropped`.
+- Menu toggles that also switch a PhysBone or a renderer on or off now convert. Before, the
+  whole toggle was dropped, its object switches included. The control drives the jiggle rig or
+  the renderer. Report codes: `vixxy.componentSwitch`, `vixxy.componentSwitch.dropped`.
 
 ## [0.8.0] - 2026-09-14
 
 ### Removed
 
-- The application of Modular Avatar Shape Changers without a menu item, added in 0.7.0. Modular
-  Avatar bakes those itself at Basis build time when installed with the Basis NDMF platform.
-- The unused max grab stretch on rig plans, and the unused PhysBone grab movement and reset when
-  disabled fields.
+- Applying Modular Avatar Shape Changers that have no menu item, added in 0.7.0. Modular Avatar
+  does this itself at Basis build time when it is installed with the Basis NDMF platform.
 
 ## [0.7.0] - 2026-09-14
 
 ### Added
 
-- The FX layers nothing read are listed by name: `fx.layersUnread`. States scrubbed by a
-  parameter are reported: `motion.motionTime`.
-- Two controls setting the same object, blendshape or property are reported: `vixxy.overlap`.
-  A control switching the avatar root is reported: `vixxy.rootActivation`.
-- PhysBone permissions decided per player are reported: `physbone.allowGrabbing.filtered`,
-  `physbone.allowCollision.filtered`.
-- A Dynamic Bone force straight down, with no gravity, becomes the gravity multiplier:
-  `dynamicbone.force.gravity`.
-- A Merge Animator's relative path root is honoured.
-- Property overrides from prefab variants and nested prefab instances are applied to the
-  prefabs they modify before reading: `source.overridesApplied`. A variant that retunes a
-  PhysBone or renames a shape converts with its own values.
+- Overrides made in prefab variants and nested prefabs are applied before reading. A variant
+  that retunes a PhysBone or renames a blendshape converts with its own values.
+  `source.overridesApplied`.
+- The report now names the FX layers that were not read (`fx.layersUnread`), radials that scrub
+  a clip through motion time (`motion.motionTime`), controls that set the same object or shape
+  (`vixxy.overlap`), and PhysBone permissions decided per player.
+- A Dynamic Bone constant force pointing straight down becomes gravity.
+- A Modular Avatar Merge Animator's relative path root is honoured.
 
 ## [0.6.0] - 2026-09-14
 
-### Changed
-
-- Dynamic Bone elasticity becomes jiggle stiffness by its square root, scaled by Update Rate,
-  and Dynamic Bone stiffness becomes an angle limit of `2·asin(1−s)` degrees. The PhysBone fit
-  weights no longer apply to Dynamic Bone. `dynamicbone.stiffness.angleLimit`,
-  `dynamicbone.stiffness.tooWide`, `dynamicbone.updateRate`.
-- Dynamic Bone damping becomes air drag as well as drag.
-- Dynamic Bone gravity is reported and left to the preset. `dynamicbone.gravity` is Approximated;
-  `dynamicbone.gravity.direction` is gone.
-- Blend Weight folds into the angle limit (`dynamicbone.blendWeight`); Blend Weight 0 writes no
-  rig.
-- A PhysBone Hinge limit is reported as Approximated (`physbone.limitType.hinge`), gravity as
-  Approximated, and falloff curves as Approximated (`physbone.curves.domain`): VRChat samples
-  them by bone index, jiggle by distance from the root. `physbone.isAnimated` is Mapped.
-- A PhysBone with radius 0 is locked from grabbing, as VRChat never grabs it.
-- Max Stretch is dropped (`physbone.maxStretch.dropped`); it bounded bone length, not grab reach.
-- A PhysBone whose Root Transform cannot be resolved is skipped instead of rooted on its object.
-- Disabled PhysBones, Dynamic Bones, colliders, VRChat constraints and head chops write nothing,
-  as they did nothing on the source: `physbone.disabled`, `dynamicbone.disabled`,
-  `collider.disabled`, `constraint.disabled`, `headChop.disabled`.
-- Basis constraints are always locked; VRChat forces Locked on in play. `constraint.locked`.
-- A lone constraint source below full weight and an Aim with World Up Type None are reported:
-  `constraint.source.weight.normalized`, `constraint.worldUp.none`.
-- The rig check requires Chest and Neck, as the Basis validator does, and warns about unmapped
-  shoulders: `rig.recommendedBones`.
-- A VRM 1.0 cone angle limit becomes a jiggle angle limit; hinge and spherical limits are
-  reported: `vrm.angleLimit.cone`, `vrm.angleLimit.dropped`. A chain's centre transform becomes
-  full ignore root motion: `vrm.center`. VRM gravity is reported as a fit: `vrm.gravity`.
-- VRM rigs no longer inherit a preset's angle limit, stretch, soften, air drag or root stretch.
-- Vixxy controls carry the parameter's `saved` and `networkSynced` flags as remember and
-  networked. A two-state control with a value other than 1 is written as 0 and 1:
-  `vixxy.values.normalized`. An avatar without HVR Avatar Comms is warned about:
-  `vixxy.commsMissing`.
-- A menu toggle keeps its other targets when one object is missing, and an activation that
-  changes nothing is left out.
-- A clip that plays on its own and does not loop now plays once and holds, as in the animator.
-  Layers animating something other than rotation are reported: `motion.notRotation`. State speed
-  carries over.
-- Modular Avatar menu items without a parameter take the one Modular Avatar assigns; the menu
-  label, default, saved and synced flags are read; an inverted Object Toggle acts while the item
-  is off; targets resolve by object reference before path. `Menu Install Target` is recognised.
+Every reader was audited against the VRChat SDK 3.10.5, UniVRM 0.131.2, Dynamic Bone 1.3.4 and
+Modular Avatar 1.18.7 sources. Most entries fix a field that was read for its name rather than
+for what the runtime does with it. The new report codes are listed on the documentation's
+report page.
 
 ### Fixed
 
-- A VRM 1.0 chain's tail joint fed its parameters into the curves; UniVRM never reads them.
-- A VRM rotation or roll constraint snapped the bone to the source's orientation at rest.
-- VRM 0.x visemes and blink are matched by preset, not by the clip's free-text name.
-- Upward VRM gravity was zeroed. The obsolete `VRMLookAt` driver is removed with the others.
-- A menu toggle that swapped materials was rebuilt without the swap and without a diagnostic.
-- A VRC Look At constraint rolled the wrong way on Basis. Roll is negated.
-- The at-rest pose read from a VRC constraint was overwritten by the transform's current pose.
-- A constraint whose Target Transform was its own transform was reported as retargeted.
-- Blink was written from stale eyelid settings when Eye Look was disabled:
-  `descriptor.eyeLook.disabled`. An unset blink slot no longer becomes shape -1.
-- A head chop entry naming the humanoid Head is dropped and reported; Basis ignores it:
-  `headChop.head.ignored`.
-- A PhysBone root with one child stayed still after conversion whatever Multi Child Type said.
-  VRChat simulates such a root; the rig now does too. `physbone.multiChildType.oneChild`,
-  `physbone.multiChildType.ignoreBranches`.
-- The spring falloff curve was applied to drag, which runs the other way, inverting the falloff.
-  It is dropped: `physbone.springCurve.dropped`.
-- The pre-rename keys `isGrabbable` and `isPoseable` are read when the current ones are absent.
-- The rig's serialized version is set outright; the preset's stale version ran an upgrade on it.
-- The root particle no longer inherits a preset's root stretch.
-- A rig whose root bone was in its own ignore list aborted the conversion in the editor. The
-  root is kept motionless instead: `physics.excludedRoot`. A rig whose preset fails to load takes
-  jiggle's defaults.
-- A Dynamic Bone with no root wrote a rig on its own object and jiggled everything below it.
-  It now writes nothing: `dynamicbone.noRoot`. An unresolvable root skips that chain.
-- A Dynamic Bone with radius 0 and colliders lost collision. It now collides at radius 0.01:
-  `dynamicbone.radius.zero`.
-- The stiffness and inert distribution curves were dropped without a diagnostic:
-  `dynamicbone.stiffnessCurve.dropped`, `dynamicbone.inertCurve.dropped`.
-- End Length 1 with no offset matches jiggle's own tip and is no longer reported as dropped.
-- A second capsule radius within 0.01 of the first no longer reports a taper, matching
-  Dynamic Bone.
-- A PhysBone with Allow Collision off kept its listed colliders in VRChat but lost collision on
-  the jiggle rig. Collision now follows the radius alone. `physbone.allowCollision.off` is
-  Approximated: Basis's global hand, arm and foot colliders cannot be excluded per rig.
+- PhysBones with Allow Collision off lost collision with their own colliders. That setting only
+  governs other players' hands.
+- A PhysBone root with one child stayed still after conversion. VRChat simulates it.
+- The spring falloff curve was applied to drag, which runs the other way. It is dropped instead.
+- A PhysBone with radius 0 became grabbable. VRChat never grabs it.
+- A Dynamic Bone with no root jiggled everything under its object. It now writes nothing.
+- A Dynamic Bone with radius 0 and colliders lost collision.
+- Disabled PhysBones, Dynamic Bones, colliders, constraints and head chops were converted as
+  enabled. They now write nothing.
+- VRChat Look At constraints rolled the wrong way. A constraint's at-rest pose was overwritten by
+  the transform's current pose.
+- Blink was written from eyelid settings left behind when Eye Look was off.
+- Head chop entries naming the humanoid Head are dropped; Basis ignores them.
+- VRM: the 1.0 tail joint's unused parameters shaped the curves; rotation and roll constraints
+  snapped bones to the source at rest; 0.x visemes and blink are matched by preset, not by name;
+  upward gravity was zeroed; presets no longer leak angle limits and stretch into VRM rigs.
+- A menu toggle that swaps materials is reported instead of rebuilt without the swap. A toggle
+  keeps its other objects when one is missing.
+- A clip that plays on its own and does not loop now plays once and holds, as in the animator.
+- Modular Avatar menu items without a parameter, inverted Object Toggles, labels and defaults
+  follow Modular Avatar's own rules.
+
+### Changed
+
+- Dynamic Bone elasticity, stiffness, damping and gravity are derived from its simulation rather
+  than reusing the PhysBone fit. Gravity is left to the preset and reported.
+- More of the mapping is labelled Approximated where the two systems differ: PhysBone gravity
+  and falloff curves, hinge limits, VRM gravity and cone limits.
+- The rig check requires Chest and Neck, as the Basis validator does.
+- Vixxy controls carry the parameter's saved and synced flags. A missing HVR Avatar Comms is
+  warned about.
 
 ## [0.5.8] - 2026-09-07
 
