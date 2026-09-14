@@ -559,11 +559,6 @@ namespace yuna0x0.Basis.Convert.Sources
             return property == null ? (bool?)null : property.boolValue;
         }
 
-        private static int Count(SerializedProperty list)
-        {
-            return list == null || !list.isArray ? 0 : list.arraySize;
-        }
-
         /// <summary>
         /// VRM 1.0 weights run from 0 to 1, and Unity's blendshape weights from 0 to 100.
         /// UniVRM's own constant for this is `MorphTargetBinding.VRM_TO_UNITY`.
