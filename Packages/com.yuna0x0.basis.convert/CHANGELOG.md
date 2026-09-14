@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-14
+
 ### Fixed
 
 - A menu toggle whose clip also enabled or disabled a PhysBone or a renderer was dropped whole,
@@ -384,7 +386,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.1
 [0.8.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.0
 [0.7.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.7.0
 [0.6.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.6.0
