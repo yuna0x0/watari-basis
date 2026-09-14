@@ -22,6 +22,10 @@ Everything here is also reported by the tool. This is the same information in on
 - **Expression parameters as a system.** Vixxy controls hold their own state, so there is no
   parameter list to recreate.
 - **Custom animation layers**, gestures, sitting and IK poses.
+- **Anything that only exists while an animator runs.** Gesture blends, radials that scrub a
+  clip through motion time, layers that interact. The animator is read to find the constant
+  values a menu entry sets, never run. Such layers are named in the report (`fx.layersUnread`,
+  `motion.motionTime`).
 - **Overrides made on a scene instance.** A prefab variant's overrides and a nested prefab's
   overrides are read from their files. A value changed on the instance in the scene, on a
   component that arrives as a missing script, is not.

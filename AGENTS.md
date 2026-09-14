@@ -88,6 +88,13 @@ Close the Unity editor before any git operation on the Basis clone, and check th
 actually closed. Switching branches under a running editor can corrupt its Library, which is
 tens of gigabytes and slow to rebuild.
 
+## The scope line
+
+In: data on components, plus the constant values menu entries set. Out: anything that only exists
+while an animator is running. The animator is read to find data, never run. See
+`agent/decisions/0017`. A survey turning up another animator shape is not a reason to build;
+a wrong result on a real avatar or the user's ask is.
+
 ## Constraints that are easy to violate
 
 - **Editor-only.** Basis validates loaded avatars against an allow-list of component types, and
