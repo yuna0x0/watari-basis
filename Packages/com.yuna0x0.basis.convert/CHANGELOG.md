@@ -6,6 +6,12 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-09-14
+
+### Changed
+
+- Internal cleanup only: an unused helper removed. Nothing converts differently.
+
 ## [0.8.1] - 2026-09-14
 
 ### Fixed
@@ -338,7 +344,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.2
 [0.8.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.1
 [0.8.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.0
 [0.7.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.7.0
