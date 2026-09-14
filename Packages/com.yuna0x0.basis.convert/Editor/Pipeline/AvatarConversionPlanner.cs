@@ -2241,6 +2241,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 PlannedVixxyControl planned = new PlannedVixxyControl { Plan = control };
                 List<VixxyActivationPlan> kept = new List<VixxyActivationPlan>();
+                int rigSwitches = 0;
+                int rendererSwitches = 0;
 
                 foreach (VixxyActivationPlan activation in control.Activations)
                 {
@@ -2250,6 +2252,36 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     {
                         kept.Add(activation);
                         planned.SourceTargets.Add(null);
+                        planned.SourceRigs.Add(null);
+                        continue;
+                    }
+
+                    // A script switch is a PhysBone switch when a rig is planned on that object;
+                    // the control then drives the rig. Any other script has no counterpart.
+                    if (activation.Target == VixxyActivationTarget.Component)
+                    {
+                        Transform host = root.Find(activation.Path);
+                        PlannedJiggleRig rig = host == null ? null : RigHostedAt(plan, host);
+                        if (rig == null)
+                        {
+                            plan.ToggleDiagnostics.Add(DiagnosticSeverity.Dropped,
+                                "vixxy.componentSwitch.dropped",
+                                $"'{control.MenuName}' switches a component on {activation.Path} "
+                                + "that is not a converted PhysBone. That switch was left out.");
+                            continue;
+                        }
+
+                        // A converted PhysBone is enabled; disabled ones write no rig at all.
+                        VixxyAuthoredDefaults.Apply(activation, true);
+                        if (AllEqual(activation.Choices))
+                        {
+                            continue;
+                        }
+
+                        kept.Add(activation);
+                        planned.SourceTargets.Add(host);
+                        planned.SourceRigs.Add(rig);
+                        rigSwitches++;
                         continue;
                     }
 
@@ -2273,6 +2305,32 @@ namespace yuna0x0.Basis.Convert.Pipeline
                         continue;
                     }
 
+                    // A renderer switch drives the renderer's enabled flag, which Vixxy does for
+                    // a Renderer component the same way it sets an object active.
+                    if (activation.Target == VixxyActivationTarget.Renderer)
+                    {
+                        Renderer renderer = target.GetComponent<Renderer>();
+                        if (renderer == null)
+                        {
+                            plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.targetMissing",
+                                $"'{control.MenuName}' switches a renderer on {activation.Path}, "
+                                + "which has none in this avatar. That switch was left out.");
+                            continue;
+                        }
+
+                        VixxyAuthoredDefaults.Apply(activation, renderer.enabled);
+                        if (AllEqual(activation.Choices))
+                        {
+                            continue;
+                        }
+
+                        kept.Add(activation);
+                        planned.SourceTargets.Add(target);
+                        planned.SourceRigs.Add(null);
+                        rendererSwitches++;
+                        continue;
+                    }
+
                     // Whatever the toggle did not animate stays as the avatar was authored.
                     VixxyAuthoredDefaults.Apply(activation, target.gameObject.activeSelf);
 
@@ -2285,9 +2343,18 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                     kept.Add(activation);
                     planned.SourceTargets.Add(target);
+                    planned.SourceRigs.Add(null);
                 }
 
                 control.Activations = kept;
+
+                if (rigSwitches > 0 || rendererSwitches > 0)
+                {
+                    plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.componentSwitch",
+                        $"'{control.MenuName}' switches {rigSwitches} PhysBones and "
+                        + $"{rendererSwitches} renderers. The control enables and disables the "
+                        + "jiggle rigs and renderers the same way it switches objects.");
+                }
 
                 if (control.Activations.Count == 0 && control.Subjects.Count == 0)
                 {
@@ -2314,6 +2381,20 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     + "each with a menu item. The rest are listed above with why they were not.");
                 WarnIfCommsMissing(plan);
             }
+        }
+
+        /// <summary>The planned rig whose PhysBone sits on this object, if any.</summary>
+        private static PlannedJiggleRig RigHostedAt(AvatarConversionPlan plan, Transform host)
+        {
+            foreach (PlannedJiggleRig rig in plan.Rigs)
+            {
+                if (rig.SourceHost == host)
+                {
+                    return rig;
+                }
+            }
+
+            return null;
         }
 
         private static bool AllEqual(bool[] choices)

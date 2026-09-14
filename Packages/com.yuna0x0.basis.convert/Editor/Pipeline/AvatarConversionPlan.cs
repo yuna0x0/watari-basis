@@ -68,6 +68,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public List<Transform> SourceTargets = new List<Transform>();
 
         /// <summary>
+        /// One per activation, in the same order: the planned rig a script switch resolved to,
+        /// or null for every other kind of activation.
+        /// </summary>
+        public List<PlannedJiggleRig> SourceRigs = new List<PlannedJiggleRig>();
+
+        /// <summary>
         /// Renderers the subjects name, in the same order as the plan's subjects. Blendshapes
         /// need a skinned mesh; material properties work on any renderer.
         /// </summary>

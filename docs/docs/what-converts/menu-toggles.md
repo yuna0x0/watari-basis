@@ -63,6 +63,11 @@ is reported as `vixxy.puppetEnds`.
   parameter list to recreate, and anything driven by parameters outside a toggle has to be
   rebuilt by hand.
 
+A toggle that switches a PhysBone or a renderer on or off carries that switch: the control
+enables and disables the jiggle rig written for the PhysBone, or the renderer, the same way it
+switches an object. A switch on any other component is left out and reported
+(`vixxy.componentSwitch.dropped`).
+
 A toggle that cannot be rebuilt is reported and left alone rather than partly converted. The one
 exception is an object the clip names that this avatar does not have: the control is written
 without it and the report says so (`vixxy.targetMissing`).

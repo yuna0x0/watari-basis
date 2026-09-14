@@ -499,6 +499,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 effects.Deactivated[i] = Join(prefix, effects.Deactivated[i]);
             }
 
+            foreach (ComponentEnableEffect enable in effects.ComponentEnables)
+            {
+                enable.Path = Join(prefix, enable.Path);
+            }
+
             for (int i = 0; i < effects.AnimatedRotationPaths.Count; i++)
             {
                 effects.AnimatedRotationPaths[i] =

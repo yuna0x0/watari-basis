@@ -93,6 +93,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                 plan.Activations.Add(activation);
             }
 
+            MapComponentSwitches(toggle, plan);
             MapBlendShapes(toggle, plan);
             MapMaterialProperties(toggle, plan);
 
@@ -125,6 +126,50 @@ namespace yuna0x0.Basis.Convert.Mapping
         }
 
         /// <summary>
+        /// A clip that enables or disables a component becomes an activation on that component:
+        /// a renderer directly, a script through the jiggle rig written for the PhysBone there,
+        /// which the planner resolves. As with objects, a choice that says nothing leaves the
+        /// component as authored.
+        /// </summary>
+        private static void MapComponentSwitches(ResolvedToggle toggle, VixxyControlPlan plan)
+        {
+            int count = toggle.Choices.Count;
+            Dictionary<(string, bool), bool>[] states = new Dictionary<(string, bool), bool>[count];
+            HashSet<(string, bool)> keys = new HashSet<(string, bool)>();
+
+            for (int choice = 0; choice < count; choice++)
+            {
+                states[choice] = new Dictionary<(string, bool), bool>();
+                foreach (Sources.ComponentEnableEffect effect in toggle.Choices[choice].Effects.ComponentEnables)
+                {
+                    bool renderer = effect.TypeName.EndsWith("Renderer");
+                    states[choice][(effect.Path, renderer)] = effect.Enabled;
+                }
+
+                keys.UnionWith(states[choice].Keys);
+            }
+
+            foreach ((string path, bool renderer) in keys)
+            {
+                VixxyActivationPlan activation = new VixxyActivationPlan
+                {
+                    Path = path,
+                    Target = renderer ? VixxyActivationTarget.Renderer : VixxyActivationTarget.Component,
+                    Choices = new bool[count],
+                    Set = new bool[count],
+                };
+
+                for (int choice = 0; choice < count; choice++)
+                {
+                    activation.Set[choice] = states[choice].TryGetValue((path, renderer), out bool enabled);
+                    activation.Choices[choice] = enabled;
+                }
+
+                plan.Activations.Add(activation);
+            }
+        }
+
+        /// <summary>
         /// Turns a choice that animates transforms over time into a motion the control switches.
         /// <para>
         /// The activation reads like any other: on for the choice whose clip carried the
@@ -152,6 +197,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                 // resolves against the avatar, and that is known a layer further out.
                 VixxyActivationPlan activation = new VixxyActivationPlan
                 {
+                    Target = VixxyActivationTarget.Motion,
                     MotionIndex = plan.Motions.Count,
                     Choices = new bool[count],
                     Set = new bool[count],

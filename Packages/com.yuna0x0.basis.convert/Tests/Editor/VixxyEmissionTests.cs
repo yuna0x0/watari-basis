@@ -69,7 +69,14 @@ namespace yuna0x0.Basis.Convert.Tests
 
                 foreach (VixxyActivationPlan activation in control.Plan.Activations)
                 {
-                    Assert.That(activation.Choices[0], Is.Not.EqualTo(activation.Choices[1]),
+                    // A selector has one choice per value; a switch is real when any differ.
+                    bool anyDiffers = false;
+                    foreach (bool choice in activation.Choices)
+                    {
+                        anyDiffers |= choice != activation.Choices[0];
+                    }
+
+                    Assert.That(anyDiffers, Is.True,
                         $"{control.Plan.MenuName} would not change {activation.Path} at all.");
                 }
 
@@ -172,18 +179,21 @@ namespace yuna0x0.Basis.Convert.Tests
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);
 
-            bool reported = false;
+            // This avatar's hair toggles disable the PhysBones of the hair they hide. Those
+            // switches carry over onto the rigs; anything else a control cannot hold is reported.
+            bool switched = false;
             foreach (ConversionDiagnostic diagnostic in plan.AllDiagnostics())
             {
-                if (diagnostic.Code == "vixxy.notSimple")
+                if (diagnostic.Code == "vixxy.componentSwitch"
+                    || diagnostic.Code == "vixxy.notSimple")
                 {
-                    reported = true;
+                    switched |= diagnostic.Code == "vixxy.componentSwitch";
                     TestContext.WriteLine(diagnostic.Message);
                 }
             }
 
-            Assert.That(reported, Is.True,
-                "Toggles doing more than switching objects should be reported, not half built.");
+            Assert.That(switched, Is.True,
+                "A toggle that disables PhysBones should switch their rigs, not be dropped.");
         }
     }
 }

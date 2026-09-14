@@ -39,6 +39,16 @@ namespace yuna0x0.Basis.Convert.Sources
     }
 
     /// <summary>What a clip does, reduced to the states Vixxy can hold.</summary>
+    /// <summary>A component the clip enables or disables, by driving its m_Enabled.</summary>
+    public sealed class ComponentEnableEffect
+    {
+        public string Path = string.Empty;
+
+        /// <summary>The binding's type name: a renderer type, or MonoBehaviour for a script.</summary>
+        public string TypeName = string.Empty;
+        public bool Enabled;
+    }
+
     public sealed class ClipEffects
     {
         /// <summary>Transform paths the clip switches on, by driving m_IsActive to 1.</summary>
@@ -51,6 +61,12 @@ namespace yuna0x0.Basis.Convert.Sources
 
         public List<MaterialPropertyEffect> MaterialProperties =
             new List<MaterialPropertyEffect>();
+
+        /// <summary>
+        /// Components the clip switches on or off. A clothes toggle commonly disables the
+        /// PhysBones of what it hides, and some toggle a renderer rather than its object.
+        /// </summary>
+        public List<ComponentEnableEffect> ComponentEnables = new List<ComponentEnableEffect>();
 
         /// <summary>
         /// Curves driving something other than object activity, a blendshape or a material
@@ -77,7 +93,7 @@ namespace yuna0x0.Basis.Convert.Sources
 
         public bool IsEmpty =>
             Activated.Count == 0 && Deactivated.Count == 0 && BlendShapes.Count == 0
-            && MaterialProperties.Count == 0;
+            && MaterialProperties.Count == 0 && ComponentEnables.Count == 0;
     }
 
     /// <summary>
@@ -158,6 +174,17 @@ namespace yuna0x0.Basis.Convert.Sources
                 if (TryReadMaterialProperty(binding, value, out MaterialPropertyEffect material))
                 {
                     effects.MaterialProperties.Add(material);
+                    continue;
+                }
+
+                if (binding.propertyName == "m_Enabled" && binding.type != typeof(GameObject))
+                {
+                    effects.ComponentEnables.Add(new ComponentEnableEffect
+                    {
+                        Path = binding.path,
+                        TypeName = binding.type != null ? binding.type.Name : string.Empty,
+                        Enabled = value >= 0.5f,
+                    });
                     continue;
                 }
 

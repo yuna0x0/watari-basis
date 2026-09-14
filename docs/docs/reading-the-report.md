@@ -229,6 +229,8 @@ on the case; the usual one is given.
 | `vixxy.builtinGuard` | Approximated | The layer also waited on a VRChat parameter such as `IsLocal`. The control switches whenever it is used. |
 | `vixxy.materialBlock` | Approximated | The control sets material properties on a renderer with several materials. Vixxy sets them per renderer, so all are affected. |
 | `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar. That object was left out. |
+| `vixxy.componentSwitch` | Mapped | The toggle switches PhysBones or renderers on or off. The control drives their jiggle rigs and renderers. |
+| `vixxy.componentSwitch.dropped` | Dropped | The toggle switches a component that is not a converted PhysBone or a renderer. That switch was left out. |
 | `vixxy.rootActivation` | Warning | The control switches the avatar root, which Vixxy refuses. That object was left out. |
 | `vixxy.overlap` | Warning | Two controls set the same object, blendshape or property. The control used last wins on Basis. |
 | `fx.layersUnread` | Dropped | FX layers nothing read, by name. Only menu-steered layers and layers that play on their own are read. |

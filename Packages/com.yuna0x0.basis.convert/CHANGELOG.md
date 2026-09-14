@@ -6,6 +6,13 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A menu toggle whose clip also enabled or disabled a PhysBone or a renderer was dropped whole,
+  its object switches included. The control now drives the jiggle rig or renderer:
+  `vixxy.componentSwitch`. A switch on any other component is left out and reported:
+  `vixxy.componentSwitch.dropped`.
+
 ## [0.8.0] - 2026-09-14
 
 ### Removed

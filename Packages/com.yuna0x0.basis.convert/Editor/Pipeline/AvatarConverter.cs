@@ -67,6 +67,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             Transform target = targetRoot.transform;
             Dictionary<ConversionSource, Transform> roots = LocateSources(plan, target, result);
+            Dictionary<PlannedJiggleRig, JiggleRig> rigs = new Dictionary<PlannedJiggleRig, JiggleRig>();
 
             foreach (PlannedJiggleRig planned in plan.SelectedRigs())
             {
@@ -116,7 +117,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     }
                 }
 
-                result.Written.Add(JiggleRigWriter.Write(resolved, undoName));
+                JiggleRig written = JiggleRigWriter.Write(resolved, undoName);
+                rigs[planned] = written;
+                result.Written.Add(written);
                 result.RigsWritten++;
             }
 
@@ -165,7 +168,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Dictionary<PlannedAuthoredMotion, BasisAuthoredMotion> motions =
                 WriteAuthoredMotions(plan, roots, target, undoName, result);
 
-            WriteVixxyControls(plan, roots, target, motions, undoName, result);
+            WriteVixxyControls(plan, roots, target, motions, rigs, undoName, result);
             RemoveVrmRuntime(target, undoName, result);
 
             Undo.CollapseUndoOperations(group);
@@ -305,7 +308,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
         private static void WriteVixxyControls(
             AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
             Transform target, Dictionary<PlannedAuthoredMotion, BasisAuthoredMotion> motions,
-            string undoName, ConversionResult result)
+            Dictionary<PlannedJiggleRig, JiggleRig> rigs, string undoName, ConversionResult result)
         {
             foreach (PlannedVixxyControl planned in plan.SelectedVixxyControls())
             {
@@ -350,6 +353,34 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     {
                         ok = false;
                         break;
+                    }
+
+                    VixxyActivationTarget kind = i < planned.Plan.Activations.Count
+                        ? planned.Plan.Activations[i].Target
+                        : VixxyActivationTarget.Object;
+
+                    // A PhysBone switch drives the rig written for it. Left out of the write,
+                    // the control still switches whatever else it holds.
+                    if (kind == VixxyActivationTarget.Component)
+                    {
+                        PlannedJiggleRig rig = i < planned.SourceRigs.Count ? planned.SourceRigs[i] : null;
+                        if (rig != null && rigs.TryGetValue(rig, out JiggleRig component))
+                        {
+                            component.enabled = StartsOn(planned.Plan, i);
+                            resolved.Targets.Add(component);
+                        }
+                        else
+                        {
+                            resolved.Targets.Add(null);
+                        }
+
+                        continue;
+                    }
+
+                    if (kind == VixxyActivationTarget.Renderer)
+                    {
+                        resolved.Targets.Add(translated.GetComponent<Renderer>());
+                        continue;
                     }
 
                     resolved.Targets.Add(translated);

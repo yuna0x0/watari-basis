@@ -4,10 +4,31 @@ using UnityEngine;
 namespace yuna0x0.Basis.Convert.Model
 {
     /// <summary>One object a control switches, and its state in each choice.</summary>
+    /// <summary>What an activation switches. Vixxy holds a Component either way.</summary>
+    public enum VixxyActivationTarget
+    {
+        /// <summary>The object at the path, through its Transform.</summary>
+        Object,
+
+        /// <summary>An authored motion this conversion writes; see <see cref="VixxyActivationPlan.MotionIndex"/>.</summary>
+        Motion,
+
+        /// <summary>The renderer on the object at the path, through its enabled flag.</summary>
+        Renderer,
+
+        /// <summary>
+        /// A script component on the object at the path. Resolved later to the jiggle rig
+        /// written for a PhysBone there; anything else is dropped and reported.
+        /// </summary>
+        Component,
+    }
+
     public sealed class VixxyActivationPlan
     {
         /// <summary>Transform path relative to the avatar root.</summary>
         public string Path = string.Empty;
+
+        public VixxyActivationTarget Target = VixxyActivationTarget.Object;
 
         /// <summary>
         /// Index into the control's <see cref="VixxyControlPlan.Motions"/> when this activation
