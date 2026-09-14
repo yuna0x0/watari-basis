@@ -1,4 +1,3 @@
-using System.IO;
 using NUnit.Framework;
 using yuna0x0.Basis.Convert.Pipeline;
 
@@ -6,11 +5,11 @@ namespace yuna0x0.Basis.Convert.Tests
 {
     public class SourceProfileTests
     {
-        private const string AvatarFixture =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string AvatarFixture =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
-        private const string ModelFixture =
-            "Assets/yuna0x0/Avatars/Shinano/FBX/Shinano.fbx";
+        private static readonly string ModelFixture =
+            LocalFixtures.Find(LocalFixtures.ShinanoModel);
 
         private const string PropFixture =
             "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/DynamicBoneChain.prefab";
@@ -18,9 +17,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void AVrchatAvatarIsNamedAsOne()
         {
-            if (!File.Exists(AvatarFixture))
+            if (AvatarFixture == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarFixture}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             SourceProfile profile = AvatarConversionPlanner.Plan(AvatarFixture).Profile;
@@ -49,9 +48,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ABareHumanoidIsFlaggedAsHavingNothingToConvert()
         {
-            if (!File.Exists(ModelFixture))
+            if (ModelFixture == null)
             {
-                Assert.Ignore($"Fixture not present at {ModelFixture}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoModel}.");
             }
 
             SourceProfile profile = AvatarConversionPlanner.Plan(ModelFixture).Profile;

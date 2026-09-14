@@ -54,6 +54,9 @@ each with a humanoid rig, a face with the blendshapes its expressions bind to, a
 expressions, licence, eye offset and spring bones. Their `Avatar` and mesh assets are generated,
 since a rig Unity validates and blendshape frames cannot be hand-written. Prefer extending these
 over reaching for a real avatar, so the suite runs on a machine that has no purchased assets.
+The tests that do read a real avatar find it through `LocalFixtures`, which looks under each
+folder of `Assets/_UserContent` (the folder Basis keeps out of version control) and of `Assets`,
+and skip when it is absent.
 The animator half, and the VRM fixtures' rig and face, are generated through
 `Tools/Watari/Development/Regenerate Test Fixtures`, because hand-writing a state machine
 produces files that look right and do not load. The generated assets are committed; tests do not

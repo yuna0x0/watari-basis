@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using GatorDragonGames.JigglePhysics;
 using NUnit.Framework;
 using UnityEditor;
@@ -20,12 +19,11 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class AssembledAvatarTests
     {
-        private const string AvatarPath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string AvatarPath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
-        private const string ClothingPath =
-            "Assets/yuna0x0/Avatar Cloth/EXTENSION CLOTHING/BISQUE DOLL/For Shinano/"
-            + "Black Gimmick.prefab";
+        private static readonly string ClothingPath = LocalFixtures.Find(
+            "Avatar Cloth/EXTENSION CLOTHING/BISQUE DOLL/For Shinano/Black Gimmick.prefab");
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
@@ -45,7 +43,7 @@ namespace yuna0x0.Basis.Convert.Tests
 
         private GameObject Assembled()
         {
-            if (!File.Exists(AvatarPath) || !File.Exists(ClothingPath))
+            if (AvatarPath == null || ClothingPath == null)
             {
                 Assert.Ignore("This needs an avatar and a piece of clothing for it.");
             }

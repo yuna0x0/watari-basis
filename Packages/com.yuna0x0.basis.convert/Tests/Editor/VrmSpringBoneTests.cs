@@ -359,8 +359,10 @@ namespace yuna0x0.Basis.Convert.Tests
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             try
             {
-                Assert.That(HasComponentNamed(instance, "Vrm10Instance"), Is.True,
-                    "the fixture carries a live Vrm10Instance while UniVRM is installed");
+                if (!HasComponentNamed(instance, "Vrm10Instance"))
+                {
+                    Assert.Ignore("UniVRM is not installed, so the fixture carries missing scripts.");
+                }
 
                 ConversionResult result = AvatarConverter.Apply(plan, instance);
 

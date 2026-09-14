@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using yuna0x0.Basis.Convert.Model;
@@ -10,8 +9,8 @@ namespace yuna0x0.Basis.Convert.Tests
 {
     public class RigReadinessTests
     {
-        private const string FixturePath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string FixturePath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
@@ -116,9 +115,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ARealAvatarIsInspectedAsPartOfPlanning()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);

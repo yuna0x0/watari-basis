@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using HVR.Vixxy;
 using NUnit.Framework;
 using UnityEditor;
@@ -19,8 +18,8 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class MaterialPropertyTests
     {
-        private const string AvatarPath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string AvatarPath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         private GameObject _instance;
 
@@ -179,9 +178,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void TheAvatarsMaterialTogglesConvertAndCarryTheirPropertyNames()
         {
-            if (!File.Exists(AvatarPath))
+            if (AvatarPath == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(AvatarPath);
@@ -223,9 +222,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void MaterialPropertiesAreWrittenAsVixxyPropertiesOnTheAvatar()
         {
-            if (!File.Exists(AvatarPath))
+            if (AvatarPath == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(AvatarPath);

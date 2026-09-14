@@ -1,4 +1,3 @@
-using System.IO;
 using HVR.Vixxy;
 using NUnit.Framework;
 using UnityEditor;
@@ -10,8 +9,8 @@ namespace yuna0x0.Basis.Convert.Tests
 {
     public class VixxyEmissionTests
     {
-        private const string FixturePath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string FixturePath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         private GameObject _instance;
 
@@ -28,9 +27,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ToggleThatOnlySwitchesObjectsBecomesAControl()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);
@@ -105,9 +104,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ConvertingWritesTheControlsAndTheirMenuItems()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);
@@ -172,9 +171,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void AToggleDoingMoreThanSwitchingObjectsIsLeftAlone()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);

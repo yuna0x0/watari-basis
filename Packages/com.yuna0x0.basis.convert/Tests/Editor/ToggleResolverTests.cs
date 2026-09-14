@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using yuna0x0.Basis.Convert.Pipeline;
 
@@ -7,15 +6,15 @@ namespace yuna0x0.Basis.Convert.Tests
 {
     public class ToggleResolverTests
     {
-        private const string FixturePath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string FixturePath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         [Test]
         public void MenuTogglesAreTracedToTheirAnimatorLayers()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);

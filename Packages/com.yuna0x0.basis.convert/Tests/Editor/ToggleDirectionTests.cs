@@ -1,4 +1,3 @@
-using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -20,15 +19,15 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class ToggleDirectionTests
     {
-        private const string AvatarPath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string AvatarPath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         [Test]
         public void PrintTheDirectionOfEveryRebuiltToggle()
         {
-            if (!File.Exists(AvatarPath))
+            if (AvatarPath == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(AvatarPath);
@@ -63,9 +62,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ASideThatAnimatesNothingKeepsTheAuthoredState()
         {
-            if (!File.Exists(AvatarPath))
+            if (AvatarPath == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(AvatarPath);

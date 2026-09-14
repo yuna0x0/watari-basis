@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using yuna0x0.Basis.Convert.Model;
@@ -9,8 +8,8 @@ namespace yuna0x0.Basis.Convert.Tests
 {
     public class VrcConstraintDocumentReaderTests
     {
-        private const string FixturePath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string FixturePath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         /// <summary>
         /// The real serialized shape: sixteen fixed slots, then totalLength, then an overflow
@@ -154,9 +153,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ReadsTheConstraintsInARealAvatar()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             int found = 0;

@@ -1,4 +1,3 @@
-using System.IO;
 using Basis.Scripts.BasisSdk;
 using NUnit.Framework;
 using UnityEditor;
@@ -14,8 +13,8 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class NonVrchatAvatarTests
     {
-        private const string HumanoidModelPath =
-            "Assets/yuna0x0/Avatars/Shinano/FBX/Shinano.fbx";
+        private static readonly string HumanoidModelPath =
+            LocalFixtures.Find(LocalFixtures.ShinanoModel);
 
         private const string DynamicBoneFixture =
             "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/DynamicBoneChain.prefab";
@@ -35,9 +34,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void AHumanoidWithNoVrchatComponentsStillGetsABasisAvatar()
         {
-            if (!File.Exists(HumanoidModelPath))
+            if (HumanoidModelPath == null)
             {
-                Assert.Ignore($"Fixture not present at {HumanoidModelPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoModel}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(HumanoidModelPath);
@@ -63,9 +62,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void TheRigIsCheckedWhateverTheAvatarWasMadeFor()
         {
-            if (!File.Exists(HumanoidModelPath))
+            if (HumanoidModelPath == null)
             {
-                Assert.Ignore($"Fixture not present at {HumanoidModelPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoModel}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(HumanoidModelPath);
@@ -89,9 +88,9 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void ConvertingAHumanoidWithNoVrchatDataWritesTheComponent()
         {
-            if (!File.Exists(HumanoidModelPath))
+            if (HumanoidModelPath == null)
             {
-                Assert.Ignore($"Fixture not present at {HumanoidModelPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoModel}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(HumanoidModelPath);

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using UnityEditor.Animations;
 using yuna0x0.Basis.Convert.Model;
@@ -14,15 +13,15 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class ToggleTracingDiagnosticTests
     {
-        private const string AvatarPath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string AvatarPath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         [Test]
         public void PrintWhyEachMenuToggleIsOrIsNotTraced()
         {
-            if (!File.Exists(AvatarPath))
+            if (AvatarPath == null)
             {
-                Assert.Ignore($"Fixture not present at {AvatarPath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(AvatarPath);

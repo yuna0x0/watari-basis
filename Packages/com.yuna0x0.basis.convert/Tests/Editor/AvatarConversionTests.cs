@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using Basis.Scripts.BasisSdk.Constraints;
 using GatorDragonGames.JigglePhysics;
 using NUnit.Framework;
@@ -16,8 +15,8 @@ namespace yuna0x0.Basis.Convert.Tests
     /// </summary>
     public class AvatarConversionTests
     {
-        private const string FixturePath =
-            "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
+        private static readonly string FixturePath =
+            LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
 
         private GameObject _instance;
 
@@ -33,9 +32,9 @@ namespace yuna0x0.Basis.Convert.Tests
 
         private static void RequireFixture()
         {
-            if (!File.Exists(FixturePath))
+            if (FixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {FixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
         }
 

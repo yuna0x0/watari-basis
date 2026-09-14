@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Pipeline;
@@ -76,10 +75,10 @@ namespace yuna0x0.Basis.Convert.Tests
         [Test]
         public void TheReportCoversARealAvatarEndToEnd()
         {
-            const string fixturePath = "Assets/yuna0x0/Avatars/Shinano/Prefab/Shinano.prefab";
-            if (!File.Exists(fixturePath))
+            string fixturePath = LocalFixtures.Find(LocalFixtures.ShinanoPrefab);
+            if (fixturePath == null)
             {
-                Assert.Ignore($"Fixture not present at {fixturePath}.");
+                Assert.Ignore($"Fixture not present: {LocalFixtures.ShinanoPrefab}.");
             }
 
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(fixturePath);
