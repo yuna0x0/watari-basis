@@ -2,7 +2,7 @@ name: Checks
 
 # The EditMode tests need a Basis project and a Unity licence, so they are not run here. What
 # this checks is that the documentation site still builds, which catches a broken link or a bad
-# page before it reaches Pages.
+# page before it reaches Pages, and that no docs paragraph or changelog entry runs long.
 
 on:
   pull_request:
@@ -10,6 +10,12 @@ on:
     branches: [main]
 
 jobs:
+  prose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 scripts/check-prose.py
+
   docs:
     runs-on: ubuntu-latest
     steps:

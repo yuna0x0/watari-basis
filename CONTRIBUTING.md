@@ -101,6 +101,11 @@ expected. If the source avatar is not yours to share, the settings alone are usu
 Releases are immutable: publishing locks the assets and the tag for good. The workflow attaches
 everything to a draft and publishes it as a separate step. Keep that shape for prereleases too.
 
+## Prose
+
+`python3 scripts/check-prose.py` fails on a docs paragraph over 70 words or a changelog entry over
+two lines. It runs in the Checks workflow; run it before a release.
+
 ## Documentation
 
 The documentation site is a Docusaurus project in `docs/`, run with pnpm:

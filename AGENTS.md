@@ -151,6 +151,9 @@ This is "read the code, not the docs" under Lessons, applied to interfaces.
 
 Nobody reads a wall of text. This applies hardest to the changelog and release notes, and to
 commit messages, docs, diagnostics and code comments after that.
+`scripts/check-prose.py` enforces the two measurable parts, paragraph and entry length, and
+runs in Checks. Run it before every release; it was added after 0.9.1 shipped with paragraphs
+that broke this rule.
 
 - **One line per changelog entry.** Say what changed. A second line only if the entry names a
   diagnostic code or a caveat a user would hit. Never a paragraph.
