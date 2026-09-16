@@ -14,6 +14,9 @@ namespace yuna0x0.Basis.Convert.Sources
 
         /// <summary>The reference written when the property is an object, else fileID 0.</summary>
         public string ObjectReference = string.Empty;
+
+        /// <summary>Guid of the file whose prefab instance carried this modification.</summary>
+        public string OriginGuid = string.Empty;
     }
 
     /// <summary>
@@ -36,7 +39,8 @@ namespace yuna0x0.Basis.Convert.Sources
             @"^data\[(?<index>\d+)\]$", RegexOptions.Compiled);
 
         /// <summary>The modifications every PrefabInstance in these documents carries.</summary>
-        public static List<PrefabModification> Read(List<UnityYamlDocument> documents)
+        public static List<PrefabModification> Read(
+            List<UnityYamlDocument> documents, string originGuid = null)
         {
             List<PrefabModification> modifications = new List<PrefabModification>();
             foreach (UnityYamlDocument document in documents)
@@ -102,6 +106,14 @@ namespace yuna0x0.Basis.Convert.Sources
                 }
             }
 
+            if (!string.IsNullOrEmpty(originGuid))
+            {
+                foreach (PrefabModification modification in modifications)
+                {
+                    modification.OriginGuid = originGuid.ToLowerInvariant();
+                }
+            }
+
             return modifications;
         }
 
@@ -114,6 +126,20 @@ namespace yuna0x0.Basis.Convert.Sources
             List<PrefabModification> modifications,
             Dictionary<string, Dictionary<long, UnityYamlDocument>> byGuid)
         {
+            return Apply(modifications, byGuid, null);
+        }
+
+        /// <summary>
+        /// Applies the overrides. A reference an outer prefab sets on a nested one, to an object
+        /// of the outer file, is written as a bare file id that means nothing in the nested file;
+        /// <paramref name="foreignId"/> turns the origin file's guid and id into an id the
+        /// nested file's resolver can hand back to the plan.
+        /// </summary>
+        public static int Apply(
+            List<PrefabModification> modifications,
+            Dictionary<string, Dictionary<long, UnityYamlDocument>> byGuid,
+            System.Func<string, long, long> foreignId)
+        {
             int applied = 0;
             foreach (PrefabModification modification in modifications)
             {
@@ -125,7 +151,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 }
 
                 string value = IsReference(modification.ObjectReference)
-                    ? modification.ObjectReference
+                    ? Translate(modification, foreignId)
                     : modification.Value;
 
                 if (SetPath(document.Lines, modification.PropertyPath, value))
@@ -161,6 +187,28 @@ namespace yuna0x0.Basis.Convert.Sources
             }
 
             return null;
+        }
+
+        private static readonly Regex LocalReference = new Regex(
+            @"^\{\s*fileID:\s*(?<id>-?\d+)\s*\}$", RegexOptions.Compiled);
+
+        /// <summary>A bare reference set from another file is rewritten to an id the plan owns.</summary>
+        private static string Translate(
+            PrefabModification modification, System.Func<string, long, long> foreignId)
+        {
+            if (foreignId == null || string.IsNullOrEmpty(modification.OriginGuid)
+                || modification.OriginGuid == modification.TargetGuid)
+            {
+                return modification.ObjectReference;
+            }
+
+            Match match = LocalReference.Match(modification.ObjectReference.Trim());
+            if (!match.Success || !long.TryParse(match.Groups["id"].Value, out long fileId))
+            {
+                return modification.ObjectReference;
+            }
+
+            return "{fileID: " + foreignId(modification.OriginGuid, fileId) + "}";
         }
 
         private static bool IsReference(string objectReference)
@@ -300,6 +348,15 @@ namespace yuna0x0.Basis.Convert.Sources
         {
             List<int> starts = EntryStarts(lines, keyLine, blockEnd, indent);
 
+            // A list that was empty in its own file has no entry to repeat. Overrides that grow
+            // one are reference lists, colliders and ignored transforms assigned to a nested
+            // PhysBone, so it is seeded with empty references for the entries to land in.
+            if (starts.Count == 0 && wanted >= 0)
+            {
+                Seed(lines, keyLine, ref blockEnd, indent, wanted + 1);
+                starts = EntryStarts(lines, keyLine, blockEnd, indent);
+            }
+
             // Unity fills a grown list by repeating its last entry.
             while (starts.Count <= wanted && starts.Count > 0)
             {
@@ -356,13 +413,26 @@ namespace yuna0x0.Basis.Convert.Sources
                 return true;
             }
 
-            if (size > starts.Count && starts.Count > 0)
+            if (size > starts.Count)
             {
                 int end = blockEnd;
                 TryEntry(lines, keyLine, ref end, indent, size - 1, out int _, out int _);
             }
 
             return true;
+        }
+
+        private static void Seed(List<string> lines, int keyLine, ref int blockEnd, int indent, int count)
+        {
+            lines[keyLine] = ReplaceValue(lines[keyLine], string.Empty).TrimEnd();
+            List<string> seeds = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                seeds.Add(new string(' ', indent) + "- {fileID: 0}");
+            }
+
+            lines.InsertRange(keyLine + 1, seeds);
+            blockEnd = keyLine + 1 + seeds.Count;
         }
 
         private static string ReplaceValue(string line, string value)

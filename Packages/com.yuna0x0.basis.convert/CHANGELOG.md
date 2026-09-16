@@ -6,6 +6,14 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A reference an outer prefab sets on a nested one, pointing at the outer prefab's own objects, is
+  followed. A PhysBone on a prefab of its own whose root bone, colliders or ignored transforms are
+  assigned on the avatar was dropped as unresolved; a descriptor kept on a nested prefab lost its meshes.
+- A list that was empty in a nested prefab's file and grown by an override is read; colliders assigned
+  to a nested PhysBone were dropped.
+
 ## [0.9.0] - 2026-09-17
 
 ### Added

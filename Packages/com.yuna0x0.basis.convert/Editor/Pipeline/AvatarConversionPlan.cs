@@ -209,6 +209,64 @@ namespace yuna0x0.Basis.Convert.Pipeline
         internal List<PrefabModification> Modifications = new List<PrefabModification>();
         public int OverridesApplied;
 
+        /// <summary>Each read file's resolver, by the file's guid, for references that cross files.</summary>
+        public Dictionary<string, PrefabObjectResolver> ResolversByGuid =
+            new Dictionary<string, PrefabObjectResolver>();
+
+        /// <summary>Colliders planned so far, by the file and id that define them.</summary>
+        public Dictionary<(string guid, long fileId), PlannedJiggleCollider> ColliderIndex =
+            new Dictionary<(string, long), PlannedJiggleCollider>();
+
+        private readonly Dictionary<long, (string guid, long fileId)> _foreign =
+            new Dictionary<long, (string, long)>();
+
+        /// <summary>
+        /// An id of the plan's own for an object of another file, stable for the pair. Real file
+        /// ids never carry the top bits set here.
+        /// </summary>
+        public long ForeignId(string guid, long fileId)
+        {
+            unchecked
+            {
+                long hash = 1469598103934665603L;
+                foreach (char c in guid)
+                {
+                    hash = (hash ^ c) * 1099511628211L;
+                }
+
+                hash = (hash ^ fileId) * 1099511628211L;
+                long alias = (hash & 0x0FFFFFFFFFFFFFFFL) | 0x4000000000000000L;
+                _foreign[alias] = (guid, fileId);
+                return alias;
+            }
+        }
+
+        public bool TryForeign(long alias, out string guid, out long fileId)
+        {
+            if (_foreign.TryGetValue(alias, out (string guid, long fileId) pair))
+            {
+                guid = pair.guid;
+                fileId = pair.fileId;
+                return true;
+            }
+
+            guid = null;
+            fileId = 0L;
+            return false;
+        }
+
+        /// <summary>The live object behind a plan-owned id, through the file's own resolver.</summary>
+        public UnityEngine.Object ResolveForeign(long alias)
+        {
+            if (!TryForeign(alias, out string guid, out long fileId)
+                || !ResolversByGuid.TryGetValue(guid, out PrefabObjectResolver resolver))
+            {
+                return null;
+            }
+
+            return resolver.TryResolve(fileId, out UnityEngine.Object resolved) ? resolved : null;
+        }
+
         /// <summary>
         /// Every prefab this plan was read from, the avatar's own first. Each planned item
         /// records which one it came from, because its transforms are in that prefab's space.

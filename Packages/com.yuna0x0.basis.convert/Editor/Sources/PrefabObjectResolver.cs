@@ -147,12 +147,28 @@ namespace yuna0x0.Basis.Convert.Sources
             return false;
         }
 
+        /// <summary>
+        /// Answers ids this file does not hold: references an outer prefab set on this one, to
+        /// objects of its own file, which the plan translated into ids it owns.
+        /// </summary>
+        public System.Func<long, Object> Foreign;
+
         public bool TryResolve(long fileId, out Object resolved)
         {
             resolved = null;
             if (fileId == 0L)
             {
                 return false;
+            }
+
+            if (Foreign != null)
+            {
+                Object foreign = Foreign(fileId);
+                if (foreign != null)
+                {
+                    resolved = foreign;
+                    return true;
+                }
             }
 
             // In inherited mode the ids are the base file's, so a local id could collide.

@@ -99,6 +99,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return plan;
         }
 
+        private static string GuidOf(string assetPath)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            return string.IsNullOrEmpty(guid) ? null : guid.ToLowerInvariant();
+        }
+
         private static void Register(
             AvatarConversionPlan plan, string assetPath, List<UnityYamlDocument> documents)
         {
@@ -209,14 +215,22 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             for (int i = inheritedFiles.Count - 1; i >= 0; i--)
             {
-                plan.Modifications.AddRange(PrefabOverrides.Read(inheritedFiles[i].documents));
+                plan.Modifications.AddRange(PrefabOverrides.Read(
+                    inheritedFiles[i].documents, GuidOf(inheritedFiles[i].path)));
             }
 
-            plan.Modifications.AddRange(PrefabOverrides.Read(documents));
-            plan.OverridesApplied += PrefabOverrides.Apply(plan.Modifications, plan.DocumentsByGuid);
+            string sourceGuid = GuidOf(source.AssetPath);
+            plan.Modifications.AddRange(PrefabOverrides.Read(documents, sourceGuid));
+            plan.OverridesApplied += PrefabOverrides.Apply(
+                plan.Modifications, plan.DocumentsByGuid, plan.ForeignId);
 
             PrefabObjectResolver resolver =
                 PrefabObjectResolver.Create(source.AssetPath, documents);
+            resolver.Foreign = plan.ResolveForeign;
+            if (!string.IsNullOrEmpty(sourceGuid))
+            {
+                plan.ResolversByGuid[sourceGuid] = resolver;
+            }
 
             if (resolver.Root == null)
             {
@@ -243,6 +257,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 PrefabObjectResolver inheritedResolver =
                     PrefabObjectResolver.CreateForInherited(
                         source.AssetPath, inherited, inheritedDocuments);
+                if (inheritedResolver != null)
+                {
+                    inheritedResolver.Foreign = plan.ResolveForeign;
+                }
 
                 if (inheritedResolver == null || inheritedResolver.Root == null)
                 {
@@ -369,9 +387,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Dictionary<long, PlannedJiggleCollider> colliders =
                 MapColliders(documents, resolver, plan);
 
-            foreach (PlannedJiggleCollider collider in colliders.Values)
+            string colliderFileGuid = GuidOf(source.AssetPath);
+            foreach (KeyValuePair<long, PlannedJiggleCollider> pair in colliders)
             {
-                collider.Source = source;
+                pair.Value.Source = source;
+                if (colliderFileGuid != null)
+                {
+                    plan.ColliderIndex[(colliderFileGuid, pair.Key)] = pair.Value;
+                }
             }
 
             plan.ModularAvatarToggles.AddRange(
@@ -1794,7 +1817,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     SourceRootBone = rootBone,
                 };
 
-                AttachExclusionsAndColliders(rigPlan, planned, resolver, colliders);
+                AttachExclusionsAndColliders(plan, rigPlan, planned, resolver, colliders);
                 planned.Source = source;
                 plan.Rigs.Add(planned);
             }
@@ -1805,8 +1828,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// once mapped.
         /// </summary>
         private static void AttachExclusionsAndColliders(
-            JiggleRigPlan rigPlan, PlannedJiggleRig planned, PrefabObjectResolver resolver,
-            IReadOnlyDictionary<long, PlannedJiggleCollider> colliders)
+            AvatarConversionPlan plan, JiggleRigPlan rigPlan, PlannedJiggleRig planned,
+            PrefabObjectResolver resolver, IReadOnlyDictionary<long, PlannedJiggleCollider> colliders)
         {
             foreach (long excludedFileId in rigPlan.ExcludedTransformFileIds)
             {
@@ -1837,7 +1860,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             foreach (long colliderFileId in rigPlan.ColliderSourceFileIds)
             {
-                if (!colliders.TryGetValue(colliderFileId, out PlannedJiggleCollider collider))
+                if (!colliders.TryGetValue(colliderFileId, out PlannedJiggleCollider collider)
+                    && !(plan.TryForeign(colliderFileId, out string colliderGuid, out long colliderId)
+                         && plan.ColliderIndex.TryGetValue((colliderGuid, colliderId), out collider)))
                 {
                     rigPlan.Diagnostics.Add(DiagnosticSeverity.Warning,
                         "physics.collider.unresolved",
@@ -3103,7 +3128,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 SourceRootBone = rootBone,
             };
 
-            AttachExclusionsAndColliders(rigPlan, planned, resolver, colliders);
+            AttachExclusionsAndColliders(plan, rigPlan, planned, resolver, colliders);
 
             return planned;
         }

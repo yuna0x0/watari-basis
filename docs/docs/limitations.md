@@ -75,6 +75,10 @@ missing scripts and only the file still holds their values. Two things follow fr
   installed, before the avatar is exported.
 - **A prefab variant is read from every prefab above it as well**, since its own file holds
   only its overrides. The report names the base as `source.prefabVariant`.
+- **A prefab nested inside another is read from its own file**, with the outer prefab's
+  overrides applied to it first, including references that point back into the outer prefab. An
+  avatar that keeps its armature clean and puts every component on a prefab of its own reads
+  the same as one that does not.
 
 A copy built by VRCFury is not the thing to convert. Its output is written under
 `Packages/com.vrcfury.temp`, which a unitypackage export leaves out (`expressions.assetMissing`,
