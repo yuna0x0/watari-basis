@@ -60,4 +60,12 @@ window.
 
 ## Not read
 
-Every other VRCFury feature is listed by name: `vrcfury.feature.unread`.
+Every other VRCFury feature is listed by name: `vrcfury.feature.unread`. The ones an avatar is
+most likely to carry:
+
+- **BlendShape Link**: shape values are not copied from the body to clothing meshes.
+- **Gestures, Blink Controller, Advanced Visemes, When-Talking State, Smooth Loop Builder**:
+  driven by the animator, which is not run.
+- **Toes Puppet, Security Pin Number, Droppable, World Drop**: no Basis equivalent.
+- **Anchor Override Fix, Bounding Box Fix, Fix Write Defaults, Blendshape Optimizer, Direct Tree
+  Optimizer, Parameter Compressor**: act on VRChat's build only.
