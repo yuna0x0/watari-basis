@@ -42,7 +42,17 @@ on the case; the usual one is given.
 | `source.notUnpacked` | Warning | Nothing was found, and the prefab was saved from an imported model without unpacking. Unpack it completely and save it again. |
 | `source.editorOnlyTool` | Mapped | Components of an editor-time authoring tool. They carry no runtime behaviour. |
 | `source.unknownScript` | Warning | A component whose script this version does not recognise. Please report it. |
-| `source.vrcfury` | Warning | VRCFury components were found. This version does not read them; what the avatar carries on its own converts. |
+| `source.vrcfury` | Mapped | How many VRCFury components were read, by kind: toggles, full controllers, armature links, other. |
+| `vrcfury.togglesRebuilt` | Mapped | How many VRCFury toggles became Vixxy controls. VRCFury does not run on a Basis build. |
+| `vrcfury.toggle.dropped` | Dropped | A hold button, or a toggle with no menu item that an animator parameter drives. Not rebuilt. |
+| `vrcfury.toggle.animatorOnly` | Approximated | The toggle also had a transition, a separate local state, a security lock or drove another parameter. The control switches its states directly. |
+| `vrcfury.exclusiveTag` | Approximated | Toggles sharing an exclusive tag turned each other off. Vixxy controls are independent. |
+| `vrcfury.action.dropped` | Dropped | Toggle actions a Vixxy control cannot express, by class: material swaps, animation clips, scale, and the rest. |
+| `vrcfury.action.unresolved` | Warning | An action names an object, blendshape or renderer that is not in the prefab. That part was left out. |
+| `vrcfury.fullController.assetMissing` | Warning | A Full Controller names a controller, menu or parameter asset that could not be read. |
+| `vrcfury.fullController.untraced` | Dropped | A Full Controller's menu controls traced to no toggle layer in its FX controller. |
+| `vrcfury.armatureLink` | Warning | Armature Links attach bones at build. Nothing moves the bones here yet, so what they attach will not follow the body. |
+| `vrcfury.feature.unread` | Dropped | Other VRCFury features, by class and count. None of them is read. |
 | `source.builtCopy` | Warning | The avatar carries VRCFury's build markers: it is a copy VRCFury built, whose menus cannot be read. Convert the original. |
 
 ### Writing

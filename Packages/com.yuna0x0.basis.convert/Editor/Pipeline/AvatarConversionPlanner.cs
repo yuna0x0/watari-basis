@@ -375,6 +375,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
             plan.ModularAvatarToggles.AddRange(
                 ModularAvatarToggleResolver.Resolve(documents, resolver, source));
 
+            MergeVrcFury(plan, VrcFuryToggleResolver.Resolve(documents, resolver, source));
+
             // VRM chains are read in a pass of their own: a spring names joint components that
             // sit anywhere in the file, so they cannot be resolved as the documents go past.
             PlanVrmChains(documents, resolver, plan, source);
@@ -687,13 +689,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     + "convert and nothing was lost. The tool itself does not run under Basis.");
             }
 
-            if (plan.VrcFuryComponentsFound > 0)
-            {
-                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.vrcfury",
-                    $"{plan.VrcFuryComponentsFound} VRCFury components were found. This version "
-                    + "does not read them: the toggles, controllers and armature links they "
-                    + "define are not converted. What the avatar carries on its own is.");
-            }
+            ReportVrcFury(plan);
 
             if (plan.VrcFuryBuildMarkersFound > 0)
             {
@@ -743,6 +739,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             // Clothing has no descriptor and no expression menu of its own, so this is not part
             // of reading one: what Modular Avatar installs stands on its own.
             BuildModularAvatarControls(plan);
+            BuildVrcFuryControls(plan);
             ReportOverlaps(plan);
 
             // Only meaningful once the descriptor is known: a prop has physics but no rig, and
@@ -2302,6 +2299,117 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.overlap",
                     $"'{string.Join("', '", entry.Value)}' all set {entry.Key}. On Basis the "
                     + "control used last wins; in VRChat the later FX layer did.");
+            }
+        }
+
+        private static void MergeVrcFury(AvatarConversionPlan plan, VrcFuryReadResult result)
+        {
+            VrcFuryReadResult total = plan.VrcFury;
+            total.Components += result.Components;
+            total.Toggles += result.Toggles;
+            total.FullControllers += result.FullControllers;
+            total.ArmatureLinks += result.ArmatureLinks;
+
+            foreach (KeyValuePair<string, int> pair in result.OtherFeatures)
+            {
+                total.OtherFeatures.TryGetValue(pair.Key, out int count);
+                total.OtherFeatures[pair.Key] = count + pair.Value;
+            }
+
+            foreach (KeyValuePair<string, int> pair in result.DroppedActions)
+            {
+                total.DroppedActions.TryGetValue(pair.Key, out int count);
+                total.DroppedActions[pair.Key] = count + pair.Value;
+            }
+
+            plan.VrcFuryToggles.AddRange(result.Resolved);
+            plan.Diagnostics.AddRange(result.Diagnostics);
+        }
+
+        /// <summary>
+        /// What the VRCFury components amounted to. Toggles and Full Controllers were read;
+        /// an Armature Link moves bones, which nothing here does yet, so clothing it attaches
+        /// will not follow the body; every other feature is named and left alone.
+        /// </summary>
+        private static void ReportVrcFury(AvatarConversionPlan plan)
+        {
+            VrcFuryReadResult fury = plan.VrcFury;
+            if (fury.Components == 0)
+            {
+                return;
+            }
+
+            plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "source.vrcfury",
+                $"{fury.Components} VRCFury components were read: {fury.Toggles} toggles, "
+                + $"{fury.FullControllers} full controllers, {fury.ArmatureLinks} armature links, "
+                + $"{Sum(fury.OtherFeatures)} other features.");
+
+            if (fury.ArmatureLinks > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "vrcfury.armatureLink",
+                    $"{fury.ArmatureLinks} VRCFury Armature Links attach bones to the avatar's at "
+                    + "build. VRCFury does not run on a Basis build and this version does not move "
+                    + "the bones, so what they attach will not follow the body.");
+            }
+
+            if (fury.OtherFeatures.Count > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrcfury.feature.unread",
+                    $"VRCFury features not read: {Listed(fury.OtherFeatures)}.");
+            }
+
+            if (fury.DroppedActions.Count > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrcfury.action.dropped",
+                    $"Toggle actions a Vixxy control cannot express, left out: "
+                    + $"{Listed(fury.DroppedActions)}.");
+            }
+        }
+
+        private static int Sum(Dictionary<string, int> counts)
+        {
+            int total = 0;
+            foreach (int count in counts.Values)
+            {
+                total += count;
+            }
+
+            return total;
+        }
+
+        private static string Listed(Dictionary<string, int> counts)
+        {
+            List<string> parts = new List<string>();
+            foreach (KeyValuePair<string, int> pair in counts)
+            {
+                parts.Add($"{pair.Key} x{pair.Value}");
+            }
+
+            parts.Sort();
+            return string.Join(", ", parts);
+        }
+
+        private static void BuildVrcFuryControls(AvatarConversionPlan plan)
+        {
+            int before = plan.VixxyControls.Count;
+
+            foreach (VrcFuryToggle toggle in plan.VrcFuryToggles)
+            {
+                if (toggle.Source?.Root == null)
+                {
+                    continue;
+                }
+
+                BuildVixxyControls(plan, new[] { toggle.Toggle },
+                    toggle.Source.Root.transform, toggle.Source);
+            }
+
+            if (plan.VrcFuryToggles.Count > 0)
+            {
+                plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vrcfury.togglesRebuilt",
+                    $"{plan.VixxyControls.Count - before} of {plan.VrcFuryToggles.Count} VRCFury "
+                    + "toggles were rebuilt as Vixxy controls. VRCFury does not run on a Basis "
+                    + "build, so they would otherwise not exist.");
             }
         }
 

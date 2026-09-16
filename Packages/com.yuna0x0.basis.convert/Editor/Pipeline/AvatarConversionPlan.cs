@@ -257,6 +257,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// </summary>
         public List<ModularAvatarToggle> ModularAvatarToggles = new List<ModularAvatarToggle>();
 
+        /// <summary>Toggles read from VRCFury components, one entry per prefab they came from.</summary>
+        public List<VrcFuryToggle> VrcFuryToggles = new List<VrcFuryToggle>();
+
+        /// <summary>What the VRCFury pass found across every prefab, for the report.</summary>
+        public VrcFuryReadResult VrcFury = new VrcFuryReadResult();
+
         /// <summary>Menu toggles that can be rebuilt as Vixxy controls, with their targets.</summary>
         public List<PlannedVixxyControl> VixxyControls = new List<PlannedVixxyControl>();
 

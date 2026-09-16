@@ -12,8 +12,10 @@ Notable changes to this package. The format follows
   `expressions.assetMissing`, `expressions.assetNotText`, `expressions.assetUnread`,
   `fx.controllerMissing`. A copy built by VRCFury produces the first two.
 - A menu packed into a file with other assets is read by its file id.
-- VRCFury components are recognised and reported as not read, `source.vrcfury`, instead of as unknown
-  scripts; a copy VRCFury built is named as such, `source.builtCopy`.
+- VRCFury is read as a source, checked against 1.1429.0. Toggles with object, blendshape and material
+  property actions are rebuilt as Vixxy controls, and Full Controllers are traced like merged animators.
+  Armature Links are not applied yet and are warned about. Codes under `vrcfury.*`.
+- A copy VRCFury built is named as such, `source.builtCopy`.
 
 ## [0.8.5] - 2026-09-17
 

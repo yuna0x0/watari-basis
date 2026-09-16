@@ -459,7 +459,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return $"{layer.Parameter} {value}";
         }
 
-        private static string PathWithin(Transform root, Transform target)
+        internal static string PathWithin(Transform root, Transform target)
         {
             if (target == root)
             {
@@ -482,7 +482,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// Moves a clip's paths from the object the animator was merged onto into the prefab's
         /// own space, which is where everything else in this source is addressed from.
         /// </summary>
-        private static ClipEffects Rebase(ClipEffects effects, string prefix)
+        internal static ClipEffects Rebase(ClipEffects effects, string prefix)
         {
             if (effects == null || string.IsNullOrEmpty(prefix))
             {
@@ -523,7 +523,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return effects;
         }
 
-        private static string Join(string prefix, string path)
+        internal static string Join(string prefix, string path)
         {
             return string.IsNullOrEmpty(path) ? prefix : prefix + "/" + path;
         }

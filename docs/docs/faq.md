@@ -28,12 +28,11 @@ listed and the avatar was stripped of its components before export, there is not
 
 ### I built a copy with VRCFury and the toggles are missing.
 
-The report says which of two things happened. `expressions.assetMissing` or `fx.controllerMissing`:
-the copy's menus and controllers live under `Packages/com.vrcfury.temp` in the project that built
-it, and a unitypackage export leaves that folder out; copy it across with its `.meta` files.
-`expressions.assetNotText`: the menus and parameters are inside a container VRCFury saves in
-binary form, which cannot be read here. Convert the original avatar instead, which keeps its own
-menu assets.
+Convert the original avatar, with its VRCFury components still on it, instead of the copy. The
+copy's menus sit in a container VRCFury saves in binary form, which cannot be read here
+(`expressions.assetNotText`), and its controllers live under `Packages/com.vrcfury.temp`, which a
+unitypackage export leaves out (`expressions.assetMissing`, `fx.controllerMissing`). The original's
+toggles and Full Controllers are read directly: see [VRCFury](what-converts/vrcfury.md).
 
 ### The jiggle physics does not move in Play mode.
 

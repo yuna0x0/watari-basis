@@ -9,7 +9,8 @@ Basis project as a UPM package.
 
 Working today: VRChat PhysBones and colliders, VRM spring bones in both formats, legacy Dynamic
 Bone, all six VRChat constraint types, the avatar descriptor and head chop, menu toggles,
-selectors and radial puppets rebuilt as HVR Vixxy controls, animation that plays on its own
+selectors and radial puppets rebuilt as HVR Vixxy controls, VRCFury toggles and full controllers
+read from the original avatar, animation that plays on its own
 rebuilt as authored motion, and a check of the humanoid rig against what Basis's IK needs. A
 conversion can be narrowed to some of those, or to individual items, from the window.
 `ProductInfo.CheckedAgainst` names the source releases the readers were checked against; the

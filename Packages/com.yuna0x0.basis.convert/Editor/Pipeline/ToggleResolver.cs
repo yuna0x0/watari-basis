@@ -136,9 +136,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public static List<ResolvedToggle> Resolve(
             VrcExpressionInventory inventory, string fxControllerGuid)
         {
+            return Resolve(inventory, LoadController(fxControllerGuid));
+        }
+
+        /// <summary>The same trace against a controller already in hand, as a merged one is.</summary>
+        public static List<ResolvedToggle> Resolve(
+            VrcExpressionInventory inventory, AnimatorController controller)
+        {
             List<ResolvedToggle> resolved = new List<ResolvedToggle>();
 
-            AnimatorController controller = LoadController(fxControllerGuid);
             if (controller == null || inventory == null)
             {
                 return resolved;
