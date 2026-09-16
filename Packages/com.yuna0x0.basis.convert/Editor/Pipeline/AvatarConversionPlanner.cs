@@ -1907,9 +1907,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             plan.Expressions = ExpressionInventoryLoader.Load(
-                source.ExpressionsMenuGuid, source.ExpressionParametersGuid);
+                source.ExpressionsMenuGuid, source.ExpressionsMenuFileId,
+                source.ExpressionParametersGuid, source.ExpressionParametersFileId);
 
             VrcExpressionInventory inventory = plan.Expressions;
+            ReportExpressionAssetProblems(plan, inventory);
             if (inventory.ControlCount == 0 && inventory.Parameters.Count == 0)
             {
                 return;
@@ -1953,6 +1955,48 @@ namespace yuna0x0.Basis.Convert.Pipeline
         }
 
         /// <summary>
+        /// A menu the descriptor names but nothing could read. Missing, because a unitypackage
+        /// export leaves out the Packages/ folder a build tool wrote it to; or binary, because
+        /// VRCFury packs a built copy's menus and parameters into a container it saves that way,
+        /// and only the project with its scripts can save it again.
+        /// </summary>
+        private static void ReportExpressionAssetProblems(
+            AvatarConversionPlan plan, VrcExpressionInventory inventory)
+        {
+            foreach (VrcExpressionAssetProblem problem in inventory.Problems)
+            {
+                switch (problem.Kind)
+                {
+                    case VrcExpressionAssetProblemKind.Missing:
+                        plan.Diagnostics.Add(DiagnosticSeverity.Warning,
+                            "expressions.assetMissing",
+                            $"The {problem.Role} asset {problem.Guid} is not in this project. A "
+                            + "tool that builds a copy of the avatar, VRCFury among them, writes "
+                            + "its output under Packages/, which a unitypackage export leaves "
+                            + "out; copy that folder with its .meta files.");
+                        break;
+
+                    case VrcExpressionAssetProblemKind.NotText:
+                        plan.Diagnostics.Add(DiagnosticSeverity.Warning,
+                            "expressions.assetNotText",
+                            $"{problem.Path} holds the {problem.Role} in Unity's binary form and "
+                            + "cannot be read. VRCFury saves a built copy's menus and parameters "
+                            + "that way, and only the project with its scripts can save the file "
+                            + "again, so convert the original avatar or rebuild the menu there as "
+                            + "assets of their own.");
+                        break;
+
+                    case VrcExpressionAssetProblemKind.NoDocument:
+                        plan.Diagnostics.Add(DiagnosticSeverity.Warning,
+                            "expressions.assetUnread",
+                            $"{problem.Path} holds no readable {problem.Role} at the file id the "
+                            + "descriptor names.");
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
         /// Ties the menu's toggles to the animator layers behind them, and says how many could be
         /// rebuilt as they stand.
         /// </summary>
@@ -1971,6 +2015,16 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             if (string.IsNullOrEmpty(fxGuid))
             {
+                return;
+            }
+
+            if (ToggleResolver.LoadController(fxGuid) == null)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "fx.controllerMissing",
+                    $"The FX controller {fxGuid} is not in this project, so no toggle or motion "
+                    + "could be traced. A tool that builds a copy of the avatar, VRCFury among "
+                    + "them, writes its output under Packages/, which a unitypackage export "
+                    + "leaves out; copy that folder with its .meta files.");
                 return;
             }
 

@@ -76,6 +76,14 @@ missing scripts and only the file still holds their values. Two things follow fr
 - **A prefab variant is read from every prefab above it as well**, since its own file holds
   only its overrides. The report names the base as `source.prefabVariant`.
 
+A copy built by another tool is read the same way, and two things about VRCFury's copies matter.
+Its output, controllers and menus included, is written under `Packages/com.vrcfury.temp`, which a
+unitypackage export leaves out, so that folder has to travel with the avatar, `.meta` files
+included: `expressions.assetMissing`, `fx.controllerMissing`. And it packs the copy's menus and
+parameters into a container it saves in Unity's binary form, which nothing here can read and
+which only its own project can save again: `expressions.assetNotText`. The original avatar, with
+its own menu assets, does not have either problem.
+
 An imported `.vrm` is the exception. It is binary rather than text, and UniVRM has to be
 installed for it to import at all, so its components are read directly. See
 [VRM](what-converts/vrm.md).

@@ -51,7 +51,9 @@ namespace yuna0x0.Basis.Convert.Sources
             ReadEyeLookSettings(document, data);
 
             data.ExpressionsMenuGuid = AssetGuidOf(document, "expressionsMenu");
+            data.ExpressionsMenuFileId = AssetFileIdOf(document, "expressionsMenu");
             data.ExpressionParametersGuid = AssetGuidOf(document, "expressionParameters");
+            data.ExpressionParametersFileId = AssetFileIdOf(document, "expressionParameters");
             ReadAnimationLayers(document, "baseAnimationLayers", data);
             ReadAnimationLayers(document, "specialAnimationLayers", data);
 
@@ -138,6 +140,29 @@ namespace yuna0x0.Basis.Convert.Sources
 
             Match match = Regex.Match(raw, @"guid:\s*(?<guid>[0-9a-fA-F]{32})");
             return match.Success ? match.Groups["guid"].Value : null;
+        }
+
+        /// <summary>
+        /// The file id of a referenced asset. A tool that packs several assets into one file, as
+        /// VRCFury does with a built avatar's menus, gives each its own id; the main asset of a
+        /// file of its own is 11400000, and that is read as 0 here so a plain reference stays
+        /// plain.
+        /// </summary>
+        private static long AssetFileIdOf(UnityYamlDocument document, string key)
+        {
+            string raw = document.GetTopLevelValue(key);
+            if (string.IsNullOrEmpty(raw))
+            {
+                return 0L;
+            }
+
+            Match match = Regex.Match(raw, @"fileID:\s*(?<id>-?\d+)");
+            if (!match.Success || !long.TryParse(match.Groups["id"].Value, out long fileId))
+            {
+                return 0L;
+            }
+
+            return fileId == 11400000L ? 0L : fileId;
         }
 
         /// <summary>

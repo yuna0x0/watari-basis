@@ -6,6 +6,13 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A menu, parameter or FX controller asset the descriptor names but that cannot be read is a warning:
+  `expressions.assetMissing`, `expressions.assetNotText`, `expressions.assetUnread`,
+  `fx.controllerMissing`. A copy built by VRCFury produces the first two.
+- A menu packed into a file with other assets is read by its file id.
+
 ## [0.8.5] - 2026-09-17
 
 ### Added

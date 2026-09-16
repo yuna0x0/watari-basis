@@ -224,6 +224,9 @@ on the case; the usual one is given.
 | `expressions.parameters` | Dropped | Expression parameters were declared. There is no parameter list to recreate. |
 | `expressions.puppets` | Dropped | Two-axis and four-axis puppets. Each drives two parameters at once. |
 | `expressions.togglesResolved` | Mapped | How many animator layers were traced from the menu and how many became controls. |
+| `expressions.assetMissing` | Warning | A menu or parameter asset the descriptor names is not in the project. A build tool's output under `Packages/` is left out of a unitypackage export; copy that folder with its `.meta` files. |
+| `expressions.assetNotText` | Warning | The menu or parameters sit in a file stored in binary form. VRCFury saves a built copy's menus that way, and only its own project can save the file again. |
+| `expressions.assetUnread` | Warning | The file is text but holds no menu or parameters at the file id the descriptor names. |
 | `vixxy.rebuilt` | Mapped | The count of menu toggles rebuilt as Vixxy controls, each with a menu item. |
 | `vixxy.notSimple` | Dropped | The toggle animates over time or drives something a Vixxy control cannot hold. |
 | `vixxy.nothingToSwitch` | Dropped | The toggle switched nothing that exists on this avatar. |
@@ -238,6 +241,7 @@ on the case; the usual one is given.
 | `vixxy.rootActivation` | Warning | The control switches the avatar root, which Vixxy refuses. That object was left out. |
 | `vixxy.overlap` | Warning | Two controls set the same object, blendshape or property. The control used last wins on Basis. |
 | `fx.layersUnread` | Dropped | FX layers nothing read, by name. Only menu-steered layers and layers that play on their own are read. |
+| `fx.controllerMissing` | Warning | The FX controller the descriptor names is not in the project, so nothing was traced. Same cause and fix as `expressions.assetMissing`. |
 | `vixxy.rendererMissing` | Warning | The control sets a renderer or blendshape that is not in this avatar. |
 | `modularAvatar.hierarchy` | Mapped | Modular Avatar components that rearrange the hierarchy or meshes. Left to Modular Avatar, which applies them at Basis build time when installed with the Basis NDMF platform. |
 | `modularAvatar.menus` | Dropped | Modular Avatar menu and animator components. See [Modular Avatar](what-converts/modular-avatar.md). |

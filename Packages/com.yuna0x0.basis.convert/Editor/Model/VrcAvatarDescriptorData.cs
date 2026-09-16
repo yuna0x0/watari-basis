@@ -103,7 +103,12 @@ namespace yuna0x0.Basis.Convert.Model
         /// <summary>Asset guid of the root expression menu, when there is one.</summary>
         public string ExpressionsMenuGuid;
 
+        /// <summary>File id of the menu inside its file; 0 when it is the file's main asset.</summary>
+        public long ExpressionsMenuFileId;
+
         public string ExpressionParametersGuid;
+
+        public long ExpressionParametersFileId;
 
         public List<VrcAnimationLayerEntry> AnimationLayers =
             new List<VrcAnimationLayerEntry>();

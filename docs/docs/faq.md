@@ -26,6 +26,15 @@ binary form (`source.notText`). Each of those has to be fixed in the project whe
 scripts are installed, because Unity will not save a prefab whose scripts are missing. If none is
 listed and the avatar was stripped of its components before export, there is nothing to convert.
 
+### I built a copy with VRCFury and the toggles are missing.
+
+The report says which of two things happened. `expressions.assetMissing` or `fx.controllerMissing`:
+the copy's menus and controllers live under `Packages/com.vrcfury.temp` in the project that built
+it, and a unitypackage export leaves that folder out; copy it across with its `.meta` files.
+`expressions.assetNotText`: the menus and parameters are inside a container VRCFury saves in
+binary form, which cannot be read here. Convert the original avatar instead, which keeps its own
+menu assets.
+
 ### The jiggle physics does not move in Play mode.
 
 Jiggle physics runs on a calibrated avatar. Press **Test In Editor** on the `BasisAvatar`

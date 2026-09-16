@@ -39,6 +39,9 @@ namespace yuna0x0.Basis.Convert.Model
         /// <summary>Asset guid of the submenu, for a SubMenu control.</summary>
         public string SubMenuGuid;
 
+        /// <summary>File id of the submenu inside its file; 0 when it is the file's main asset.</summary>
+        public long SubMenuFileId;
+
         public bool HasIcon;
     }
 
@@ -71,6 +74,9 @@ namespace yuna0x0.Basis.Convert.Model
         public List<VrcExpressionMenu> Menus = new List<VrcExpressionMenu>();
         public List<VrcExpressionParameter> Parameters = new List<VrcExpressionParameter>();
 
+        /// <summary>Menu and parameter assets the descriptor names that could not be read.</summary>
+        public List<VrcExpressionAssetProblem> Problems = new List<VrcExpressionAssetProblem>();
+
         public int ControlCount
         {
             get
@@ -101,5 +107,27 @@ namespace yuna0x0.Basis.Convert.Model
 
             return count;
         }
+    }
+
+    public enum VrcExpressionAssetProblemKind
+    {
+        /// <summary>The guid resolves to nothing in this project.</summary>
+        Missing,
+
+        /// <summary>The file exists but holds no text documents: Unity's binary form.</summary>
+        NotText,
+
+        /// <summary>The file is text but holds no document for the asset.</summary>
+        NoDocument,
+    }
+
+    /// <summary>A menu or parameter asset the descriptor names that could not be read.</summary>
+    public sealed class VrcExpressionAssetProblem
+    {
+        /// <summary>"menu", "submenu" or "parameters".</summary>
+        public string Role = string.Empty;
+        public string Guid = string.Empty;
+        public string Path = string.Empty;
+        public VrcExpressionAssetProblemKind Kind;
     }
 }

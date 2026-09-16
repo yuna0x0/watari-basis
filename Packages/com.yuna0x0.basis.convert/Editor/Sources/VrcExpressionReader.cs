@@ -159,6 +159,13 @@ namespace yuna0x0.Basis.Convert.Sources
                         if (guidMatch.Success)
                         {
                             current.SubMenuGuid = guidMatch.Groups["guid"].Value;
+                            Match idMatch = Regex.Match(value, @"fileID:\s*(?<id>-?\d+)");
+                            if (idMatch.Success
+                                && long.TryParse(idMatch.Groups["id"].Value, out long subMenuId)
+                                && subMenuId != 11400000L)
+                            {
+                                current.SubMenuFileId = subMenuId;
+                            }
                         }
 
                         inParameterBlock = false;
