@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-09-17
+
 ### Fixed
 
 - A reference an outer prefab sets on a nested one, pointing at the outer prefab's own objects, is
@@ -391,7 +393,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.9.1
 [0.9.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.9.0
 [0.8.5]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.5
 [0.8.4]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.4
