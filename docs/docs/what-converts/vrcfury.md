@@ -61,7 +61,3 @@ window.
 ## Not read
 
 Every other VRCFury feature is listed by name: `vrcfury.feature.unread`.
-
-## Versions
-
-Read against VRCFury 1.1429.0. Older files are read the way VRCFury upgrades them.

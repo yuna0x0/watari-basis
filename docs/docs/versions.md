@@ -50,3 +50,8 @@ All six read and plan without an unrecognised component.
 
 Every component 1.18.7 ships is recognised. See [Modular Avatar](what-converts/modular-avatar.md)
 for which are rebuilt, which are left to Modular Avatar and which are reported.
+
+## VRCFury
+
+Toggles, Full Controllers and Armature Links as 1.1429.0 writes them. Files written by an older
+VRCFury are read the way VRCFury upgrades them. See [VRCFury](what-converts/vrcfury.md).
