@@ -34,33 +34,32 @@ to compile, the editor keeps the last assemblies that did, and the run reports t
 passing. Check the project's `Logs/Editor.log` for `error CS` before believing a pass, and delete
 the results file first so a stale one cannot be read as a fresh one.
 
-After syncing the Basis clone to a newer upstream commit, or upgrading a source package (VRChat
-SDK, UniVRM, Dynamic Bone, Modular Avatar, NDMF), and running the suite green against it, update
-the table in `docs/docs/versions.md`: the upstream commit id and date for Basis, the version for
-a source package, and `ProductInfo.CheckedAgainst` for a source package too.
+After a Basis sync or a source package upgrade passes the suite, update `docs/docs/versions.md`:
+the upstream commit id and date for Basis, the version for a source package, and
+`ProductInfo.CheckedAgainst`.
 
 Most of the code is deliberately free of scene and AssetDatabase access so it can be tested
 without an editor open. Keep it that way: readers take text, mappers take plain data, and only
 the writers touch Unity objects.
 
-Fixtures live in `Tests/Editor/Fixtures`. `SampleAvatar` is an avatar the package ships: a
-prefab carrying a descriptor, a head chop, a PhysBone, a constraint, a raycast and a
-per-platform override as the missing scripts they arrive as, plus an expression menu,
-parameters, an animator and its clips. Between them the menu and the animator cover a plain
-toggle, a selector sharing one parameter, a radial puppet, a toggle guarded by one of VRChat's
-own parameters, a toggle whose clip animates over time, and a layer with nothing steering it.
-`SampleClothing` is the Modular Avatar half. `SampleVrmAvatar` holds one avatar per VRM format,
-each with a humanoid rig, a face with the blendshapes its expressions bind to, and its own
-expressions, licence, eye offset and spring bones. Their `Avatar` and mesh assets are generated,
-since a rig Unity validates and blendshape frames cannot be hand-written. Prefer extending these
-over reaching for a real avatar, so the suite runs on a machine that has no purchased assets.
-The tests that do read a real avatar find it through `LocalFixtures`, which looks under each
-folder of `Assets/_UserContent` (the folder Basis keeps out of version control) and of `Assets`,
-and skip when it is absent.
-The animator half, and the VRM fixtures' rig and face, are generated through
-`Tools/Watari/Development/Regenerate Test Fixtures`, because hand-writing a state machine
-produces files that look right and do not load. The generated assets are committed; tests do not
-run the generator.
+Fixtures live in `Tests/Editor/Fixtures`:
+
+- `SampleAvatar`: a prefab with a descriptor, head chop, PhysBone, constraint, raycast and
+  per-platform override as missing scripts, plus a menu, parameters, an animator and clips. The
+  menu and animator cover a plain toggle, a shared-parameter selector, a radial puppet, a toggle
+  guarded by a VRChat parameter, a toggle whose clip animates over time, and an unsteered layer.
+- `SampleClothing`: the Modular Avatar half.
+- `SampleVrmAvatar`: one avatar per VRM format, each with a humanoid rig, a face with the
+  blendshapes its expressions bind to, expressions, licence, eye offset and spring bones. The
+  `Avatar` and mesh assets are generated.
+
+Prefer extending these over a real avatar, so the suite runs without purchased assets. Tests that
+read a real avatar find it through `LocalFixtures`, under each folder of `Assets/_UserContent`
+and `Assets`, and skip when it is absent.
+
+The animator half and the VRM rig and face are generated through
+`Tools/Watari/Development/Regenerate Test Fixtures`; a hand-written state machine does not load.
+The generated assets are committed; tests do not run the generator.
 
 A conversion writes one asset, the baked motion clip, beside the animation it came from. A test
 that applies a plan must redirect that: set `OutputFolder` on each planned motion to a folder

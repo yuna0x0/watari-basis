@@ -9,9 +9,8 @@ when it, NDMF and the Basis NDMF platform are installed in the project, and much
 then needs no conversion. Its components are read here so the parts that cannot work on Basis are
 handled rather than silently doing nothing.
 
-Modular Avatar does not need to be installed for this. Its components are read from the prefab
-like every other source, and all of them are named, so a component this does not handle is
-reported as what it is rather than as an unknown script.
+Modular Avatar does not need to be installed. Its components are read from the prefab, and every
+one is named in the report.
 
 ## Left to Modular Avatar
 
@@ -31,12 +30,10 @@ Read together, those two describe a toggle completely: the menu item names the p
 merged animator holds the layer that implements it. Those are traced and rebuilt as Vixxy
 controls, on the same terms as [menu toggles](menu-toggles.md) from the avatar's own menu.
 
-`Object Toggle` needs no animator at all. It switches objects while its own object is active, and
-a menu item on that object makes it active, so the two together say what a toggle and its clips
-say. Objects it does not name keep the state the avatar was authored with, which is the
-same rule everywhere else. An inverted toggle acts while the menu item is off. A menu item with no
-parameter gets the one Modular Avatar assigns at build, from the object's name, and its default,
-saved and synced flags carry onto the control.
+`Object Toggle` needs no animator. Its objects switch while its own object is active, and the
+menu item on that object drives it. Objects it does not name keep their authored state. An
+inverted toggle acts while the item is off. An item with no parameter gets the one Modular Avatar
+assigns from the object's name; default, saved and synced carry onto the control.
 
 Paths inside a merged animator's clips are relative to the object the animator was merged at, and
 are rebased before anything is resolved. An `Object Toggle` entry is resolved by its object

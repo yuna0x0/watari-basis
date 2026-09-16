@@ -41,12 +41,10 @@ made with an older UniVRM.
 
 ## UniVRM's runtime is removed
 
-A converted VRM keeps UniVRM's data components, but its runtime drivers come off: `Vrm10Instance`
-for 1.0, and `VRMSpringBone`, `VRMBlendShapeProxy` and the look-at components for 0.x.
-`Vrm10Instance` writes every expression blendshape each frame, zeros included, and runs the spring
-bones, constraints and look-at; `VRMSpringBone` simulates from its own update. The Vixxy controls
-and jiggle rigs would be undone every frame. Basis strips them at build in any case. Undo restores
-them: `vrm.runtimeRemoved`.
+A converted VRM keeps UniVRM's data components and loses its runtime drivers: `Vrm10Instance` for
+1.0; `VRMSpringBone`, `VRMBlendShapeProxy` and the look-at components for 0.x. They would rewrite
+every blendshape and run their own physics each frame over the conversion. Basis strips them at
+build anyway. Undo restores them: `vrm.runtimeRemoved`.
 
 ## What carries across
 
@@ -70,21 +68,16 @@ swinging, so it is excluded to leave it as still as VRM left it.
 
 ## Expressions
 
-A VRM expression is a named set of blendshape weights. VRM lets an application wear several at
-once, each at its own strength; a menu has no strength and no application driving it, so the
-wearer picks one. The expressions an author added, and the emotion presets, become one Vixxy
+A VRM expression is a set of blendshape weights. The avatar's expressions become one Vixxy
 selector named Expression: Neutral first, then one choice per expression. Every shape any
-expression touches is set at every choice, at the expression's weight or at zero, which is the
-spec's own rule for applying expressions. Neutral is every shape at zero; the avatar's own
-`neutral` preset is not worn, since VRM applications do not apply it either.
+expression touches is set at every choice, at the expression's weight or zero, as the VRM
+specification applies them. Neutral is every shape at zero; the avatar's own `neutral` preset is
+not applied, since VRM applications do not apply it either.
 
-An expression that also changes a material colour, or a texture's scale and offset, keeps that
-too. VRM names the material; the property is written on every renderer that uses that material
-and nothing else, as a Vixxy material property under MToon's names (`_Color`, `_ShadeColor`,
-`_EmissionColor`, `_MatcapColor`, `_RimColor`, `_OutlineColor`, `_MainTex_ST`). Vixxy sets a
-property for the whole renderer, so a renderer that also carries other materials is left alone
-and reported: `vrm.expression.materialShared`. A material no renderer uses is reported and that
-part is left out: `vrm.expression.materials`.
+Material colour and texture offset changes carry over as Vixxy material properties under MToon's
+names, on every renderer that uses the material alone. A renderer that also carries other
+materials is left alone: `vrm.expression.materialShared`. A material no renderer uses is left
+out: `vrm.expression.materials`.
 
 Two things the spec allows are reported rather than converted. An expression that is not
 `isBinary` can be worn at any strength; a choice is all or nothing: `vrm.expression.continuous`.
@@ -94,12 +87,10 @@ no counterpart, since Basis keeps those running: `vrm.expression.override`.
 The lip sync shapes, blinking and looking around do not become controls. Basis drives those
 itself, and a menu item would fight it.
 
-The five vowels and blink are written to the `BasisAvatar` instead, so a converted VRM talks and
-blinks without anything being assigned by hand. Blink keeps every shape the expression moves, on
-one mesh, since Basis blinks with all of them. Basis takes fifteen visemes and VRM names five,
-so `aa`, `E`, `ih`, `oh` and `ou` are filled and the ten consonants are left unset: the mouth
-moves on vowels and holds still on the rest. A viseme slot holds one blendshape, so an expression
-that moves several at once is reported rather than reduced to one of them.
+The five vowels and blink go on the `BasisAvatar`, so a converted VRM talks and blinks. Blink
+keeps every shape the expression moves, on one mesh. Basis has fifteen visemes and VRM five:
+`aa`, `E`, `ih`, `oh` and `ou` are filled, the consonants stay unset. A viseme holds one
+blendshape, so an expression that moves several is reported.
 
 VRM refers to a blendshape by its position in the mesh rather than by name, so each one is looked
 up on the renderer it names. A shape that is no longer there, usually because the mesh changed
@@ -155,16 +146,13 @@ camera, add a Basis Head Chop naming it.
   ground.
 - **A plane collider's normal**, when it is not its transform's Y axis. Basis planes face that
   axis, so the plane is written facing Y and reported as `vrm.collider.planeNormal`.
-- **Inside colliders**, which hold bones within a shape rather than pushing them out. Basis only
-  pushes out, so those are written as ordinary colliders and reported: they now push the opposite
-  way, and are worth removing if the result looks wrong.
-- **Where the avatar looks.** VRM aims the eyes with curves or an expression per direction;
-  Basis drives gaze from the eye bones. Only the eye offset carries across, not the aiming. VRM
-  0.x writes this as components, which are reported as `vrm.lookAt`. An avatar whose look-at
-  type is `expression` has no eye bones to rotate, so its eyes stay still on Basis:
+- **Inside colliders**, which hold bones within a shape. Basis only pushes out, so they are
+  written as ordinary colliders and reported. Remove them if the result looks wrong.
+- **Where the avatar looks.** VRM aims the eyes with curves or an expression; Basis drives gaze
+  from the eye bones. Only the eye offset carries over. VRM 0.x look-at components:
+  `vrm.lookAt`. An expression-type look-at has no eye bones, so the eyes stay still:
   `vrm.lookAt.expression`.
-- **How far the eyes may turn.** VRM 1.0 states a limit per direction, 10 degrees on a VRoid
-  export. Basis turns every avatar's eyes up to 25 degrees and counter-rotates them while the
-  head turns, with no setting on the avatar to lower it, so a large eye shows white past the
+- **How far the eyes may turn.** VRM 1.0 states a limit, 10 degrees on a VRoid export. Basis
+  turns eyes up to 25 degrees with no setting on the avatar, so a large eye shows white past the
   model's limit: `vrm.lookAt.range`.
 - **The avatar's metadata**: its title, author and permissions.

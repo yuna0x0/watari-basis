@@ -323,8 +323,6 @@ on the case; the usual one is given.
 
 ## The rig section
 
-Separate from the conversion, the report describes what Basis's full-body IK will make of the
-humanoid rig: whether the bone mapping is complete, whether the eye bones are mapped, whether
-twist bones are named so Basis finds them, and whether a Jaw bone is mapped that the Basis setup
-guide asks to be cleared. These are settings on the model, not things a conversion changes, and
-the window offers to clear the Jaw mapping. See [Rig check](what-converts/rig-check.md).
+The report also checks the humanoid rig against Basis's IK: bone mapping, eye bones, twist bone
+names, and a mapped Jaw bone. These are model import settings; the window offers to clear the
+Jaw. See [Rig check](what-converts/rig-check.md).

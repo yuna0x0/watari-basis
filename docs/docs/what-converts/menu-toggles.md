@@ -17,11 +17,9 @@ with a clip on each side. Both are read, and the two clips are reduced to what t
 A layer counts only when a single parameter of the avatar's own steers it, which keeps gesture
 layers that mention a toggle as a secondary condition from being read as that toggle's own.
 
-VRChat's own parameters are treated differently. A gimmick that only runs for the wearer tests
-`IsLocal`, one that stops in a chair tests `InStation`, and Basis drives none of them. A layer
-guarded that way is still the toggle's, and what the rebuilt control no longer waits for is
-reported as `vixxy.builtinGuard`. It only counts as a guard when no transition tests the built-in
-on its own: a layer with a state per gesture belongs to the gesture, not to the menu.
+VRChat's own parameters, `IsLocal`, `InStation` and the rest, are not driven by Basis. A layer
+guarded by one is still rebuilt, and the guard it no longer waits for is reported:
+`vixxy.builtinGuard`. A layer with a state per gesture belongs to the gesture, not to the menu.
 
 A layer where one value of the parameter leads to two different states is left alone as well.
 Something other than the parameter is choosing between them, and reading it would keep whichever
@@ -63,10 +61,8 @@ is reported as `vixxy.puppetEnds`.
   parameter list to recreate, and anything driven by parameters outside a toggle has to be
   rebuilt by hand.
 
-A toggle that switches a PhysBone or a renderer on or off carries that switch: the control
-enables and disables the jiggle rig written for the PhysBone, or the renderer, the same way it
-switches an object. A switch on any other component is left out and reported
-(`vixxy.componentSwitch.dropped`).
+A toggle that switches a PhysBone or a renderer carries that switch to the jiggle rig or the
+renderer. A switch on any other component is left out: `vixxy.componentSwitch.dropped`.
 
 A toggle that cannot be rebuilt is reported and left alone rather than partly converted. The one
 exception is an object the clip names that this avatar does not have: the control is written

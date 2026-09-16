@@ -19,12 +19,13 @@ read. Do not remove them before converting.
 
 ### Nothing was found in my avatar.
 
-Read the Warnings section of the report. It names the three usual causes: the object is not
-linked to a prefab (`avatar.noPrefab`, `avatar.rootNotPrefab`), the components were added on the
-scene object and never applied to the prefab (`source.sceneOnly`), or the prefab file is stored in
-binary form (`source.notText`). Each of those has to be fixed in the project where the VRChat
-scripts are installed, because Unity will not save a prefab whose scripts are missing. If none is
-listed and the avatar was stripped of its components before export, there is nothing to convert.
+The Warnings section names the cause:
+
+- `avatar.noPrefab`, `avatar.rootNotPrefab`: the object is not linked to a prefab.
+- `source.sceneOnly`: components added in the scene and never applied to the prefab.
+- `source.notText`: the prefab file is binary.
+
+Fix them in the VRChat project. Unity will not save a prefab whose scripts are missing.
 
 ### I built a copy with VRCFury and the toggles are missing.
 

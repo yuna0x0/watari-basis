@@ -12,10 +12,9 @@ so an avatar using either converts whether or not VRChat was ever involved.
 This page is about PhysBones and Dynamic Bone. Spring bones have their own page, since the two
 VRM formats describe a chain differently: see [VRM](vrm.md).
 
-One rig is written per chain. A PhysBone is one chain, and jiggle physics walks into every child
-of the bone it is rooted at, so a PhysBone covering a whole head of hair stays one rig rather than
-becoming one per strand. A Dynamic Bone can name several root bones, and each of those becomes a
-rig of its own with the component's settings.
+One rig is written per chain. A PhysBone covering a whole head of hair is one rig, since jiggle
+physics walks into every child of the root. Each root bone a Dynamic Bone names becomes a rig of
+its own.
 
 ## What carries across exactly
 
@@ -47,16 +46,17 @@ Approximated, and reported as such:
   becomes a motionless root, and bones further down with several children swing where VRChat
   held them still.
 - **Hinge limits** become a cone of the same angle.
-- **Immobile** becomes ignore root motion, which cancels the root's translation only. A parent
-  that turns still swings the chain, and stiffness is what brings it back: an immobile bone with
-  almost no pull, a wind-up key left where a hand turned it, wanders on Basis and is reported as
-  `physbone.immobile.drift`. Raising that rig's stiffness holds it in place.
+- **Immobile** becomes ignore root motion, which cancels the root's translation only. An immobile
+  bone with almost no pull wanders when its parent turns: `physbone.immobile.drift`. Raise that
+  rig's stiffness.
 
-Dynamic Bone is derived rather than fitted. Elasticity is a per-tick fraction toward the pose,
-which jiggle squares, so stiffness is its square root, scaled by Update Rate over 60. Dynamic Bone
-stiffness caps how far a bone may leave its pose, and becomes jiggle's angle limit at the same
-angle; caps wider than 90 degrees are left off. Damping becomes both drag and air drag. Blend
-Weight tightens the cap, and 0 switches the component off, so no rig is written.
+Dynamic Bone is derived, not fitted:
+
+- Stiffness is the square root of Elasticity, scaled by Update Rate over 60.
+- Dynamic Bone Stiffness becomes the angle limit at the same angle; caps wider than 90 degrees
+  are left off.
+- Damping becomes drag and air drag.
+- Blend Weight tightens the cap; 0 writes no rig.
 
 Everything else is a direct mapping.
 

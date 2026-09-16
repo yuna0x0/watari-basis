@@ -58,9 +58,8 @@ Notable changes to this package. The format follows
 
 ### Fixed
 
-- Menu toggles that also switch a PhysBone or a renderer on or off now convert. Before, the
-  whole toggle was dropped, its object switches included. The control drives the jiggle rig or
-  the renderer. Report codes: `vixxy.componentSwitch`, `vixxy.componentSwitch.dropped`.
+- Menu toggles that also switch a PhysBone or a renderer now convert; the whole toggle used to be dropped.
+  `vixxy.componentSwitch`, `vixxy.componentSwitch.dropped`.
 
 ## [0.8.0] - 2026-09-14
 
@@ -73,21 +72,16 @@ Notable changes to this package. The format follows
 
 ### Added
 
-- Overrides made in prefab variants and nested prefabs are applied before reading. A variant
-  that retunes a PhysBone or renames a blendshape converts with its own values.
-  `source.overridesApplied`.
-- The report now names the FX layers that were not read (`fx.layersUnread`), radials that scrub
-  a clip through motion time (`motion.motionTime`), controls that set the same object or shape
-  (`vixxy.overlap`), and PhysBone permissions decided per player.
+- Overrides from prefab variants and nested prefabs are applied before reading: `source.overridesApplied`.
+- The report names unread FX layers, motion-time radials, overlapping controls and per-player PhysBone permissions:
+  `fx.layersUnread`, `motion.motionTime`, `vixxy.overlap`.
 - A Dynamic Bone constant force pointing straight down becomes gravity.
 - A Modular Avatar Merge Animator's relative path root is honoured.
 
 ## [0.6.0] - 2026-09-14
 
-Every reader was audited against the VRChat SDK 3.10.5, UniVRM 0.131.2, Dynamic Bone 1.3.4 and
-Modular Avatar 1.18.7 sources. Most entries fix a field that was read for its name rather than
-for what the runtime does with it. The new report codes are listed on the documentation's
-report page.
+Every reader was audited against VRChat SDK 3.10.5, UniVRM 0.131.2, Dynamic Bone 1.3.4 and
+Modular Avatar 1.18.7.
 
 ### Fixed
 
@@ -104,9 +98,7 @@ report page.
   the transform's current pose.
 - Blink was written from eyelid settings left behind when Eye Look was off.
 - Head chop entries naming the humanoid Head are dropped; Basis ignores them.
-- VRM: the 1.0 tail joint's unused parameters shaped the curves; rotation and roll constraints
-  snapped bones to the source at rest; 0.x visemes and blink are matched by preset, not by name;
-  upward gravity was zeroed; presets no longer leak angle limits and stretch into VRM rigs.
+- VRM: tail joint parameters, constraint rest snapping, 0.x viseme and blink matching, upward gravity and preset leaks fixed.
 - A menu toggle that swaps materials is reported instead of rebuilt without the swap. A toggle
   keeps its other objects when one is missing.
 - A clip that plays on its own and does not loop now plays once and holds, as in the animator.
@@ -141,27 +133,20 @@ report page.
 
 ### Fixed
 
-- The Expression selector's Neutral choice applied the avatar's own `neutral` expression at full
-  weight, which VRM applications never do; on a VRoid avatar that reshaped the face and eyes.
-  Neutral is every expression shape at zero.
+- The Expression selector's Neutral choice is every shape at zero, no longer the avatar's `neutral` preset.
 
 ## [0.5.5] - 2026-09-06
 
 ### Fixed
 
-- A converted VRM did nothing visible: UniVRM's `Vrm10Instance` stayed on the avatar and rewrote
-  every expression blendshape each frame, zeros included, and ran its own spring bones and
-  look-at over the conversion. Conversion now removes UniVRM's runtime drivers, 0.x ones
-  included, and says so: `vrm.runtimeRemoved`. Undo restores them.
+- UniVRM's runtime drivers are removed on conversion; they rewrote every blendshape each frame: `vrm.runtimeRemoved`.
 
 ## [0.5.4] - 2026-09-06
 
 ### Added
 
-- A VRM expression's material colour and texture offset changes are written as Vixxy material
-  properties on the renderers that use that material alone, under MToon's property names. Both
-  formats: `vrm.expression.materialValues`. A material no renderer uses, or one that shares its
-  renderer with others, is reported: `vrm.expression.materials`, `vrm.expression.materialShared`.
+- VRM material colour and texture offset changes become Vixxy material properties:
+  `vrm.expression.materialValues`, `vrm.expression.materials`, `vrm.expression.materialShared`.
 
 ## [0.5.3] - 2026-09-06
 
@@ -169,9 +154,8 @@ report page.
 
 - Checked against the VRM consortium's sample models: Seed-san, the constraint and twist sample,
   the two isBinary conformance models, the MToon UV test and Alicia 0.51. All six read and plan.
-- What the selector cannot carry is reported: expressions worn at any strength as
-  `vrm.expression.continuous`, blink, gaze and lip sync overrides as `vrm.expression.override`,
-  an expression made only of material changes as `vrm.expression.materials`.
+- What the Expression selector cannot carry is reported:
+  `vrm.expression.continuous`, `vrm.expression.override`, `vrm.expression.materials`.
 - An avatar that aims its eyes with expressions rather than eye bones is reported:
   `vrm.lookAt.expression`.
 
@@ -184,9 +168,7 @@ report page.
 
 ### Fixed
 
-- A VRM avatar's expressions became one Vixxy toggle each, so two could be on at once and the
-  menu held one entry per emotion. They are now one selector named Expression: Neutral, then one
-  choice per expression, every shape set at every choice. See `agent/decisions/0016`.
+- VRM expressions are one selector named Expression, not one toggle each.
 
 ## [0.5.1] - 2026-09-05
 
@@ -214,9 +196,8 @@ report page.
   against: VRChat SDK 3.10.5, UniVRM 0.131.2, Dynamic Bone 1.3.4, Modular Avatar 1.18.7.
 - Modular Avatar's vertex filters and Move Independently are named rather than reported as
   unknown scripts.
-- A plane collider facing anything but its transform's Y axis is reported, since a Basis plane
-  always faces that axis: `collider.planeRotation.dropped`, `collider.planeAxis.dropped`,
-  `vrm.collider.planeNormal`.
+- A plane collider not facing its Y axis is reported:
+  `collider.planeRotation.dropped`, `collider.planeAxis.dropped`, `vrm.collider.planeNormal`.
 
 ### Fixed
 
@@ -229,9 +210,7 @@ report page.
 
 ### Added
 
-- A `.vrm` file converts as it imports: spring bones, node constraints, expressions, licence and
-  eye offset are read from its components, so it no longer has to be unpacked and saved as a
-  prefab first.
+- A `.vrm` file converts as imported; no need to unpack it into a prefab first.
 - A VRM's vowel expressions and blink fill the Basis Avatar's visemes. Five of the fifteen, since
   VRM names no consonants: `vrm.visemes` and `vrm.blink`.
 - VRM 0.x look at components are reported as `vrm.lookAt` rather than as unknown scripts, along
@@ -275,9 +254,7 @@ report page.
 
 ### Added
 
-- A prefab variant converts the physics, colliders and constraints it inherits. Its own file
-  holds only its overrides, so every prefab above it is read too, reported as
-  `source.prefabVariant`.
+- A prefab variant converts what it inherits; every prefab above it is read: `source.prefabVariant`.
 - Avatar Modify Support is named rather than reported as an unrecognised script. It is
   editor-only and carries nothing to convert, reported as `source.editorOnlyTool`.
 
@@ -341,17 +318,13 @@ report page.
 
 ### Fixed
 
-- Menu toggles that animate one side only came out inverted: a toggle named `Tail_OFF` showed
-  the tail instead of hiding it. Which side animated an object is now recorded rather than
-  inferred. Blendshapes had the same fault.
+- One-sided menu toggles came out inverted; which side animated an object is now recorded.
 
 ## [0.1.1] - 2026-08-31
 
 ### Changed
 
-- Renamed to Watari. The menu is now **Tools > Watari > Convert Avatar to Basis**, and the
-  repository moved to `yuna0x0/watari-basis`. The package id is unchanged, so an installed copy
-  updates in place.
+- Renamed to Watari: menu **Tools > Watari > Convert Avatar to Basis**, repository `yuna0x0/watari-basis`, package id unchanged.
 
 ## [0.1.0] - 2026-08-30
 
