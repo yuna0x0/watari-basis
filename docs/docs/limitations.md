@@ -64,10 +64,15 @@ Component data is read from prefab files, because in a Basis project the VRChat 
 missing scripts and only the file still holds their values. Two things follow from that:
 
 - **The avatar has to still be linked to its prefab.** If the prefab was unpacked, there is
-  nothing left to read.
+  nothing left to read: `avatar.noPrefab`, or `avatar.rootNotPrefab` when prefab instances
+  remain beneath the selected object.
 - **A change made to a prefab instance in the scene, rather than to the prefab, is not seen.**
-  Collider assignments are commonly made that way, and show up as an unresolved collider
-  reference in the report.
+  A component added there is reported as `source.sceneOnly`; a collider assignment made there
+  shows up as an unresolved collider reference.
+- **The prefab file has to be text.** A prefab stored in Unity's binary form yields nothing and
+  is reported as `source.notText`. Unity will not save a prefab whose scripts are missing, so the
+  switch to Force Text and the re-save have to happen in the project where the scripts are
+  installed, before the avatar is exported.
 - **A prefab variant is read from every prefab above it as well**, since its own file holds
   only its overrides. The report names the base as `source.prefabVariant`.
 

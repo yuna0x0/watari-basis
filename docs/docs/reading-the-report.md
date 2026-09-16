@@ -29,6 +29,9 @@ on the case; the usual one is given.
 | Code | Severity | Meaning |
 |---|---|---|
 | `avatar.noPrefab` | Warning | Nothing selected is linked to a prefab, so there is no file to read. |
+| `avatar.rootNotPrefab` | Warning | The selected object is not linked to a prefab. Only the prefab instances beneath it were read. |
+| `source.sceneOnly` | Warning | Components with missing scripts that exist only on the scene object, not in a prefab file. Apply them to the prefab in the project where their scripts are installed. |
+| `source.notText` | Warning | The prefab file is stored in binary form and nothing in it can be read. Switch the project where its scripts are installed to Force Text, save the prefab there, and export again. |
 | `avatar.missing` | Warning | The prefab file the selection points at does not exist. |
 | `avatar.notLoaded` | Warning | The file did not load as a prefab. |
 | `source.severalPrefabs` | Mapped | The avatar is built from several prefabs. Each was read from its own file. |

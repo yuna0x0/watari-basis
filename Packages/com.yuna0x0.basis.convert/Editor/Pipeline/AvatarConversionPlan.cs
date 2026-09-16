@@ -314,6 +314,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// <summary>Recognised components read out of the source files, whatever became of them.</summary>
         public int ComponentsRead;
 
+        /// <summary>Components with missing scripts that exist on the scene object only.</summary>
+        public int SceneOnlyMissingScripts;
+
         public int PhysBonesFound;
 
         /// <summary>VRM spring chains found, from either VRM format.</summary>

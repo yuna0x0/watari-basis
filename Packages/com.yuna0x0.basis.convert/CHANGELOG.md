@@ -6,6 +6,13 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Three warnings for an avatar that reads as empty: `source.notText` for a prefab stored in binary
+  form, `source.sceneOnly` for components that exist only on the scene object, and
+  `avatar.rootNotPrefab` for a selected object that is not linked to a prefab. Each names where
+  the fix lives.
+
 ## [0.8.4] - 2026-09-16
 
 ### Fixed

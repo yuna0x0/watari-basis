@@ -63,6 +63,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             AvatarConversionPlan plan = new AvatarConversionPlan();
             List<ConversionSource> sources = ConversionSourceDiscovery.Discover(hierarchyRoot);
+            SceneOnlyComponents.Report(plan, hierarchyRoot, sources);
 
             if (sources.Count == 0)
             {
@@ -183,6 +184,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             JiggleMappingProfile profile, HashSet<string> unknownIdentities)
         {
             List<UnityYamlDocument> documents = UnityYamlScanner.ScanFile(source.AssetPath);
+            ReportNotText(plan, source.AssetPath, documents);
 
             // A variant's file holds only overrides; the prefabs above it hold the data. Both
             // are scanned first so the overrides land on the inherited documents before any
@@ -192,7 +194,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 new List<(string, List<UnityYamlDocument>)>();
             foreach (string inherited in source.InheritedAssetPaths())
             {
-                inheritedFiles.Add((inherited, UnityYamlScanner.ScanFile(inherited)));
+                List<UnityYamlDocument> inheritedDocuments = UnityYamlScanner.ScanFile(inherited);
+                ReportNotText(plan, inherited, inheritedDocuments);
+                inheritedFiles.Add((inherited, inheritedDocuments));
             }
 
             Register(plan, source.AssetPath, documents);
@@ -256,6 +260,28 @@ namespace yuna0x0.Basis.Convert.Pipeline
             {
                 ReadModelComponents(plan, source, model);
             }
+        }
+
+        /// <summary>
+        /// A prefab file that yields no text documents is stored in Unity's binary form. Nothing
+        /// in it can be read, and a missing script keeps Unity from saving it as text in this
+        /// project, so the fix lives where the scripts are installed. A model or an imported
+        /// .vrm is binary by nature and is read another way, so only .prefab files are named.
+        /// </summary>
+        private static void ReportNotText(
+            AvatarConversionPlan plan, string assetPath, List<UnityYamlDocument> documents)
+        {
+            if (documents.Count > 0
+                || !assetPath.EndsWith(".prefab", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.notText",
+                $"{assetPath} is not a text file, so nothing in it can be read. Unity refuses to "
+                + "save a prefab whose scripts are missing, so switch the project where its "
+                + "scripts are installed to Force Text (Edit > Project Settings > Editor > Asset "
+                + "Serialization), save the prefab there, and export it again.");
         }
 
         /// <summary>

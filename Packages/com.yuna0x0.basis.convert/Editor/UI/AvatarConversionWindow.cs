@@ -214,8 +214,11 @@ namespace yuna0x0.Basis.Convert.UI
             if (_plan.Profile.LooksInconsistent)
             {
                 EditorGUILayout.HelpBox(
-                    "Humanoid rig, nothing convertible. An avatar whose physics sits on a child "
-                    + "prefab looks like this; check the selected object.", MessageType.Warning);
+                    CountOf(DiagnosticSeverity.Warning) > 0
+                        ? "Humanoid rig, nothing convertible. See Warnings."
+                        : "Humanoid rig, nothing convertible. An avatar whose physics sits on a "
+                            + "child prefab looks like this; check the selected object.",
+                    MessageType.Warning);
             }
 
             EditorGUILayout.Space(2f);
