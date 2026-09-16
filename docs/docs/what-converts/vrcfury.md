@@ -4,9 +4,9 @@ sidebar_position: 8
 
 # VRCFury
 
-VRCFury applies its components only when VRChat builds an avatar. On Basis they do nothing, so
-Watari reads them from the original avatar and rebuilds what they describe. VRCFury does not
-need to be installed.
+[VRCFury](https://vrcfury.com/) applies its components only when VRChat builds an avatar. On Basis
+they do nothing, so Watari reads them from the original avatar and rebuilds what they describe.
+VRCFury does not need to be installed.
 
 ## Bringing the avatar over
 
@@ -21,7 +21,8 @@ which the export leaves out. The report names such a copy as `source.builtCopy`.
 
 ## Toggle
 
-A menu item, a parameter and a list of actions. Rebuilt as a Vixxy control.
+A [Toggle](https://vrcfury.com/components/toggle/) has a menu item, a parameter and a list of
+actions. Rebuilt as a Vixxy control.
 
 | Action | On Basis |
 |---|---|
@@ -39,13 +40,14 @@ A menu item, a parameter and a list of actions. Rebuilt as a Vixxy control.
 
 ## Full Controller
 
-A controller, menus and parameters merged from assets. Read like the avatar's own menu and FX
-controller; see [Menu toggles](menu-toggles.md). Only FX-type controllers are read.
+A [Full Controller](https://vrcfury.com/components/full-controller/) merges a controller, menus
+and parameters from assets. Read like the avatar's own menu and FX controller; see
+[Menu toggles](menu-toggles.md). Only FX-type controllers are read.
 
 ## Armature Link
 
-Clothing bones are parented under the avatar's bones. The target is **Armature links** in the
-window.
+[Armature Link](https://vrcfury.com/components/armature-link/) parents clothing bones under the
+avatar's bones. The target is **Armature links** in the window.
 
 - Bones are matched by name from the link's target down, as VRCFury matches them.
 - A matched bone is aligned to its avatar bone as the link asks and renamed
