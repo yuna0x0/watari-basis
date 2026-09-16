@@ -86,14 +86,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path))
             {
-                Record(inventory, role, guid, path, VrcExpressionAssetProblemKind.Missing);
+                Record(inventory, role, guid, path, fileId, VrcExpressionAssetProblemKind.Missing);
                 return null;
             }
 
             List<UnityYamlDocument> documents = UnityYamlScanner.ScanFile(path);
             if (documents.Count == 0)
             {
-                Record(inventory, role, guid, path, VrcExpressionAssetProblemKind.NotText);
+                Record(inventory, role, guid, path, fileId, VrcExpressionAssetProblemKind.NotText);
                 return null;
             }
 
@@ -110,18 +110,19 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
 
-            Record(inventory, role, guid, path, VrcExpressionAssetProblemKind.NoDocument);
+            Record(inventory, role, guid, path, fileId, VrcExpressionAssetProblemKind.NoDocument);
             return null;
         }
 
         private static void Record(VrcExpressionInventory inventory, string role, string guid,
-            string path, VrcExpressionAssetProblemKind kind)
+            string path, long fileId, VrcExpressionAssetProblemKind kind)
         {
             inventory.Problems.Add(new VrcExpressionAssetProblem
             {
                 Role = role,
                 Guid = guid,
                 Path = path ?? string.Empty,
+                FileId = fileId,
                 Kind = kind,
             });
         }

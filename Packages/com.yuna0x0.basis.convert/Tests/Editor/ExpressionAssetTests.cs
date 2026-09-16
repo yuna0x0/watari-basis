@@ -83,6 +83,29 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void VrcFuryComponentsAndBuildMarkersAreNamed()
+        {
+            AvatarConversionPlan plan = AvatarConversionPlanner.Plan(
+                "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/SampleVrcFury.prefab");
+
+            Assert.That(plan.VrcFuryComponentsFound, Is.EqualTo(1));
+            Assert.That(plan.VrcFuryBuildMarkersFound, Is.EqualTo(1));
+            Assert.That(plan.Diagnostics.HasCode("source.vrcfury"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("source.builtCopy"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("source.unknownScript"), Is.False,
+                "VRCFury's scripts are known, whatever this version does with them");
+        }
+
+        [Test]
+        public void AMissingPackedMenuIsNamedAsPacked()
+        {
+            VrcExpressionInventory inventory =
+                ExpressionInventoryLoader.Load("00000000000000000000000000000002", -5L, null, 0L);
+
+            Assert.That(inventory.Problems[0].FileId, Is.EqualTo(-5L));
+        }
+
+        [Test]
         public void TheSampleAvatarCarriesNoneOfTheWarnings()
         {
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(SamplePath);
@@ -90,6 +113,8 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(plan.Diagnostics.HasCode("expressions.assetMissing"), Is.False);
             Assert.That(plan.Diagnostics.HasCode("expressions.assetNotText"), Is.False);
             Assert.That(plan.Diagnostics.HasCode("fx.controllerMissing"), Is.False);
+            Assert.That(plan.Diagnostics.HasCode("source.vrcfury"), Is.False);
+            Assert.That(plan.Diagnostics.HasCode("source.builtCopy"), Is.False);
         }
     }
 }

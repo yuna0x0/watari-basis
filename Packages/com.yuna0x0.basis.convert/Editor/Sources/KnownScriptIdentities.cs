@@ -123,6 +123,12 @@ namespace yuna0x0.Basis.Convert.Sources
         // Third party authoring tools that carry no runtime behaviour of their own. Named so a
         // report says what they are rather than printing a guid.
         AvatarModifySupport,
+
+        // VRCFury. Its data lives on one component type, as managed references, and is not read
+        // by this version. A built copy can carry its debug markers; the original avatar never
+        // does.
+        VrcFuryComponent,
+        VrcFuryBuildMarker,
     }
 
     /// <summary>
@@ -221,6 +227,8 @@ namespace yuna0x0.Basis.Convert.Sources
                 // identified by their serialized fields rather than by a published list.
                 { ("2df373bf91cf30b4bbd495e11cb1a2ec", LooseScriptFileId), SourceComponentKind.MaMergeArmature },
                 { ("42581d8044b64899834d3d515ab3a144", LooseScriptFileId), SourceComponentKind.MaBoneProxy },
+                { ("d9e94e501a2d4c95bff3d5601013d923", LooseScriptFileId), SourceComponentKind.VrcFuryComponent },
+                { ("19d6be1140c9472cbc89e515ffd74126", LooseScriptFileId), SourceComponentKind.VrcFuryBuildMarker },
                 { ("560fdafd46c74b2db6422fdf0e7f2363", LooseScriptFileId), SourceComponentKind.MaMeshSettings },
                 { ("6fd7cab7d93b403280f2f9da978d8a4f", LooseScriptFileId), SourceComponentKind.MaBlendshapeSync },
                 { ("71a96d4ea0c344f39e277d82035bf9bd", LooseScriptFileId), SourceComponentKind.MaParameters },

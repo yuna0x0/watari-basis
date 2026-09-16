@@ -476,6 +476,18 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     continue;
                 }
 
+                if (kind == SourceComponentKind.VrcFuryComponent)
+                {
+                    plan.VrcFuryComponentsFound++;
+                    continue;
+                }
+
+                if (kind == SourceComponentKind.VrcFuryBuildMarker)
+                {
+                    plan.VrcFuryBuildMarkersFound++;
+                    continue;
+                }
+
                 if (kind == SourceComponentKind.DynamicBone)
                 {
                     plan.DynamicBonesFound++;
@@ -673,6 +685,22 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     $"{plan.EditorOnlyToolsFound} components of an editor-time authoring tool "
                     + "were found. They carry no runtime behaviour, so there was nothing to "
                     + "convert and nothing was lost. The tool itself does not run under Basis.");
+            }
+
+            if (plan.VrcFuryComponentsFound > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.vrcfury",
+                    $"{plan.VrcFuryComponentsFound} VRCFury components were found. This version "
+                    + "does not read them: the toggles, controllers and armature links they "
+                    + "define are not converted. What the avatar carries on its own is.");
+            }
+
+            if (plan.VrcFuryBuildMarkersFound > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.builtCopy",
+                    "This avatar carries VRCFury's build markers, so it is a copy VRCFury built. "
+                    + "Its menus and parameters sit in a container saved in binary form that "
+                    + "cannot be read here. Convert the original avatar instead.");
             }
 
             if (plan.VrmLookAtFound > 0)
@@ -1973,7 +2001,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
                             $"The {problem.Role} asset {problem.Guid} is not in this project. A "
                             + "tool that builds a copy of the avatar, VRCFury among them, writes "
                             + "its output under Packages/, which a unitypackage export leaves "
-                            + "out; copy that folder with its .meta files.");
+                            + "out; copy that folder with its .meta files."
+                            + (problem.FileId != 0L
+                                ? " The reference names an asset packed into a file with others, "
+                                    + "which is how VRCFury saves a built copy's menus; those "
+                                    + "cannot be read here even once copied. Convert the original "
+                                    + "avatar instead."
+                                : string.Empty));
                         break;
 
                     case VrcExpressionAssetProblemKind.NotText:

@@ -308,6 +308,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// <summary>Components of editor-time tools that carry no runtime behaviour.</summary>
         public int EditorOnlyToolsFound;
 
+        /// <summary>VRCFury components, whose data this version does not read.</summary>
+        public int VrcFuryComponentsFound;
+
+        /// <summary>VRCFury's debug markers, which only a built copy carries.</summary>
+        public int VrcFuryBuildMarkersFound;
+
         /// <summary>Prefabs read because a source inherits from them, being a variant.</summary>
         public int InheritedSourcesRead;
 

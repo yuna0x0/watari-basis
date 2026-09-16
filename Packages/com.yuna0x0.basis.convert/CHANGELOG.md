@@ -12,6 +12,8 @@ Notable changes to this package. The format follows
   `expressions.assetMissing`, `expressions.assetNotText`, `expressions.assetUnread`,
   `fx.controllerMissing`. A copy built by VRCFury produces the first two.
 - A menu packed into a file with other assets is read by its file id.
+- VRCFury components are recognised and reported as not read, `source.vrcfury`, instead of as unknown
+  scripts; a copy VRCFury built is named as such, `source.builtCopy`.
 
 ## [0.8.5] - 2026-09-17
 

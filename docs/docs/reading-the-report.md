@@ -42,6 +42,8 @@ on the case; the usual one is given.
 | `source.notUnpacked` | Warning | Nothing was found, and the prefab was saved from an imported model without unpacking. Unpack it completely and save it again. |
 | `source.editorOnlyTool` | Mapped | Components of an editor-time authoring tool. They carry no runtime behaviour. |
 | `source.unknownScript` | Warning | A component whose script this version does not recognise. Please report it. |
+| `source.vrcfury` | Warning | VRCFury components were found. This version does not read them; what the avatar carries on its own converts. |
+| `source.builtCopy` | Warning | The avatar carries VRCFury's build markers: it is a copy VRCFury built, whose menus cannot be read. Convert the original. |
 
 ### Writing
 

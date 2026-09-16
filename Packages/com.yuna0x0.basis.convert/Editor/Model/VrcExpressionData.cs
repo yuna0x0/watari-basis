@@ -128,6 +128,9 @@ namespace yuna0x0.Basis.Convert.Model
         public string Role = string.Empty;
         public string Guid = string.Empty;
         public string Path = string.Empty;
+
+        /// <summary>The file id named by the reference; 0 for a file's main asset.</summary>
+        public long FileId;
         public VrcExpressionAssetProblemKind Kind;
     }
 }
