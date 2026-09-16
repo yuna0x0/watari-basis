@@ -51,7 +51,13 @@ on the case; the usual one is given.
 | `vrcfury.action.unresolved` | Warning | An action names an object, blendshape or renderer that is not in the prefab. That part was left out. |
 | `vrcfury.fullController.assetMissing` | Warning | A Full Controller names a controller, menu or parameter asset that could not be read. |
 | `vrcfury.fullController.untraced` | Dropped | A Full Controller's menu controls traced to no toggle layer in its FX controller. |
-| `vrcfury.armatureLink` | Warning | Armature Links attach bones at build. Nothing moves the bones here yet, so what they attach will not follow the body. |
+| `vrcfury.armatureLink` | Mapped | How many Armature Links are applied and how many clothing bones go under the avatar's. |
+| `vrcfury.armatureLink.unresolved` | Warning | The link's target could not be found: the avatar has no humanoid rig, the bone or object is missing, or the clothing was scanned on its own. |
+| `vrcfury.armatureLink.auto` | Approximated | A link in VRCFury's old Auto mode. The clothing's meshes decided whether the whole tree merges. |
+| `vrcfury.armatureLink.physBone` | Approximated | Bones inside a PhysBone chain stay with the chain instead of going under their own avatar bone. |
+| `vrcfury.armatureLink.attached` | Approximated | Linked bones carry renderers, which now follow the avatar bone and are no longer under the clothing's own object. |
+| `vrcfury.armatureLink.constraintRemoved` | Mapped | Constraints on linked bones were left out, as VRCFury removes them. |
+| `apply.unpacked` | Approximated | A prefab instance was unpacked so its bones could go under the avatar's. Unity allows no other way; undo restores it. |
 | `vrcfury.feature.unread` | Dropped | Other VRCFury features, by class and count. None of them is read. |
 | `source.builtCopy` | Warning | The avatar carries VRCFury's build markers: it is a copy VRCFury built, whose menus cannot be read. Convert the original. |
 

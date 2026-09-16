@@ -36,8 +36,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// </summary>
         public bool Motion = true;
 
+        /// <summary>Clothing bones parented under the avatar's, from VRCFury Armature Links.</summary>
+        public bool ArmatureLinks = true;
+
         public bool IsEverything =>
-            Physics && Colliders && Constraints && Descriptor && Toggles && Motion;
+            Physics && Colliders && Constraints && Descriptor && Toggles && Motion && ArmatureLinks;
 
         /// <summary>Names of the categories switched off, for the report to state plainly.</summary>
         public IEnumerable<string> Excluded()
@@ -54,6 +57,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
             if (!Constraints)
             {
                 yield return "constraints";
+            }
+
+            if (!ArmatureLinks)
+            {
+                yield return "armature links";
             }
 
             if (!Descriptor)

@@ -47,6 +47,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             HashSet<string> unknownIdentities = new HashSet<string>();
             ReadSource(plan, source, profile, unknownIdentities);
             ReportVariantSources(plan, plan.Sources);
+            ArmatureLinkPlanner.Plan(plan, plan.VrcFury.ArmatureLinkData);
             Finish(plan, unknownIdentities);
             return plan;
         }
@@ -93,6 +94,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             ReportVariantSources(plan, sources);
 
+            ArmatureLinkPlanner.Plan(plan, plan.VrcFury.ArmatureLinkData);
             Finish(plan, unknownIdentities);
             return plan;
         }
@@ -2323,6 +2325,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             plan.VrcFuryToggles.AddRange(result.Resolved);
+            total.ArmatureLinkData.AddRange(result.ArmatureLinkData);
             plan.Diagnostics.AddRange(result.Diagnostics);
         }
 
@@ -2346,10 +2349,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             if (fury.ArmatureLinks > 0)
             {
-                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "vrcfury.armatureLink",
-                    $"{fury.ArmatureLinks} VRCFury Armature Links attach bones to the avatar's at "
-                    + "build. VRCFury does not run on a Basis build and this version does not move "
-                    + "the bones, so what they attach will not follow the body.");
+                int bones = 0;
+                foreach (PlannedArmatureLink link in plan.ArmatureLinks)
+                {
+                    bones += link.Bones.Count;
+                    plan.Diagnostics.AddRange(link.Diagnostics);
+                }
+
+                plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "vrcfury.armatureLink",
+                    $"{plan.ArmatureLinks.Count} of {fury.ArmatureLinks} VRCFury Armature Links "
+                    + $"are applied: {bones} clothing bones go under the avatar's, aligned as the "
+                    + "link asks. VRCFury does that on a VRChat build only.");
             }
 
             if (fury.OtherFeatures.Count > 0)

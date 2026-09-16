@@ -14,7 +14,8 @@ Notable changes to this package. The format follows
 - A menu packed into a file with other assets is read by its file id.
 - VRCFury is read as a source, checked against 1.1429.0. Toggles with object, blendshape and material
   property actions are rebuilt as Vixxy controls, and Full Controllers are traced like merged animators.
-  Armature Links are not applied yet and are warned about. Codes under `vrcfury.*`.
+  Armature Links parent clothing bones under the avatar's, matched and aligned as VRCFury does, under a new
+  **Armature links** target. Codes under `vrcfury.*`.
 - A copy VRCFury built is named as such, `source.builtCopy`.
 
 ## [0.8.5] - 2026-09-17

@@ -19,6 +19,7 @@ it:
 | Avatar descriptor | The `BasisAvatar` component: view position, visemes, blink. Head chops go with it |
 | Menu toggles | HVR Vixxy controls and their menu items, from menu toggles and VRM expressions |
 | Authored motion | `BasisAuthoredMotion`, with a clip baked from each always-on animator layer |
+| Armature links | Clothing bones moved under the avatar's, from VRCFury Armature Links. No component; the hierarchy changes |
 
 A row is greyed out when the avatar has nothing of that kind.
 

@@ -378,6 +378,10 @@ namespace yuna0x0.Basis.Convert.UI
                         "motions"),
                     _plan.AuthoredMotions.Count > 0);
 
+                _options.ArmatureLinks = Category("Armature links", _options.ArmatureLinks,
+                    Tally(_plan.SelectedArmatureLinkCount, _plan.ArmatureLinks.Count, "links"),
+                    _plan.ArmatureLinks.Count > 0);
+
                 if (changed.changed)
                 {
                     SaveOptions();

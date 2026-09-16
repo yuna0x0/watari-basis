@@ -96,6 +96,7 @@ namespace yuna0x0.Basis.Convert.Reporting
             text.AppendLine($"- Basis constraints planned: {plan.Constraints.Count}");
             text.AppendLine($"- Vixxy controls planned: {plan.VixxyControls.Count}");
             text.AppendLine($"- Authored motions planned: {plan.AuthoredMotions.Count}");
+            text.AppendLine($"- Armature links planned: {plan.ArmatureLinks.Count}");
             text.AppendLine("- Avatar descriptor: "
                 + (plan.Descriptor == null
                     ? "none found"

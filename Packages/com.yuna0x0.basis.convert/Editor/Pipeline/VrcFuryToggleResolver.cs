@@ -13,6 +13,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public ConversionSource Source;
     }
 
+    /// <summary>An Armature Link as read, with the prefab it sits in, for the planner.</summary>
+    public sealed class VrcFuryArmatureLinkSource
+    {
+        public VrcFuryArmatureLinkData Data;
+        public long OwnerGameObjectFileId;
+        public ConversionSource Source;
+        public PrefabObjectResolver Resolver;
+    }
+
     /// <summary>What a pass over one prefab's VRCFury components found, for the report.</summary>
     public sealed class VrcFuryReadResult
     {
@@ -28,6 +37,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public Dictionary<string, int> DroppedActions = new Dictionary<string, int>();
 
         public List<VrcFuryToggle> Resolved = new List<VrcFuryToggle>();
+        public List<VrcFuryArmatureLinkSource> ArmatureLinkData = new List<VrcFuryArmatureLinkSource>();
         public List<ConversionDiagnostic> Diagnostics = new List<ConversionDiagnostic>();
     }
 
@@ -83,8 +93,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
                             ResolveFullController(controller, data.OwnerGameObjectFileId, root, resolver, source, result);
                             break;
 
-                        case VrcFuryArmatureLinkData _:
+                        case VrcFuryArmatureLinkData link:
                             result.ArmatureLinks++;
+                            result.ArmatureLinkData.Add(new VrcFuryArmatureLinkSource
+                            {
+                                Data = link, OwnerGameObjectFileId = data.OwnerGameObjectFileId,
+                                Source = source, Resolver = resolver,
+                            });
                             break;
 
                         default:

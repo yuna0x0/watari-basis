@@ -37,6 +37,24 @@ component unless the controller was authored against the avatar root. Binding re
 applied. The result is the same as for [menu toggles](menu-toggles.md) from the avatar's own menu,
 and only FX-type controllers are read.
 
+**Armature Link.** Clothing bones go under the avatar's, matched by name from the link's target
+bone down, the way VRCFury matches them: the target by humanoid bone (falling back up the
+humanoid chain), by object, or by a path; the clothing's bones child by child, with the suffix
+the link names or the one its root implies removed, and VRCFury's four known mid-bone fixups. A
+matched bone is aligned to its avatar bone as the link asks, position, rotation and scale, with
+the same scale factor VRCFury derives, and is renamed `[VF] <bone> from <clothing>`. A bone with
+no match stays under its clothing parent and moves with it. A bone inside a PhysBone chain stays
+with the chain, as VRCFury leaves it. VRCFury also rewrites the clothing's skins to reuse the
+avatar's bones and prunes the moved ones; that changes bone count, not where the clothing sits,
+and is not done here. A link written in VRCFury's old Auto mode has the clothing's meshes decide
+whether the whole tree merges, as VRCFury decides at build. Bones move before anything else is
+written. Unity does not let an object leave the prefab instance it belongs to, which is why
+VRCFury and Modular Avatar only do this on a build clone; there is none here, so the clothing's
+prefab instance is unpacked first, outermost root only, and the report says so
+(`apply.unpacked`). Everything it carried was read before that, undo restores it, and a later
+conversion of the same avatar reads the clothing no more, since it is no longer linked to a
+prefab. The target is **Armature links** in the window.
+
 ## Reported, not rebuilt
 
 - A **hold button**, and a toggle with **no menu item** that an animator parameter drives:
@@ -47,8 +65,6 @@ and only FX-type controllers are read.
   which only exist while an animator runs: `vrcfury.toggle.animatorOnly`.
 - An **exclusive tag**, which turned the other toggles in the group off. Vixxy controls are
   independent: `vrcfury.exclusiveTag`.
-- **Armature Link.** It attaches clothing bones to the avatar's at build. Nothing here moves the
-  bones yet, so what it attaches will not follow the body: `vrcfury.armatureLink`.
 - Every other feature, by class and count: `vrcfury.feature.unread`.
 
 ## Versions

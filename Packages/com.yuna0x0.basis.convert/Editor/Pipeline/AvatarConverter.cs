@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Basis.Scripts.BasisSdk.Constraints;
 using GatorDragonGames.JigglePhysics;
 using HVR.Vixxy;
@@ -16,6 +17,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public int RigsSkipped;
         public int ConstraintsWritten;
         public int ConstraintsSkipped;
+        public int ArmatureLinksApplied;
+        public int BonesLinked;
         public bool DescriptorWritten;
         public int HeadChopsWritten;
 
@@ -68,6 +71,48 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Transform target = targetRoot.transform;
             Dictionary<ConversionSource, Transform> roots = LocateSources(plan, target, result);
             Dictionary<PlannedJiggleRig, JiggleRig> rigs = new Dictionary<PlannedJiggleRig, JiggleRig>();
+
+            // Bones move first: everything after resolves objects, not paths, so the order only
+            // matters for the rest poses the rigs and constraints capture from the transforms.
+            foreach (PlannedArmatureLink planned in plan.SelectedArmatureLinks())
+            {
+                ResolvedArmatureLink resolved = new ResolvedArmatureLink
+                {
+                    AlignPosition = planned.AlignPosition,
+                    AlignRotation = planned.AlignRotation,
+                    AlignScale = planned.AlignScale,
+                    ScaleFactor = planned.ScaleFactor,
+                    RootName = planned.RootName,
+                };
+
+                foreach (PlannedBoneLink bone in planned.Bones)
+                {
+                    if (TryTranslate(plan, roots, target, planned.Source, bone.SourceProp, out Transform prop)
+                        && TryTranslate(plan, roots, target, planned.AvatarSource, bone.SourceAvatar, out Transform avatar))
+                    {
+                        resolved.Bones.Add(new ResolvedBoneLink { Prop = prop, Avatar = avatar });
+                    }
+                }
+
+                if (resolved.Bones.Count == 0)
+                {
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
+                        $"The armature link {planned.Describe()} has no counterpart in the target "
+                        + "hierarchy and was skipped.");
+                    continue;
+                }
+
+                result.BonesLinked += ArmatureLinkWriter.Write(resolved, undoName);
+                result.ArmatureLinksApplied++;
+
+                if (resolved.Unpacked.Count > 0)
+                {
+                    result.Diagnostics.Add(DiagnosticSeverity.Approximated, "apply.unpacked",
+                        $"The prefab instance {string.Join(", ", resolved.Unpacked.Distinct())} was "
+                        + "unpacked so its bones could go under the avatar's; Unity allows no "
+                        + "other way. What it carried was already read, and undo restores it.");
+                }
+            }
 
             foreach (PlannedJiggleRig planned in plan.SelectedRigs())
             {

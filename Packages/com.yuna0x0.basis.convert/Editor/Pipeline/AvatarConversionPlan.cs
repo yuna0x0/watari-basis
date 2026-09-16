@@ -260,6 +260,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// <summary>Toggles read from VRCFury components, one entry per prefab they came from.</summary>
         public List<VrcFuryToggle> VrcFuryToggles = new List<VrcFuryToggle>();
 
+        /// <summary>Clothing bones to parent under the avatar's, from VRCFury Armature Links.</summary>
+        public List<PlannedArmatureLink> ArmatureLinks = new List<PlannedArmatureLink>();
+
         /// <summary>What the VRCFury pass found across every prefab, for the report.</summary>
         public VrcFuryReadResult VrcFury = new VrcFuryReadResult();
 
@@ -423,6 +426,22 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
         }
 
+        public IEnumerable<PlannedArmatureLink> SelectedArmatureLinks()
+        {
+            if (!Options.ArmatureLinks)
+            {
+                yield break;
+            }
+
+            foreach (PlannedArmatureLink link in ArmatureLinks)
+            {
+                if (link.Include)
+                {
+                    yield return link;
+                }
+            }
+        }
+
         public IEnumerable<PlannedConstraint> SelectedConstraints()
         {
             if (!Options.Constraints)
@@ -487,6 +506,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         public int SelectedRigCount => Tally(SelectedRigs());
         public int SelectedConstraintCount => Tally(SelectedConstraints());
+        public int SelectedArmatureLinkCount => Tally(SelectedArmatureLinks());
         public int SelectedVixxyControlCount => Tally(SelectedVixxyControls());
         public int SelectedAuthoredMotionCount => Tally(SelectedAuthoredMotions());
 
