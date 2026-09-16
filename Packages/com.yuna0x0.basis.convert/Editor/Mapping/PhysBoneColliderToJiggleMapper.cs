@@ -85,9 +85,7 @@ namespace yuna0x0.Basis.Convert.Mapping
             if (source.GlobalCollision)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "collider.global.dropped",
-                    "The collider was marked global, so other avatars' PhysBones could collide "
-                    + "with it. Basis offers only the hands, arms and feet of an avatar to other "
-                    + "avatars, on its own, so this one collides with its own avatar only.");
+                    "Global collision was dropped. Basis exposes only hands, arms and feet to other avatars, so this collider acts on its own avatar only.");
             }
 
             return plan;
@@ -149,10 +147,7 @@ namespace yuna0x0.Basis.Convert.Mapping
             if (turned > AxisSnapToleranceDegrees)
             {
                 log.Add(DiagnosticSeverity.Dropped, "collider.planeRotation.dropped",
-                    $"The plane was rotated {turned:0.#} degrees away from its transform's Y "
-                    + "axis. A jiggle plane always faces that axis, so the rotation was dropped "
-                    + "and the plane faces the transform's Y. Turn the transform, or parent the "
-                    + "collider to one that faces the right way.");
+                    $"The plane is rotated {turned:0.#} degrees off its transform's Y axis, which a jiggle plane always faces. Turn the transform to fix the facing.");
             }
         }
     }

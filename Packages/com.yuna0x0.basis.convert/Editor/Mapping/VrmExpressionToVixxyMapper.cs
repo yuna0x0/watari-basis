@@ -228,9 +228,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                 if (unnamed > 0)
                 {
                     plan.Diagnostics.Add(DiagnosticSeverity.Warning, "vrm.expression.shapeMissing",
-                        $"'{expression.Name}' sets {unnamed} blendshapes that are not on the mesh "
-                        + "they name. VRM refers to a shape by its position in the mesh, so this "
-                        + "usually means the mesh has changed since the expression was authored.");
+                        $"'{expression.Name}' sets {unnamed} blendshapes the mesh does not have. VRM names shapes by index, so the mesh has likely changed since the expression was authored.");
                 }
 
                 List<string> missing = new List<string>();

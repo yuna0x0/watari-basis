@@ -6,6 +6,10 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Report messages cut to one or two sentences: what happened and what to do.
+
 ## [0.9.1] - 2026-09-17
 
 ### Fixed

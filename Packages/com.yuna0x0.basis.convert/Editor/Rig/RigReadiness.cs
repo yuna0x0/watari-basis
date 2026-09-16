@@ -152,9 +152,7 @@ namespace yuna0x0.Basis.Convert.Rig
             }
 
             log.Add(DiagnosticSeverity.Warning, "rig.jawMapped",
-                "A Jaw bone is mapped in the humanoid rig. Basis does not drive the Jaw, and "
-                + "humanoid retargeting moves whatever bone is mapped there. Clear it under the "
-                + "model's Configure, in the Head mapping, unless it is a jaw.");
+                "A Jaw bone is mapped. Basis does not drive it and retargeting moves whatever is mapped there. Clear it in the model's Configure, under Head, unless it is a jaw.");
         }
 
         private static void InspectEyes(Animator animator, List<ConversionDiagnostic> log)

@@ -267,10 +267,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             Undo.SetCurrentGroupName(undoName);
             result.Diagnostics.Add(DiagnosticSeverity.Mapped, "vrm.runtimeRemoved",
-                $"{result.VrmRuntimeRemoved} UniVRM runtime components were removed from the "
-                + $"converted avatar ({string.Join(", ", names)}). They drove the expressions, "
-                + "spring bones and look-at every frame over what was written. Undo restores "
-                + "them; Basis strips them at build in any case.");
+                $"{result.VrmRuntimeRemoved} UniVRM runtime components removed (" + string.Join(", ", names) + "). They rewrote expressions, spring bones and look-at every frame. Undo restores them; Basis strips them at build.");
         }
 
         /// <summary>

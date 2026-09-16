@@ -298,10 +298,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.notText",
-                $"{assetPath} is not a text file, so nothing in it can be read. Unity refuses to "
-                + "save a prefab whose scripts are missing, so switch the project where its "
-                + "scripts are installed to Force Text (Edit > Project Settings > Editor > Asset "
-                + "Serialization), save the prefab there, and export it again.");
+                $"{assetPath} is binary, not text, so nothing in it can be read. Set Force Text in the project where its scripts are installed, save the prefab there, and export again.");
         }
 
         /// <summary>
@@ -681,21 +678,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
             if (plan.ModularAvatarHierarchyFound > 0)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "modularAvatar.hierarchy",
-                    $"{plan.ModularAvatarHierarchyFound} Modular Avatar components rearrange the "
-                    + "hierarchy or the meshes: merged armatures, bone proxies, mesh settings and "
-                    + "the like. They are left to Modular Avatar, which applies them at Basis "
-                    + "build time when it and the Basis NDMF platform are installed. Blendshape "
-                    + "Sync and Parameters have VRChat-only passes and do nothing on Basis.");
+                    $"{plan.ModularAvatarHierarchyFound} Modular Avatar components rearrange the hierarchy or meshes. Modular Avatar applies them on the Basis build; Blendshape Sync and Parameters are VRChat-only and do nothing.");
             }
 
             if (plan.ModularAvatarMenuFound > 0)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "modularAvatar.menus",
-                    $"{plan.ModularAvatarMenuFound} Modular Avatar components build menus, merge "
-                    + "animator layers or react to them. All of those target structures VRChat "
-                    + "has and Basis does not, so they do nothing there as they stand. A menu "
-                    + "item read together with a merged animator or an object toggle is rebuilt "
-                    + "as a Vixxy control; anything else is listed here and left.");
+                    $"{plan.ModularAvatarMenuFound} Modular Avatar components build menus or merge animators, which Basis lacks. A menu item with a merged animator or object toggle becomes a Vixxy control; the rest are left.");
             }
 
             if (plan.ModularAvatarVrchatOnlyFound > 0)
@@ -1100,10 +1089,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 && settings.EyeRotationLimitDegrees < basisEyeLimitDegrees)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrm.lookAt.range",
-                    $"The avatar limits its eye bones to {settings.EyeRotationLimitDegrees:0.#} "
-                    + $"degrees. Basis turns eyes up to {basisEyeLimitDegrees:0} degrees and has "
-                    + "no setting on the avatar to lower it, so on a large eye the white shows "
-                    + "when the eyes track past the model's limit.");
+                    $"The avatar limits its eyes to {settings.EyeRotationLimitDegrees:0.#} degrees; Basis turns them up to {basisEyeLimitDegrees:0} with no per-avatar setting, so a large eye shows white past the limit.");
             }
 
             if (settings.LookAtByExpression)
@@ -1117,11 +1103,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             if (settings.ThirdPersonOnlyRenderers > 0 || settings.FirstPersonOnlyRenderers > 0)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrm.firstPerson",
-                    $"{settings.ThirdPersonOnlyRenderers} renderers are marked to hide from the "
-                    + $"wearer and {settings.FirstPersonOnlyRenderers} to show only to them. "
-                    + "Basis hides the head bone and everything under it in first person, which "
-                    + "covers the usual case. If something still blocks the camera, add a Basis "
-                    + "Head Chop naming it.");
+                    $"{settings.ThirdPersonOnlyRenderers} renderers hide from the wearer and {settings.FirstPersonOnlyRenderers} show only to them. Basis hides the head bone and its children in first person instead. Add a Basis Head Chop for anything else.");
             }
         }
 
@@ -1334,10 +1316,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             plan.Descriptor.SourceVisemeMesh = best;
 
             plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrm.visemes",
-                $"{bestCount} of the fifteen visemes were filled from the avatar's own vowel "
-                + $"expressions, on {best.name}. VRM names the five vowels and no consonants, so "
-                + "the rest are unset: the mouth moves on vowels and holds still on the "
-                + "consonants.");
+                $"{bestCount} of fifteen visemes were filled from the vowel expressions on {best.name}. VRM names no consonants, so those stay unset.");
 
             if (total > bestCount)
             {
@@ -1476,10 +1455,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 || !(resolved is Component instance))
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "vrm.objectUnreadable",
-                    "This avatar's expressions, licence and eye offset are held inside the .vrm "
-                    + "file itself rather than as assets in the project, so none of them could "
-                    + "be read. In the .vrm's import settings, press \"Extract Meta And "
-                    + "Expressions\", then convert again. The spring bones are not affected.");
+                    "Expressions, licence and eye offset are inside the .vrm file and could not be read. Press \"Extract Meta And Expressions\" in the .vrm import settings, then convert again.");
                 return;
             }
 
@@ -1978,12 +1954,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             int puppets = radials + axisPuppets;
 
             plan.ToggleDiagnostics.Add(DiagnosticSeverity.Dropped, "expressions.menu",
-                $"The expression menu has {inventory.ControlCount} controls across "
-                + $"{inventory.Menus.Count} menus: {toggles} toggles, {buttons} buttons, "
-                + $"{subMenus} submenus, {puppets} puppets. Basis has no menu of its own, so the "
-                + "toggles and radials are rebuilt as Vixxy controls with a menu item each, "
-                + "listed one after another. Buttons, which act only while held, and the nesting "
-                + "the submenus gave the menu are not rebuilt.");
+                $"{inventory.ControlCount} controls across {inventory.Menus.Count} menus: {toggles} toggles, {buttons} buttons, {subMenus} submenus, {puppets} puppets. Toggles and radials become Vixxy controls, listed flat. Buttons and submenu nesting are not rebuilt.");
 
             if (inventory.Parameters.Count > 0)
             {
@@ -2022,26 +1993,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     case VrcExpressionAssetProblemKind.Missing:
                         plan.Diagnostics.Add(DiagnosticSeverity.Warning,
                             "expressions.assetMissing",
-                            $"The {problem.Role} asset {problem.Guid} is not in this project. A "
-                            + "tool that builds a copy of the avatar, VRCFury among them, writes "
-                            + "its output under Packages/, which a unitypackage export leaves "
-                            + "out; copy that folder with its .meta files."
-                            + (problem.FileId != 0L
-                                ? " The reference names an asset packed into a file with others, "
-                                    + "which is how VRCFury saves a built copy's menus; those "
-                                    + "cannot be read here even once copied. Convert the original "
-                                    + "avatar instead."
-                                : string.Empty));
+                            $"The {problem.Role} asset {problem.Guid} is not in this project. A copy built by VRCFury keeps it under Packages/, left out of a unitypackage export. Convert the original avatar." + (problem.FileId != 0L ? " It is also packed into another file." : string.Empty));
                         break;
 
                     case VrcExpressionAssetProblemKind.NotText:
                         plan.Diagnostics.Add(DiagnosticSeverity.Warning,
                             "expressions.assetNotText",
-                            $"{problem.Path} holds the {problem.Role} in Unity's binary form and "
-                            + "cannot be read. VRCFury saves a built copy's menus and parameters "
-                            + "that way, and only the project with its scripts can save the file "
-                            + "again, so convert the original avatar or rebuild the menu there as "
-                            + "assets of their own.");
+                            $"{problem.Path} holds the {problem.Role} in binary form and cannot be read. VRCFury saves a built copy's menus that way. Convert the original avatar.");
                         break;
 
                     case VrcExpressionAssetProblemKind.NoDocument:
@@ -2079,10 +2037,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             if (ToggleResolver.LoadController(fxGuid) == null)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "fx.controllerMissing",
-                    $"The FX controller {fxGuid} is not in this project, so no toggle or motion "
-                    + "could be traced. A tool that builds a copy of the avatar, VRCFury among "
-                    + "them, writes its output under Packages/, which a unitypackage export "
-                    + "leaves out; copy that folder with its .meta files.");
+                    $"The FX controller {fxGuid} is not in this project, so no toggle or motion was traced. A copy built by VRCFury keeps it under Packages/. Convert the original avatar.");
                 return;
             }
 
@@ -2118,11 +2073,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             // rebuilt count is what was actually produced rather than what looked rebuildable,
             // since a layer that animates over time becomes a control and a motion together.
             plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "expressions.togglesResolved",
-                $"{plan.Toggles.Count} animator layers were traced from the {toggleControls} "
-                + "menu toggles and radials, which share fewer parameters between them. "
-                + $"{rebuilt} of those layers became Vixxy controls, {simple} of them holding "
-                + "nothing but object switching, blendshapes and material properties. The rest "
-                + "are listed above with why.");
+                $"{plan.Toggles.Count} animator layers traced from {toggleControls} menu toggles and radials; {rebuilt} became Vixxy controls, {simple} of them switching, blendshapes and material properties only. The rest are listed above.");
         }
 
         /// <summary>

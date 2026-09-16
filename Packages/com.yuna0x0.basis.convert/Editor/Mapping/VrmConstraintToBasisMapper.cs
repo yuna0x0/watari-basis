@@ -48,28 +48,19 @@ namespace yuna0x0.Basis.Convert.Mapping
                 case VrmConstraintKind.Aim:
                     plan.AimVector = source.AimVector;
                     plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrm.constraint.aim",
-                        $"An aim constraint points this object's {source.AimAxis} axis at its "
-                        + "source. Basis aims the same way but also holds an up direction, which "
-                        + "VRM does not state, so the scene's up is used and the roll around the "
-                        + "aim may differ.");
+                        $"Aims the {source.AimAxis} axis at the source, as VRM does, with the scene's up as the up direction VRM does not state. Roll around the aim may differ.");
                     break;
 
                 case VrmConstraintKind.Roll:
                     // Nothing in Basis, or in Unity's own set, copies rotation about one axis.
                     plan.RotationAxis = AxisOf(source.RollAxis);
                     plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrm.constraint.roll",
-                        $"A roll constraint copies the source's rotation about its "
-                        + $"{AxisName(source.RollAxis)} axis alone. Basis has no constraint that "
-                        + "does that, so this became a rotation constraint limited to that axis, "
-                        + "which follows the source's rotation rather than its roll.");
+                        $"A roll constraint about the {AxisName(source.RollAxis)} axis became a rotation constraint limited to that axis. Basis has no roll constraint; this follows rotation, not roll.");
                     break;
 
                 default:
                     plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrm.constraint.rotation",
-                        "A rotation constraint copies how far the source has turned from its "
-                        + "rest pose. A Basis constraint takes the source's rotation itself, "
-                        + "offset so the authored pose holds at rest. The two differ if the "
-                        + "source's rest pose changes.");
+                        "VRM copies the source's turn from its rest pose; Basis takes its rotation, offset to hold the authored pose. They differ if the source's rest pose changes.");
                     break;
             }
 

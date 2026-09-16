@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fails on prose the project rules do not allow: a paragraph over 70 words in the docs, READMEs
-or CONTRIBUTING, or a changelog entry over two lines. Tables, code, headings and list items are
+or CONTRIBUTING, a changelog entry over two lines, or a report message over 35 words. Tables, code, headings and list items are
 not measured. Run before a release; the Checks workflow runs it on every push."""
 import pathlib
 import re
@@ -53,6 +53,22 @@ if CHANGELOG.exists():
         else:
             flush(); entry = []
     flush()
+
+MAX_MESSAGE_WORDS = 35
+EDITOR = ROOT / "Packages" / "com.yuna0x0.basis.convert" / "Editor"
+CALL = re.compile(
+    r'(?:Diagnostics\.Add|ToggleDiagnostics\.Add|MotionDiagnostics\.Add|log\.Add|new ConversionDiagnostic)'
+    r'\((?:\s*DiagnosticSeverity\.\w+,\s*)?\s*"([^"]+)",\s*(.*?)\);', re.S)
+for source in sorted(EDITOR.rglob("*.cs")):
+    text = source.read_text()
+    for call in CALL.finditer(text):
+        code, expression = call.group(1), call.group(2)
+        # A ternary carries two messages; measure each branch on its own.
+        for branch in re.split(r"\n\s*[?:]\s*(?=\$?\")", expression):
+            message = " ".join(re.findall(r'"((?:[^"\\]|\\.)*)"', branch))
+            words = len(re.sub(r"\{[^}]*\}", "X", message).split())
+            if words > MAX_MESSAGE_WORDS:
+                failures.append(f"{source.relative_to(ROOT)}: {code} message of {words} words")
 
 for failure in failures:
     print(failure)

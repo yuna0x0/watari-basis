@@ -58,10 +58,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             if (sceneOnly > 0)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.sceneOnly",
-                    $"{sceneOnly} components with missing scripts exist only on the scene object "
-                    + "and not in a prefab file, which is what is read. Unity refuses to save a "
-                    + "prefab whose scripts are missing, so apply them to the prefab in the "
-                    + "project where their scripts are installed and export it again.");
+                    $"{sceneOnly} components with missing scripts exist only on the scene object, not in the prefab file that is read. Apply them to the prefab where their scripts are installed, then export again.");
             }
         }
     }

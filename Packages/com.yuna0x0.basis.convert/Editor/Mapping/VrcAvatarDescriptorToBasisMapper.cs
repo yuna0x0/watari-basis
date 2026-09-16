@@ -44,9 +44,7 @@ namespace yuna0x0.Basis.Convert.Mapping
             ReportExpressionSystems(source, plan);
 
             plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "descriptor.autoSetup",
-                "The animator, human scale, renderer list and mouth position were left for "
-                + "Basis to fill in when the Basis Avatar inspector is first opened. It does not "
-                + "overwrite values that are already set, so what came from VRChat stays.");
+                "Animator, human scale, renderers and mouth position are filled in by Basis when the Basis Avatar inspector first opens. Values already set are kept.");
 
             return plan;
         }
@@ -87,10 +85,7 @@ namespace yuna0x0.Basis.Convert.Mapping
             }
 
             plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "descriptor.animationLayers",
-                $"{names.Count} custom animation layers were assigned ({string.Join(", ", names)}). "
-                + "Basis has no playable layer system, so gestures, toggles and any animation "
-                + "driven through them do not come across. Rebuild what you need with HVR Vixxy "
-                + "for toggles and Basis Authored Motion for looping movement.");
+                $"{names.Count} custom animation layers (" + string.Join(", ", names) + ") do not carry over; Basis has no playable layers. Toggles become Vixxy controls, looping movement Authored Motion.");
         }
 
         private static void MapVisemes(VrcAvatarDescriptorData source, BasisAvatarPlan plan)

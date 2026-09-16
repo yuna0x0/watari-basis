@@ -66,11 +66,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                     {
                         plan.Diagnostics.Add(DiagnosticSeverity.Dropped,
                             "vrm.collider.planeNormal",
-                            $"The plane's normal pointed {turned:0.#} degrees away from its "
-                            + "transform's Y axis. A jiggle plane always faces that axis, so "
-                            + "the normal was dropped and the plane faces the transform's Y. "
-                            + "Turn the transform, or parent the collider to one that faces "
-                            + "the right way.");
+                            $"The plane's normal points {turned:0.#} degrees off its transform's Y axis, which a jiggle plane always faces. Turn the transform to fix the facing.");
                     }
 
                     break;
@@ -85,10 +81,7 @@ namespace yuna0x0.Basis.Convert.Mapping
                 || source.Type == VrmColliderType.CapsuleInside)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrm.collider.inside",
-                    "A collider kept bones inside its shape rather than outside it, which is "
-                    + "how VRM holds hair within a hood or a collar. Jiggle only pushes bones "
-                    + "out, so the shape was written as an ordinary one and now pushes the "
-                    + "opposite way. Remove it if the result looks wrong.");
+                    "An inside collider, which holds bones within its shape, was written as an ordinary one; jiggle only pushes out. Remove it if the result looks wrong.");
             }
 
             return plan;
