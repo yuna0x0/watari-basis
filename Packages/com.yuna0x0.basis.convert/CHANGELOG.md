@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-09-17
+
 ### Added
 
 - Three warnings for an avatar that reads as empty: `source.notText` for a prefab stored in binary
@@ -367,7 +369,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.4...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.5...HEAD
+[0.8.5]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.5
 [0.8.4]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.4
 [0.8.3]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.3
 [0.8.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.2
