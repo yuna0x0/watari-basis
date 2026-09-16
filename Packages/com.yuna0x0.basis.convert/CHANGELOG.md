@@ -10,34 +10,27 @@ Notable changes to this package. The format follows
 
 ### Fixed
 
-- A reference an outer prefab sets on a nested one, pointing at the outer prefab's own objects, is
-  followed. A PhysBone on a prefab of its own whose root bone, colliders or ignored transforms are
-  assigned on the avatar was dropped as unresolved; a descriptor kept on a nested prefab lost its meshes.
-- A list that was empty in a nested prefab's file and grown by an override is read; colliders assigned
-  to a nested PhysBone were dropped.
+- PhysBones kept on a prefab of their own now find their root bone and colliders on the avatar.
+- A descriptor kept on a nested prefab now keeps its meshes.
+- Colliders assigned to a nested PhysBone by override are read.
 
 ## [0.9.0] - 2026-09-17
 
 ### Added
 
-- A menu, parameter or FX controller asset the descriptor names but that cannot be read is a warning:
-  `expressions.assetMissing`, `expressions.assetNotText`, `expressions.assetUnread`,
-  `fx.controllerMissing`. A copy built by VRCFury produces the first two.
-- A menu packed into a file with other assets is read by its file id.
-- VRCFury is read as a source, checked against 1.1429.0. Toggles with object, blendshape and material
-  property actions are rebuilt as Vixxy controls, and Full Controllers are traced like merged animators.
-  Armature Links parent clothing bones under the avatar's, matched and aligned as VRCFury does, under a new
-  **Armature links** target. Codes under `vrcfury.*`.
-- A copy VRCFury built is named as such, `source.builtCopy`.
+- VRCFury toggles become Vixxy controls. Checked against VRCFury 1.1429.0.
+- VRCFury Full Controllers are traced like the avatar's own menu and FX controller.
+- VRCFury Armature Links parent clothing bones under the avatar's, new **Armature links** target.
+- A menu, parameter or FX controller the descriptor names but cannot be read is a warning:
+  `expressions.assetMissing`, `expressions.assetNotText`, `fx.controllerMissing`.
+- A copy built by VRCFury is named as such: `source.builtCopy`.
 
 ## [0.8.5] - 2026-09-17
 
 ### Added
 
-- Three warnings for an avatar that reads as empty: `source.notText` for a prefab stored in binary
-  form, `source.sceneOnly` for components that exist only on the scene object, and
-  `avatar.rootNotPrefab` for a selected object that is not linked to a prefab. Each names where
-  the fix lives.
+- Three warnings for an avatar that reads as empty: `source.notText`, `source.sceneOnly`,
+  `avatar.rootNotPrefab`.
 
 ## [0.8.4] - 2026-09-16
 

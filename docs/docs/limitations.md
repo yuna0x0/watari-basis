@@ -80,11 +80,8 @@ missing scripts and only the file still holds their values. Two things follow fr
   avatar that keeps its armature clean and puts every component on a prefab of its own reads
   the same as one that does not.
 
-A copy built by VRCFury is not the thing to convert. Its output is written under
-`Packages/com.vrcfury.temp`, which a unitypackage export leaves out (`expressions.assetMissing`,
-`fx.controllerMissing`), and its menus and parameters sit in a container saved in Unity's binary
-form that only its own project can save again (`expressions.assetNotText`). The original avatar,
-with its VRCFury components still on it, is what converts: see [VRCFury](what-converts/vrcfury.md).
+A copy built by VRCFury cannot be read. Convert the original avatar: see
+[VRCFury](what-converts/vrcfury.md).
 
 An imported `.vrm` is the exception. It is binary rather than text, and UniVRM has to be
 installed for it to import at all, so its components are read directly. See
