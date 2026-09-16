@@ -4,8 +4,8 @@ sidebar_position: 4
 
 # Avatar descriptor
 
-The VRChat avatar descriptor becomes a `BasisAvatar`, the component Basis loads an avatar
-through.
+The [VRChat avatar descriptor](https://creators.vrchat.com/avatars/creating-your-first-avatar/)
+becomes a `BasisAvatar`, the component Basis loads an avatar through.
 
 ## What carries across
 
@@ -19,9 +19,10 @@ See [VRM](vrm.md).
 
 ## Head chop
 
-A VRC Head Chop becomes a Basis Head Chop on the same object, naming the same bones with the same
-scale factors: 0 scales a bone away while the wearer is in first person, 1 leaves it. VRChat's
-global factor is multiplied into each bone.
+A [VRC Head Chop](https://creators.vrchat.com/avatars/avatar-components/vrc-headchop/) becomes a
+Basis Head Chop on the same object, naming the same bones with the same scale factors: 0 scales
+a bone away while the wearer is in first person, 1 leaves it. VRChat's global factor is
+multiplied into each bone.
 
 A bone VRChat scaled away only in VR, or only on desktop, is scaled away in both. Basis has no
 such condition: `headChop.condition.dropped`.

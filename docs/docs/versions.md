@@ -11,10 +11,10 @@ the same versions.
 
 | Source | Checked against |
 |---|---|
-| VRChat SDK | 3.10.5 |
-| UniVRM | 0.131.2 |
-| Dynamic Bone | 1.3.4 |
-| Modular Avatar | 1.18.7, with NDMF 1.14.8 |
+| [VRChat SDK](https://creators.vrchat.com/sdk/) | 3.10.5 |
+| [UniVRM](https://github.com/vrm-c/UniVRM) | 0.131.2 |
+| [Dynamic Bone](https://assetstore.unity.com/packages/tools/animation/dynamic-bone-16743) | 1.3.4 |
+| [Modular Avatar](https://modular-avatar.nadena.dev/) | 1.18.7, with [NDMF](https://ndmf.nadena.dev/) 1.14.8 |
 | [VRCFury](https://vrcfury.com/) | 1.1429.0 |
 | Basis | `developer` at [978a4b720](https://github.com/BasisVR/Basis/commit/978a4b7202f299d20e79f4893bed11c879419f0a), 2026-09-15 |
 

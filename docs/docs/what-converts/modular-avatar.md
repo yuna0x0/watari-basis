@@ -5,7 +5,7 @@ sidebar_position: 7
 # Modular Avatar
 
 [Modular Avatar](https://modular-avatar.nadena.dev/) applies its components at Basis build time
-when it, NDMF and the Basis NDMF platform are installed in the project, and much of what it does
+when it, [NDMF](https://ndmf.nadena.dev/) and the Basis NDMF platform are installed in the project, and much of what it does
 then needs no conversion. Its components are read here so the parts that cannot work on Basis are
 handled rather than silently doing nothing.
 

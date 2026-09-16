@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # VRM
 
-VRM avatars, including everything VRoid Studio exports, carry their physics as spring bones and
+[VRM](https://vrm.dev/en/) avatars, including everything VRoid Studio exports, carry their physics as spring bones and
 their faces as expressions. Both formats are read: spring bones become Basis jiggle physics, and
 expressions become HVR Vixxy controls.
 

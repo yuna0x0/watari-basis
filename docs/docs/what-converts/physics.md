@@ -4,7 +4,8 @@ sidebar_position: 1
 
 # Physics
 
-VRChat PhysBones, VRM spring bones and legacy Dynamic Bone all become
+[VRChat PhysBones](https://creators.vrchat.com/common-components/physbones/), VRM spring bones
+and legacy [Dynamic Bone](https://assetstore.unity.com/packages/tools/animation/dynamic-bone-16743) all become
 [Jiggle Physics](https://github.com/naelstrof/UnityJigglePhysics) rigs, the secondary motion
 system Basis ships. Dynamic Bone is an ordinary Unity asset and VRM is a format, not a platform,
 so an avatar using either converts whether or not VRChat was ever involved.

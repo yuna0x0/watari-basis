@@ -4,8 +4,9 @@ sidebar_position: 3
 
 # Constraints
 
-All six VRChat constraint types become their Basis equivalents: position, rotation, aim, parent,
-scale and look-at. VRM has three of its own, which are covered on the [VRM](vrm.md) page.
+All six [VRChat constraint](https://creators.vrchat.com/common-components/constraints/) types
+become their Basis equivalents: position, rotation, aim, parent, scale and look-at. VRM has three
+of its own, which are covered on the [VRM](vrm.md) page.
 
 Basis also ships its own converter for Unity's built-in constraints and Animation Rigging, which
 this does not duplicate. If your avatar uses those instead, use
