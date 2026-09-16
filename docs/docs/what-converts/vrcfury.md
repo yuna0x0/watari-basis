@@ -14,6 +14,23 @@ parameters sit inside a container VRCFury saves in Unity's binary form, which ca
 here, and its controllers live under `Packages/`, which a unitypackage export leaves out. The
 report names both: `expressions.assetNotText`, `expressions.assetMissing`, `fx.controllerMissing`.
 
+## Bringing the avatar over
+
+1. In the VRChat project, select the avatar prefab, the one that still carries the VRCFury
+   components, and go to Assets > Export Assets. Enable **Include dependencies**, so the meshes,
+   materials, textures, controllers and menus it references come along, and click Export.
+2. In the Basis project, go to Assets > Import Package > Custom Package and import it. The
+   VRChat and VRCFury scripts arrive as missing scripts; that is expected and needed, since the
+   data is read from them.
+3. Open the Watari window, select the avatar, and convert. VRCFury toggles appear under Menu
+   toggles and Armature Links under Armature links, alongside the avatar's own physics, constraints
+   and menu.
+
+Do not export a copy built with VRCFury's Build an Editor Test Copy. That copy has already had its
+VRCFury components applied and removed, its menus and parameters sit in a container VRCFury saves
+in Unity's binary form, and its controllers live under `Packages/`, which the export leaves out.
+None of that can be read here, and the report says so. The original avatar has everything.
+
 ## Rebuilt
 
 **Toggle.** A menu item, a parameter and a list of actions. The on state is what the actions
