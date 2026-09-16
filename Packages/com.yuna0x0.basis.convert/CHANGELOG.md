@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-09-16
+
 ### Fixed
 
 - The Jiggle Physics dependency is declared as 16.0.1, the version every Basis checkout ships. VPM
@@ -358,7 +360,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.8.4...HEAD
+[0.8.4]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.4
 [0.8.3]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.3
 [0.8.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.2
 [0.8.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.8.1
