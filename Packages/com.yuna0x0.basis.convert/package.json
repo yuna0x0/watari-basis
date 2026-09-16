@@ -30,7 +30,7 @@
   "hideInEditor": false,
   "vpmDependencies": {
     "com.basis.sdk": "0.0.1",
-    "com.gator-dragon-games.jigglephysics": "16.0.0",
+    "com.gator-dragon-games.jigglephysics": "16.0.1",
     "dev.hai-vr.basis.comms": "0.0.1"
   }
 }

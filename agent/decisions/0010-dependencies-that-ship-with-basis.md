@@ -13,12 +13,22 @@ Every package those assemblies come from is declared in `vpmDependencies`:
 ```json
 "vpmDependencies": {
   "com.basis.sdk": "0.0.1",
-  "com.gator-dragon-games.jigglephysics": "16.0.0",
+  "com.gator-dragon-games.jigglephysics": "16.0.1",
   "dev.hai-vr.basis.comms": "0.0.1"
 }
 ```
 
 The three Basis assemblies all belong to `com.basis.sdk`. UPM `dependencies` stays empty.
+
+**A bare version is an exact version** (checked 2026-09-16 against vrc-get 29bb9ea, the library
+ALCOM uses, and confirmed with a scratch project holding the three packages as embedded folders):
+a package already in `Packages/` satisfies the dependency only when its version equals the string.
+The string is therefore the version Basis ships, read from the package's own `package.json`, not
+a floor. Jiggle Physics has been 16.0.1 in every Basis checkout since 2026-07-09; the 16.0.0 first
+declared here made every install show a conflict warning on that package. Weekly-tag projects
+carry `-dev.<week>` versions of all three packages and show the warning for each regardless; the
+Basis listing rewrites its own packages' dependency strings per tag for the same reason, and a
+third-party package cannot.
 
 ## Why declare them
 

@@ -17,6 +17,10 @@ the same versions.
 | Modular Avatar | 1.18.7, with NDMF 1.14.8 |
 | Basis | `developer` at [978a4b720](https://github.com/BasisVR/Basis/commit/978a4b7202f299d20e79f4893bed11c879419f0a), 2026-09-15 |
 
+The Basis row covers what the converter writes to as well as what it reads: Jiggle Physics and HVR
+Basis Comms are part of the Basis repository and change with it, at version numbers that do not
+move between commits, so the commit is their version.
+
 ## VRChat SDK
 
 Avatar components and what becomes of each on Basis. The SDK release that added a component is

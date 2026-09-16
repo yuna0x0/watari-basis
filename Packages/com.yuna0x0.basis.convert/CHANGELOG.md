@@ -6,6 +6,11 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The Jiggle Physics dependency is declared as 16.0.1, the version every Basis checkout ships. VPM
+  clients matched the embedded package against 16.0.0 exactly and warned of a conflict on install.
+
 ## [0.8.3] - 2026-09-14
 
 ### Changed
