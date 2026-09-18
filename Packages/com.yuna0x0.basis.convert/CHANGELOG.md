@@ -6,6 +6,10 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Parameters that drive more than one control are named in the report: `vixxy.sharedParameter`.
+
 ## [0.11.0] - 2026-09-18
 
 ### Added

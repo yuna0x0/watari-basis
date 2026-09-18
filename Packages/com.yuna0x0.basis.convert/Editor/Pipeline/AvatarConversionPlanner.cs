@@ -2760,6 +2760,39 @@ namespace yuna0x0.Basis.Convert.Pipeline
                         + "so an OSC float sent to /avatar/parameters/<name> drives them.");
                 }
 
+                // Two controls on one parameter are one toggle read from two places, or two
+                // layers one parameter steered on VRChat. Either way one value drives both,
+                // and the names let a reader tell which.
+                Dictionary<string, int> perParameter = new Dictionary<string, int>();
+                foreach (PlannedVixxyControl control in plan.VixxyControls)
+                {
+                    string parameter = control.Plan?.Parameter;
+                    if (string.IsNullOrEmpty(parameter))
+                    {
+                        continue;
+                    }
+
+                    perParameter.TryGetValue(parameter, out int count);
+                    perParameter[parameter] = count + 1;
+                }
+
+                List<string> shared = new List<string>();
+                foreach (KeyValuePair<string, int> pair in perParameter)
+                {
+                    if (pair.Value > 1)
+                    {
+                        shared.Add($"{pair.Key} ({pair.Value})");
+                    }
+                }
+
+                if (shared.Count > 0)
+                {
+                    shared.Sort();
+                    plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.sharedParameter",
+                        $"{shared.Count} parameters drive more than one control, so one value moves "
+                        + $"all of them: {string.Join(", ", shared)}.");
+                }
+
                 WarnIfCommsMissing(plan);
             }
         }
