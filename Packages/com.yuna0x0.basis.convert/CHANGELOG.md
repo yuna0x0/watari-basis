@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-18
+
 ### Added
 
 - Components that exist only in the scene are read from the saved scene file: `source.scene`,
@@ -21,7 +23,7 @@ Notable changes to this package. The format follows
 ### Fixed
 
 - An avatar placed from its model file, with components added in the scene, is reported as
-  `source.modelInstance` with the step that fixes it, instead of "apply them to the prefab".
+  `source.modelInstance` instead of being told to apply them to a prefab it does not have.
 
 ## [0.10.0] - 2026-09-18
 
@@ -397,7 +399,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.11.0
 [0.10.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.10.0
 [0.9.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.9.2
 [0.9.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.9.1
