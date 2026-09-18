@@ -35,6 +35,13 @@ namespace yuna0x0.Basis.Convert.Sources
         public GameObject Root { get; private set; }
 
         /// <summary>
+        /// File ids of the PrefabInstance documents whose objects sit under the scene root, when
+        /// this resolver was built for a scene. Tells scene overrides for this hierarchy apart
+        /// from those of anything else in the scene.
+        /// </summary>
+        public HashSet<long> SceneInstanceIds { get; } = new HashSet<long>();
+
+        /// <summary>
         /// Set when the documents being read come from a prefab this one inherits from rather
         /// than from its own file. Their file ids are identities in that file, so they are
         /// looked up as the object each live object corresponds to instead of as local ids.
@@ -108,6 +115,82 @@ namespace yuna0x0.Basis.Convert.Sources
             }
 
             return resolver;
+        }
+
+        /// <summary>
+        /// Ties the documents of a saved scene to the live objects under one scene object.
+        /// <para>
+        /// A scene object that is not a prefab instance is addressed by its own id, which
+        /// <see cref="GlobalObjectId"/> reports as the target object id. An object of a prefab
+        /// instance appears in the scene file only as a stripped stub naming the prefab's object
+        /// and the PrefabInstance, which is the same shape a nested prefab has inside a prefab
+        /// file, matched the same way. The AssetDatabase knows no ids for scene objects, so the
+        /// two ids come from <see cref="GlobalObjectId"/> instead.
+        /// </para>
+        /// </summary>
+        public static PrefabObjectResolver CreateForScene(
+            GameObject root, IReadOnlyList<UnityYamlDocument> documents)
+        {
+            PrefabObjectResolver resolver = new PrefabObjectResolver { Root = root };
+            if (documents != null)
+            {
+                foreach (UnityYamlDocument document in documents)
+                {
+                    resolver._documents[document.FileId] = document;
+                }
+            }
+
+            if (root == null)
+            {
+                return resolver;
+            }
+
+            foreach (Transform live in root.GetComponentsInChildren<Transform>(true))
+            {
+                resolver.IndexSceneObject(live.gameObject);
+                foreach (Component component in live.GetComponents<Component>())
+                {
+                    if (component != null)
+                    {
+                        resolver.IndexSceneObject(component);
+                    }
+                }
+            }
+
+            return resolver;
+        }
+
+        private void IndexSceneObject(Object live)
+        {
+            GlobalObjectId id = GlobalObjectId.GetGlobalObjectIdSlow(live);
+            if (id.identifierType != 2)
+            {
+                return;
+            }
+
+            long instanceFileId = unchecked((long)id.targetPrefabId);
+            if (instanceFileId == 0L)
+            {
+                _byLocalFileId[unchecked((long)id.targetObjectId)] = live;
+                return;
+            }
+
+            SceneInstanceIds.Add(instanceFileId);
+
+            Object source = live;
+            for (int depth = 0; depth < 16; depth++)
+            {
+                source = PrefabUtility.GetCorrespondingObjectFromSource(source);
+                if (source == null
+                    || !AssetDatabase.TryGetGUIDAndLocalFileIdentifier(
+                        source, out string sourceGuid, out long sourceFileId))
+                {
+                    return;
+                }
+
+                Add(new SourceIdentity(sourceGuid, sourceFileId, instanceFileId), live);
+                Add(new SourceIdentity(sourceGuid, sourceFileId, 0L), live);
+            }
         }
 
         /// <summary>

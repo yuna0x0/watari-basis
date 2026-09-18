@@ -241,6 +241,16 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
         }
 
+        /// <summary>
+        /// Records what a stub in the scene file stands for, under the stub's own id. A scene
+        /// component naming a prefab collider names the stub, and this is what lets that name
+        /// reach the collider's file and id.
+        /// </summary>
+        public void RegisterForeign(long alias, string guid, long fileId)
+        {
+            _foreign[alias] = (guid, fileId);
+        }
+
         public bool TryForeign(long alias, out string guid, out long fileId)
         {
             if (_foreign.TryGetValue(alias, out (string guid, long fileId) pair))
@@ -389,6 +399,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         /// <summary>Components with missing scripts that exist on the scene object only.</summary>
         public int SceneOnlyMissingScripts;
+
+        /// <summary>Recognised components read from the saved scene file.</summary>
+        public int SceneComponentsRead;
 
         public int PhysBonesFound;
 

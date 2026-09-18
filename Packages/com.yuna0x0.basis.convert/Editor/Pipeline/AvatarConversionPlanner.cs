@@ -64,25 +64,42 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             AvatarConversionPlan plan = new AvatarConversionPlan();
             List<ConversionSource> sources = ConversionSourceDiscovery.Discover(hierarchyRoot);
-            SceneOnlyComponents.Report(plan, hierarchyRoot, sources);
 
-            if (sources.Count == 0)
+            // The scene file is scanned before any prefab is read: its PrefabInstance
+            // modifications are the values the instances actually carry, and they have to land
+            // on the prefab documents before a reader sees them.
+            SceneRead scene = ScanScene(plan, hierarchyRoot);
+
+            if (sources.Count == 0 && scene == null)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "avatar.noPrefab",
                     "Nothing here is linked to a prefab, so there is no file to read the source "
                     + "data from.");
+                SceneOnlyComponents.Report(plan, hierarchyRoot, sources, false);
                 return plan;
             }
 
             plan.Sources.AddRange(sources);
-            plan.SourceAssetPath = sources[0].AssetPath;
-            plan.SourceRoot = sources[0].Root;
+            if (scene != null)
+            {
+                plan.Sources.Add(scene.Source);
+            }
+
+            plan.SourceAssetPath = plan.Sources[0].AssetPath;
+            plan.SourceRoot = plan.Sources[0].Root;
 
             HashSet<string> unknownIdentities = new HashSet<string>();
             foreach (ConversionSource source in sources)
             {
                 ReadSource(plan, source, profile, unknownIdentities);
             }
+
+            if (scene != null)
+            {
+                ReadSceneDocuments(plan, scene, profile, unknownIdentities);
+            }
+
+            SceneOnlyComponents.Report(plan, hierarchyRoot, sources, scene != null);
 
             if (sources.Count > 1)
             {
@@ -97,6 +114,137 @@ namespace yuna0x0.Basis.Convert.Pipeline
             ArmatureLinkPlanner.Plan(plan, plan.VrcFury.ArmatureLinkData);
             Finish(plan, unknownIdentities);
             return plan;
+        }
+
+        /// <summary>What a scan of the saved scene file produced, ahead of reading it.</summary>
+        private sealed class SceneRead
+        {
+            public ConversionSource Source;
+            public PrefabObjectResolver Resolver;
+            public List<UnityYamlDocument> Documents;
+            public string Guid;
+        }
+
+        /// <summary>
+        /// Scans the scene the hierarchy sits in. Components added in the scene rather than in a
+        /// prefab exist in no prefab file, and a missing script keeps them from being read live,
+        /// so the saved scene file is the one place their values are. Only the documents that
+        /// belong to this hierarchy are kept: a scene holds other things.
+        /// </summary>
+        private static SceneRead ScanScene(AvatarConversionPlan plan, GameObject hierarchyRoot)
+        {
+            if (hierarchyRoot == null || PrefabUtility.IsPartOfPrefabAsset(hierarchyRoot))
+            {
+                return null;
+            }
+
+            UnityEngine.SceneManagement.Scene scene = hierarchyRoot.scene;
+            if (!scene.IsValid())
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(scene.path))
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "scene.unsaved",
+                    "The scene has never been saved, so components added in it have no file to "
+                    + "be read from. Save the scene and rescan.");
+                return null;
+            }
+
+            List<UnityYamlDocument> documents = UnityYamlScanner.ScanFile(scene.path);
+            if (documents.Count == 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "scene.notText",
+                    $"{System.IO.Path.GetFileName(scene.path)} is binary, not text, so components "
+                    + "added in the scene cannot be read. Set Force Text in this project's editor "
+                    + "settings, save the scene, and rescan.");
+                return null;
+            }
+
+            string guid = GuidOf(scene.path);
+            if (guid == null)
+            {
+                return null;
+            }
+
+            if (scene.isDirty)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "scene.dirty",
+                    "The scene has unsaved changes, so components added in it were read from its "
+                    + "last saved copy. Save the scene and rescan.");
+            }
+
+            PrefabObjectResolver resolver = PrefabObjectResolver.CreateForScene(hierarchyRoot, documents);
+
+            List<UnityYamlDocument> kept = new List<UnityYamlDocument>();
+            foreach (UnityYamlDocument document in documents)
+            {
+                if (document.ClassId == UnityYamlScanner.ClassIdMonoBehaviour && !document.Stripped)
+                {
+                    if (!document.TryGetTopLevelFileIdReference("m_GameObject", out long ownerId)
+                        || !resolver.TryResolve(ownerId, out Object _))
+                    {
+                        continue;
+                    }
+                }
+                else if (document.ClassId == UnityYamlScanner.ClassIdPrefabInstance
+                    && !resolver.SceneInstanceIds.Contains(document.FileId))
+                {
+                    continue;
+                }
+
+                kept.Add(document);
+            }
+
+            Register(plan, scene.path, kept);
+            plan.ResolversByGuid[guid] = resolver;
+            plan.Modifications.AddRange(PrefabOverrides.Read(kept, guid));
+
+            return new SceneRead
+            {
+                Source = new ConversionSource
+                {
+                    AssetPath = scene.path,
+                    Root = hierarchyRoot,
+                    PathInHierarchy = new int[0],
+                    IsScene = true,
+                },
+                Resolver = resolver,
+                Documents = kept,
+                Guid = guid,
+            };
+        }
+
+        /// <summary>
+        /// Reads the scene's own documents, after every prefab, so that a scene component naming
+        /// a prefab collider finds it in the index. The stub it names is registered as the file
+        /// and id it stands for first.
+        /// </summary>
+        private static void ReadSceneDocuments(AvatarConversionPlan plan, SceneRead scene,
+            JiggleMappingProfile profile, HashSet<string> unknownIdentities)
+        {
+            foreach (UnityYamlDocument document in scene.Documents)
+            {
+                if (!document.Stripped
+                    || document.ClassId != UnityYamlScanner.ClassIdMonoBehaviour
+                    || !document.TryGetTopLevelObjectReference(
+                        "m_CorrespondingSourceObject", out string sourceGuid, out long sourceFileId)
+                    || string.IsNullOrEmpty(sourceGuid))
+                {
+                    continue;
+                }
+
+                if (PrefabOverrides.TryFollow(sourceGuid.ToLowerInvariant(), sourceFileId,
+                        plan.DocumentsByGuid, out string finalGuid, out long finalFileId))
+                {
+                    plan.RegisterForeign(document.FileId, finalGuid, finalFileId);
+                }
+            }
+
+            int before = plan.ComponentsRead;
+            ReadDocuments(plan, scene.Source, profile, unknownIdentities, scene.Documents, scene.Resolver);
+            plan.SceneComponentsRead = plan.ComponentsRead - before;
         }
 
         private static string GuidOf(string assetPath)

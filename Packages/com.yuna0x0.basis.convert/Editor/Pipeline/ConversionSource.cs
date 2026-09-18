@@ -30,7 +30,16 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// </summary>
         public int[] PathInHierarchy = new int[0];
 
-        public string Name => Root != null ? Root.name : System.IO.Path.GetFileNameWithoutExtension(AssetPath);
+        public string Name => Root == null
+            ? System.IO.Path.GetFileNameWithoutExtension(AssetPath)
+            : IsScene ? $"{Root.name} (scene)" : Root.name;
+
+        /// <summary>
+        /// Set when this source is the saved scene file rather than a prefab: its documents are
+        /// the components that exist only in the scene, and <see cref="Root"/> is the scene
+        /// object itself, so nothing read from it needs translating.
+        /// </summary>
+        public bool IsScene;
 
         public bool IsPrimary => PathInHierarchy.Length == 0;
 

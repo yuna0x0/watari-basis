@@ -21,12 +21,11 @@ read. Do not remove them before converting.
 
 The Warnings section names the cause:
 
-- `avatar.noPrefab`, `avatar.rootNotPrefab`: the object is not linked to a prefab.
-- `source.sceneOnly`: components added in the scene and never applied to the prefab.
-- `source.modelInstance`: the avatar was placed from its FBX and never saved as a prefab.
-- `source.notText`: the prefab file is binary.
-
-Fix them in the VRChat project. Unity will not save a prefab whose scripts are missing.
+- `scene.unsaved`, `scene.dirty`: components added in the scene are read from the saved scene
+  file. Save the scene and rescan.
+- `avatar.noPrefab`, `avatar.rootNotPrefab`: the object is not linked to a prefab and the scene
+  could not be read.
+- `source.notText`, `scene.notText`: the file is binary. Set Force Text where it was saved.
 
 ### I built a copy with VRCFury and the toggles are missing.
 

@@ -163,6 +163,44 @@ namespace yuna0x0.Basis.Convert.Sources
             return applied;
         }
 
+        /// <summary>
+        /// The file and id of the document a stub finally stands for, following stubs through
+        /// nested prefab files. Returns false when the chain leaves the read files.
+        /// </summary>
+        public static bool TryFollow(string guid, long fileId,
+            Dictionary<string, Dictionary<long, UnityYamlDocument>> byGuid,
+            out string finalGuid, out long finalFileId)
+        {
+            finalGuid = guid;
+            finalFileId = fileId;
+            for (int depth = 0; depth < 8; depth++)
+            {
+                if (string.IsNullOrEmpty(finalGuid)
+                    || !byGuid.TryGetValue(finalGuid, out Dictionary<long, UnityYamlDocument> documents)
+                    || !documents.TryGetValue(finalFileId, out UnityYamlDocument document))
+                {
+                    return false;
+                }
+
+                if (!document.Stripped)
+                {
+                    return true;
+                }
+
+                if (!document.TryGetTopLevelObjectReference(
+                        "m_CorrespondingSourceObject", out string sourceGuid, out long sourceFileId)
+                    || string.IsNullOrEmpty(sourceGuid))
+                {
+                    return false;
+                }
+
+                finalGuid = sourceGuid.ToLowerInvariant();
+                finalFileId = sourceFileId;
+            }
+
+            return false;
+        }
+
         private static UnityYamlDocument Resolve(string guid, long fileId,
             Dictionary<string, Dictionary<long, UnityYamlDocument>> byGuid, int depth)
         {

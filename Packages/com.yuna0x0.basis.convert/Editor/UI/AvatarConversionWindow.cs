@@ -190,7 +190,7 @@ namespace yuna0x0.Basis.Convert.UI
 
             if (_plan.Sources.Count > 1)
             {
-                WrappedField("Read from", $"{_plan.Sources.Count} prefabs: {SourceNames()}");
+                WrappedField("Read from", $"{_plan.Sources.Count} files: {SourceNames()}");
             }
 
             // A VRM states who may wear it and what may be done to it. Converting changes the

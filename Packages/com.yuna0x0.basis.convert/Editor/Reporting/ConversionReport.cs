@@ -77,7 +77,7 @@ namespace yuna0x0.Basis.Convert.Reporting
 
             if (plan.Sources.Count > 1)
             {
-                text.AppendLine($"- Read from {plan.Sources.Count} prefabs:");
+                text.AppendLine($"- Read from {plan.Sources.Count} files:");
                 foreach (ConversionSource source in plan.Sources)
                 {
                     text.AppendLine($"  - {source.Name} ({source.AssetPath})"

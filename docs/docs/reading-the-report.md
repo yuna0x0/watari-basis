@@ -28,10 +28,14 @@ on the case; the usual one is given.
 
 | Code | Severity | Meaning |
 |---|---|---|
-| `avatar.noPrefab` | Warning | Nothing selected is linked to a prefab, so there is no file to read. |
-| `avatar.rootNotPrefab` | Warning | The selected object is not linked to a prefab. Only the prefab instances beneath it were read. |
-| `source.sceneOnly` | Warning | Components with missing scripts that exist only on the scene object, not in a prefab file. Apply them to the prefab in the project where their scripts are installed. |
-| `source.modelInstance` | Warning | The avatar was placed from its model file, which carries no components, and the components with missing scripts exist only in the scene. Save the avatar as a prefab in the project where its scripts are installed, and export that. |
+| `avatar.noPrefab` | Warning | Nothing selected is linked to a prefab and the scene could not be read, so there is no file to read. |
+| `avatar.rootNotPrefab` | Warning | The selected object is not linked to a prefab and the scene could not be read. Only the prefab instances beneath it were read. |
+| `source.sceneOnly` | Warning | Components with missing scripts exist only in the scene, and the saved scene holds no data for them or could not be read. Unpacking a prefab here drops that data; a scene saved where the scripts existed keeps it. |
+| `source.modelInstance` | Warning | The avatar was placed from its model file, which carries no components, so everything on it exists only in the scene, and the scene could not be read. Save the scene and rescan. |
+| `source.scene` | Mapped | Components that exist only in the scene were read from the saved scene file. |
+| `scene.unsaved` | Warning | The scene has never been saved, so components added in it have no file to be read from. |
+| `scene.dirty` | Warning | The scene has unsaved changes; components added in it were read from its last saved copy. |
+| `scene.notText` | Warning | The scene file is binary. Set Force Text in the project's editor settings and save the scene. |
 | `source.notText` | Warning | The prefab file is stored in binary form and nothing in it can be read. Switch the project where its scripts are installed to Force Text, save the prefab there, and export again. |
 | `avatar.missing` | Warning | The prefab file the selection points at does not exist. |
 | `avatar.notLoaded` | Warning | The file did not load as a prefab. |

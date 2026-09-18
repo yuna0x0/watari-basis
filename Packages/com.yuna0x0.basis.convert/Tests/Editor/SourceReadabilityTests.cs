@@ -26,6 +26,17 @@ namespace yuna0x0.Basis.Convert.Tests
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
+        // An unsaved scene of its own, so what the open scene holds cannot change what these
+        // read: a saved scene is a source now.
+        private UnityEngine.SceneManagement.Scene _scene;
+        private bool _additive;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _scene = TestScenes.Unsaved(out _additive);
+        }
+
         [TearDown]
         public void TearDown()
         {
@@ -38,12 +49,13 @@ namespace yuna0x0.Basis.Convert.Tests
             }
 
             _spawned.Clear();
+            TestScenes.Release(_scene, _additive);
         }
 
         private GameObject Instantiate()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SamplePath);
-            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, _scene);
             _spawned.Add(instance);
             return instance;
         }
@@ -101,7 +113,7 @@ namespace yuna0x0.Basis.Convert.Tests
         {
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
             Assert.That(PrefabUtility.GetPrefabAssetType(model), Is.EqualTo(PrefabAssetType.Model));
-            GameObject root = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            GameObject root = (GameObject)PrefabUtility.InstantiatePrefab(model, _scene);
             _spawned.Add(root);
 
             GameObject avatar = Instantiate();
@@ -123,6 +135,7 @@ namespace yuna0x0.Basis.Convert.Tests
         public void AnUnlinkedRootOverALinkedInstanceIsNamed()
         {
             GameObject root = new GameObject("Wrapper");
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root, _scene);
             _spawned.Add(root);
             Instantiate().transform.SetParent(root.transform);
 

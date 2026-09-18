@@ -13,8 +13,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
     /// </summary>
     public static class SceneOnlyComponents
     {
+        /// <param name="sceneRead">
+        /// Whether the saved scene file was read. When it was, what exists only in the scene
+        /// came from there and is reported as read rather than as missing.
+        /// </param>
         public static void Report(
-            AvatarConversionPlan plan, GameObject hierarchyRoot, List<ConversionSource> sources)
+            AvatarConversionPlan plan, GameObject hierarchyRoot, List<ConversionSource> sources,
+            bool sceneRead)
         {
             if (hierarchyRoot == null)
             {
@@ -24,7 +29,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             bool rootLinked = PrefabUtility.IsPartOfPrefabAsset(hierarchyRoot)
                 || PrefabUtility.IsPartOfPrefabInstance(hierarchyRoot);
 
-            if (!rootLinked && sources.Count > 0)
+            if (!rootLinked && sources.Count > 0 && !sceneRead)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "avatar.rootNotPrefab",
                     $"{hierarchyRoot.name} is not linked to a prefab. Only the {sources.Count} "
@@ -60,19 +65,35 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return;
             }
 
+            if (sceneRead)
+            {
+                if (plan.SceneComponentsRead > 0)
+                {
+                    plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "source.scene",
+                        $"{sceneOnly} components exist only in the scene, not in a prefab file, so they were read from the saved scene: {plan.SceneComponentsRead} recognised.");
+                }
+                else
+                {
+                    plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.sceneOnly",
+                        $"{sceneOnly} components with missing scripts exist only in the scene, and the saved scene holds no data for them. Unpacking a prefab here drops that data; a scene saved where the scripts existed keeps it.");
+                }
+
+                return;
+            }
+
             // An avatar placed straight from its FBX is an instance of the model file, which
-            // holds the mesh and the skeleton and never a component. "Apply to the prefab" is
-            // not an action Unity offers there; saving a prefab is.
+            // holds the mesh and the skeleton and never a component. Everything on it lives in
+            // the scene alone, and the scene could not be read.
             string model = ModelAssetPathOf(hierarchyRoot);
             if (model != null)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.modelInstance",
-                    $"{System.IO.Path.GetFileName(model)} is a model file and carries no components, so the {sceneOnly} components with missing scripts exist only in the scene. Save the avatar as a prefab where its scripts are installed, and export that.");
+                    $"{System.IO.Path.GetFileName(model)} is a model file and carries no components, so the {sceneOnly} components with missing scripts exist only in the scene, which could not be read. Save the scene and rescan.");
                 return;
             }
 
             plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.sceneOnly",
-                $"{sceneOnly} components with missing scripts exist only on the scene object, not in the prefab file that is read. Apply them to the prefab where their scripts are installed, then export again.");
+                $"{sceneOnly} components with missing scripts exist only in the scene, not in a prefab file, and the scene could not be read. Save the scene and rescan.");
         }
 
         /// <summary>

@@ -61,27 +61,27 @@ Everything here is also reported by the tool. This is the same information in on
 ## Where the data comes from
 
 Component data is read from prefab files, because in a Basis project the VRChat components are
-missing scripts and only the file still holds their values. Two things follow from that:
+missing scripts and only a file still holds their values. What was added in the scene rather
+than in a prefab is read from the saved scene file. Things that follow:
 
-- **The avatar has to still be linked to its prefab.** If the prefab was unpacked, there is
-  nothing left to read: `avatar.noPrefab`, or `avatar.rootNotPrefab` when prefab instances
-  remain beneath the selected object.
-- **A change made to a prefab instance in the scene, rather than to the prefab, is not seen.**
-  A component added there is reported as `source.sceneOnly`; a collider assignment made there
-  shows up as an unresolved collider reference.
-- **An avatar placed from its FBX has no prefab file.** A model file holds the mesh and the
-  skeleton and no components, so everything added on that instance is scene-only:
-  `source.modelInstance`. Save the avatar as a prefab in the VRChat project and export that.
-- **The prefab file has to be text.** A prefab stored in Unity's binary form yields nothing and
-  is reported as `source.notText`. Unity will not save a prefab whose scripts are missing, so the
-  switch to Force Text and the re-save have to happen in the project where the scripts are
-  installed, before the avatar is exported.
+- **The scene has to be saved.** Components added in the scene are read from its file, so an
+  unsaved scene reports `scene.unsaved` and a scene with unsaved changes `scene.dirty`. An
+  avatar placed from its FBX with everything added on the instance reads this way.
+- **Unpacking a prefab in the Basis project drops its data.** A component whose script is
+  missing keeps its values only while it comes from a file. Convert the linked instance instead
+  of unpacking it. A scene saved where the scripts existed keeps everything added in it.
+- **A file has to be text.** A binary prefab is `source.notText` and a binary scene
+  `scene.notText`. Unity will not save a prefab whose scripts are missing, so a prefab's switch
+  to Force Text happens in the project where the scripts are installed.
 - **A prefab variant is read from every prefab above it as well**, since its own file holds
   only its overrides. The report names the base as `source.prefabVariant`.
 - **A prefab nested inside another is read from its own file**, with the outer prefab's
   overrides applied to it first, including references that point back into the outer prefab. An
   avatar that keeps its armature clean and puts every component on a prefab of its own reads
   the same as one that does not.
+- **A collider added in the scene and assigned to a PhysBone inside a prefab** is not found:
+  `physics.collider.unresolved`. The other direction, a scene PhysBone naming a prefab collider,
+  is.
 
 A copy built by VRCFury cannot be read. Convert the original avatar: see
 [VRCFury](what-converts/vrcfury.md).

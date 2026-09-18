@@ -6,6 +6,16 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Components that exist only in the scene are read from the saved scene file: `source.scene`,
+  `scene.unsaved`, `scene.dirty`, `scene.notText`.
+
+### Changed
+
+- `source.sceneOnly`, `source.modelInstance`, `avatar.noPrefab` and `avatar.rootNotPrefab` now
+  say to save the scene; they appear only when the scene could not be read.
+
 ### Fixed
 
 - An avatar placed from its model file, with components added in the scene, is reported as
