@@ -29,7 +29,9 @@ or at least say that a number came from one sample.
 - **Personal information.** Contributors commit under their own name and address, and nothing
   else needs identifying. Do not record who did what, machine-specific absolute paths, or
   anything about a contributor's setup that is not needed to reproduce a result. Write paths as
-  `/path/to/...` or relative to the repository.
+  `/path/to/...` or relative to the repository. The same holds for anyone who reports a bug:
+  no handle, no avatar name, no file name, no store, no screenshot text. Record the shape of
+  the report, never the report.
 - **Third party assets**, in any form, including inside a `.unitypackage`: no VRChat SDK, no
   purchased avatars or plugins. Script GUIDs, fileIDs and field names are facts about a file
   format and are fine to record; the files are not ours to redistribute.

@@ -70,6 +70,29 @@ for source in sorted(EDITOR.rglob("*.cs")):
             if words > MAX_MESSAGE_WORDS:
                 failures.append(f"{source.relative_to(ROOT)}: {code} message of {words} words")
 
+# Identifiers that come from a bug report or a contributor's machine never belong in a committed
+# file. These patterns are the mechanical part; a name has to be caught by reading the diff.
+IDENTIFIER = re.compile(
+    r"cdn\.discordapp\.com|discord\.com/channels|media\.discordapp\.net"
+    r"|(?<![\w/])/Users/[A-Za-z]|(?<![\w/])/home/[a-z]|[A-Za-z]:\\Users\\"
+    r"|[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}")
+ALLOWED_ADDRESSES = {"yuna@yuna0x0.com", "noreply@github.com"}
+SCANNED = [ROOT / "agent", ROOT / "docs" / "docs", ROOT / "Packages" / "com.yuna0x0.basis.convert",
+           ROOT / "README.md", ROOT / "CONTRIBUTING.md", ROOT / "AGENTS.md"]
+for base in SCANNED:
+    files = [base] if base.is_file() else sorted(q for q in base.rglob("*") if q.is_file() and q.suffix in {".md", ".cs", ".json", ".txt", ".yaml", ".yml", ".asset", ".prefab"})
+    for path in files:
+        try:
+            text = path.read_text()
+        except UnicodeDecodeError:
+            continue
+        for match in IDENTIFIER.finditer(text):
+            token = match.group(0)
+            if "@" in token and token in ALLOWED_ADDRESSES:
+                continue
+            line = text.count("\n", 0, match.start()) + 1
+            failures.append(f"{path.relative_to(ROOT)}:{line}: identifier {token!r} does not belong in a committed file")
+
 for failure in failures:
     print(failure)
 print(f"{len(failures)} prose failures" if failures else "prose ok")

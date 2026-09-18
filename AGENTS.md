@@ -110,6 +110,15 @@ a wrong result on a real avatar or the user's ask is.
 - **Menus belong to us, not to Basis.** `Tools/<ProductName>/...`, never under Basis's own menu.
   See `agent/decisions/0002`.
 
+## Nothing from a report identifies its reporter
+
+A bug report's scene name, avatar file path, store, clothing pack, handle, screenshot and text
+stay out of committed files: worklog, decisions, research, tests, fixtures, commit messages.
+Describe the shape ("an avatar placed from its FBX with components added in the scene") and
+say "a user". A fork or its owner is not cited in any form. `scripts/check-prose.py` fails on
+Discord links, e-mail addresses and home-directory paths; it cannot know a name, so grep the
+diff before committing.
+
 ## Versions checked
 
 `docs/docs/versions.md` and `ProductInfo.CheckedAgainst` state which release of each source the
