@@ -24,6 +24,9 @@ namespace yuna0x0.Basis.Convert.Tests
         private const string SamplePath =
             "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/SampleAvatar/SampleAvatar.prefab";
 
+        private const string VrcFuryPath =
+            "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/SampleVrcFury.prefab";
+
         private const string ModelPath =
             "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/SampleModel.obj";
 
@@ -139,6 +142,66 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(plan.Diagnostics.HasCode("source.sceneOnly"), Is.False);
             Assert.That(plan.Sources.Count, Is.EqualTo(2), "the prefab and the scene");
             Assert.That(plan.Sources[0].IsScene, Is.False, "the prefab stays the primary source");
+        }
+
+        /// <summary>
+        /// A prefab instance's components appear in the scene file only as stubs, which the
+        /// readers skip, so nothing is read twice: the toggle and link counts of an instance in
+        /// a saved scene equal those of the prefab alone.
+        /// </summary>
+        [Test]
+        public void AVrcFuryInstanceInASavedSceneIsNotReadTwice()
+        {
+            GameObject avatar = Place(VrcFuryPath);
+            Assert.That(EditorSceneManager.SaveScene(_scene, ScenePath), Is.True);
+
+            AvatarConversionPlan reference = AvatarConversionPlanner.Plan(VrcFuryPath);
+            AvatarConversionPlan plan = AvatarConversionPlanner.Plan(avatar);
+
+            Assert.That(plan.VrcFury.Components, Is.EqualTo(reference.VrcFury.Components));
+            Assert.That(plan.VrcFury.Toggles, Is.EqualTo(reference.VrcFury.Toggles));
+            Assert.That(plan.VrcFury.ArmatureLinks, Is.EqualTo(reference.VrcFury.ArmatureLinks));
+            Assert.That(plan.VixxyControls.Count, Is.EqualTo(reference.VixxyControls.Count));
+            Assert.That(plan.VixxyControls.Count, Is.GreaterThan(0));
+            Assert.That(plan.SceneComponentsRead, Is.EqualTo(0));
+        }
+
+        /// <summary>
+        /// The same components living only in the scene file are read once, from there, and
+        /// yield the same controls as the prefab does.
+        /// </summary>
+        [Test]
+        public void VrcFuryComponentsLivingOnlyInTheSceneYieldTheSameControls()
+        {
+            string prefabText = File.ReadAllText(VrcFuryPath);
+            int body = prefabText.IndexOf("--- !u!", System.StringComparison.Ordinal);
+            File.WriteAllText(ScenePath,
+                "%YAML 1.1\n%TAG !u! tag:unity3d.com,2011:\n" + prefabText.Substring(body));
+            AssetDatabase.ImportAsset(ScenePath);
+
+            TestScenes.Release(_scene, _additive);
+            _scene = TestScenes.Open(ScenePath, out _additive);
+
+            GameObject avatar = null;
+            foreach (GameObject root in _scene.GetRootGameObjects())
+            {
+                if (root.name == "SampleVrcFury")
+                {
+                    avatar = root;
+                }
+            }
+
+            Assert.That(avatar, Is.Not.Null);
+
+            AvatarConversionPlan reference = AvatarConversionPlanner.Plan(VrcFuryPath);
+            AvatarConversionPlan plan = AvatarConversionPlanner.Plan(avatar);
+            string state = "diagnostics: " + string.Join("; ", plan.Diagnostics);
+
+            Assert.That(plan.VrcFury.Components, Is.EqualTo(reference.VrcFury.Components), state);
+            Assert.That(plan.VrcFury.Toggles, Is.EqualTo(reference.VrcFury.Toggles), state);
+            Assert.That(plan.VixxyControls.Count, Is.EqualTo(reference.VixxyControls.Count), state);
+            Assert.That(plan.VixxyControls.Count, Is.GreaterThan(0));
+            Assert.That(plan.SceneComponentsRead, Is.EqualTo(reference.VrcFury.Components), state);
         }
 
         /// <summary>
