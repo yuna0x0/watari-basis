@@ -55,11 +55,44 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             plan.SceneOnlyMissingScripts = sceneOnly;
-            if (sceneOnly > 0)
+            if (sceneOnly == 0)
             {
-                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.sceneOnly",
-                    $"{sceneOnly} components with missing scripts exist only on the scene object, not in the prefab file that is read. Apply them to the prefab where their scripts are installed, then export again.");
+                return;
             }
+
+            // An avatar placed straight from its FBX is an instance of the model file, which
+            // holds the mesh and the skeleton and never a component. "Apply to the prefab" is
+            // not an action Unity offers there; saving a prefab is.
+            string model = ModelAssetPathOf(hierarchyRoot);
+            if (model != null)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.modelInstance",
+                    $"{System.IO.Path.GetFileName(model)} is a model file and carries no components, so the {sceneOnly} components with missing scripts exist only in the scene. Save the avatar as a prefab where its scripts are installed, and export that.");
+                return;
+            }
+
+            plan.Diagnostics.Add(DiagnosticSeverity.Warning, "source.sceneOnly",
+                $"{sceneOnly} components with missing scripts exist only on the scene object, not in the prefab file that is read. Apply them to the prefab where their scripts are installed, then export again.");
+        }
+
+        /// <summary>
+        /// The model file an instance was placed from, or null when its source is a prefab. A
+        /// variant saved from a model is a prefab: its own file holds the added components.
+        /// </summary>
+        public static string ModelAssetPathOf(GameObject instanceRoot)
+        {
+            if (!PrefabUtility.IsPartOfPrefabInstance(instanceRoot))
+            {
+                return null;
+            }
+
+            GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);
+            if (source == null || PrefabUtility.GetPrefabAssetType(source) != PrefabAssetType.Model)
+            {
+                return null;
+            }
+
+            return AssetDatabase.GetAssetPath(source);
         }
     }
 }

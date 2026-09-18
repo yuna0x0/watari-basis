@@ -6,6 +6,11 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- An avatar placed from its model file, with components added in the scene, is reported as
+  `source.modelInstance` with the step that fixes it, instead of "apply them to the prefab".
+
 ## [0.10.0] - 2026-09-18
 
 ### Added

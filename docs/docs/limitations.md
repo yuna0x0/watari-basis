@@ -69,6 +69,9 @@ missing scripts and only the file still holds their values. Two things follow fr
 - **A change made to a prefab instance in the scene, rather than to the prefab, is not seen.**
   A component added there is reported as `source.sceneOnly`; a collider assignment made there
   shows up as an unresolved collider reference.
+- **An avatar placed from its FBX has no prefab file.** A model file holds the mesh and the
+  skeleton and no components, so everything added on that instance is scene-only:
+  `source.modelInstance`. Save the avatar as a prefab in the VRChat project and export that.
 - **The prefab file has to be text.** A prefab stored in Unity's binary form yields nothing and
   is reported as `source.notText`. Unity will not save a prefab whose scripts are missing, so the
   switch to Force Text and the re-save have to happen in the project where the scripts are

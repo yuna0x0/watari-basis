@@ -21,6 +21,9 @@ namespace yuna0x0.Basis.Convert.Tests
         private const string BinaryPath =
             "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/BinaryPrefab.prefab";
 
+        private const string ModelPath =
+            "Packages/com.yuna0x0.basis.convert/Tests/Editor/Fixtures/SampleModel.obj";
+
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
         [TearDown]
@@ -87,6 +90,33 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(plan.SceneOnlyMissingScripts, Is.GreaterThan(0),
                 "the sample's VRChat components are missing scripts, and unpacking left them "
                 + "on the scene object only");
+        }
+
+        /// <summary>
+        /// An avatar dragged into the scene from its FBX, with the VRChat components added on
+        /// that instance: the root is a model instance, and no prefab holds the components.
+        /// </summary>
+        [Test]
+        public void AModelInstanceWithSceneComponentsIsToldToSaveAPrefab()
+        {
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
+            Assert.That(PrefabUtility.GetPrefabAssetType(model), Is.EqualTo(PrefabAssetType.Model));
+            GameObject root = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            _spawned.Add(root);
+
+            GameObject avatar = Instantiate();
+            PrefabUtility.UnpackPrefabInstance(
+                avatar, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            avatar.transform.SetParent(root.transform);
+
+            AvatarConversionPlan plan = AvatarConversionPlanner.Plan(root);
+
+            Assert.That(plan.Diagnostics.HasCode("source.modelInstance"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("source.sceneOnly"), Is.False,
+                "the model message replaces the prefab one; there is no prefab to apply to");
+            Assert.That(plan.SceneOnlyMissingScripts, Is.GreaterThan(0));
+            Assert.That(plan.Diagnostics.HasCode("avatar.rootNotPrefab"), Is.False,
+                "a model instance is a linked instance");
         }
 
         [Test]

@@ -1,0 +1,7 @@
+# A one-triangle model. Placed in a scene it is a model prefab instance, the shape an avatar
+# has when its FBX is dragged into the scene and the VRChat components are added there.
+o Triangle
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3

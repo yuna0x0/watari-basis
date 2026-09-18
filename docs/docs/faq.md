@@ -23,6 +23,7 @@ The Warnings section names the cause:
 
 - `avatar.noPrefab`, `avatar.rootNotPrefab`: the object is not linked to a prefab.
 - `source.sceneOnly`: components added in the scene and never applied to the prefab.
+- `source.modelInstance`: the avatar was placed from its FBX and never saved as a prefab.
 - `source.notText`: the prefab file is binary.
 
 Fix them in the VRChat project. Unity will not save a prefab whose scripts are missing.

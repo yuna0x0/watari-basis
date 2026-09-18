@@ -31,6 +31,7 @@ on the case; the usual one is given.
 | `avatar.noPrefab` | Warning | Nothing selected is linked to a prefab, so there is no file to read. |
 | `avatar.rootNotPrefab` | Warning | The selected object is not linked to a prefab. Only the prefab instances beneath it were read. |
 | `source.sceneOnly` | Warning | Components with missing scripts that exist only on the scene object, not in a prefab file. Apply them to the prefab in the project where their scripts are installed. |
+| `source.modelInstance` | Warning | The avatar was placed from its model file, which carries no components, and the components with missing scripts exist only in the scene. Save the avatar as a prefab in the project where its scripts are installed, and export that. |
 | `source.notText` | Warning | The prefab file is stored in binary form and nothing in it can be read. Switch the project where its scripts are installed to Force Text, save the prefab there, and export again. |
 | `avatar.missing` | Warning | The prefab file the selection points at does not exist. |
 | `avatar.notLoaded` | Warning | The file did not load as a prefab. |
