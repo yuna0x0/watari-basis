@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-09-18
+
 ### Added
 
 - Parameters that drive more than one control are named in the report: `vixxy.sharedParameter`.
@@ -403,7 +405,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.11.1
 [0.11.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.11.0
 [0.10.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.10.0
 [0.9.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.9.2
