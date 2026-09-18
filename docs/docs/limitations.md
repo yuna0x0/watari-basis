@@ -94,3 +94,30 @@ installed for it to import at all, so its components are read directly. See
 
 Materials and shaders, meshes, the avatar's animator, and anything Basis fills in itself when the
 `BasisAvatar` inspector is first opened.
+
+### Shaders
+
+Basis renders with URP. A material whose shader does not run there is swapped at load for
+`Universal Render Pipeline/Lit`, keeping its base texture, colour, normal, metallic and occlusion
+maps. What an avatar's materials need depends on the shader:
+
+- **lilToon** regenerates its shaders for the project's pipeline on import. No material change.
+- **Silent Cel Shading** has a URP pass in the same shader file. No material change.
+- **MToon** for VRM 1.0 is chosen for URP by UniVRM when the `.vrm` is imported. VRM 0.x MToon
+  has no URP shader and imports as unlit.
+- **Poiyomi** 10.0.20 and later ships its URP shaders as a separate package, `Poi.Toon.URP`,
+  for Unity 6. They are separate shaders, so each material has to be switched to the URP one.
+  A Poiyomi material whose shader is missing offers **Switch to latest Toon** in its inspector,
+  which picks the URP shader in a URP project. A locked material has to be unlocked first.
+
+Basis keeps its own list of shaders known to work at
+[docs.basisvr.org](https://docs.basisvr.org/en/docs/avatar/shaders).
+
+### OSC
+
+Basis listens for OSC on port 9000 and routes `/avatar/parameters/<name>` to the Vixxy control
+whose address is `<name>`, on an avatar carrying HVR Basis Comms's Automatic Face Tracking or
+OSC Acquisition component. Converted controls are written without an address, so Vixxy
+generates one from the object path and an app cannot reach them by parameter name.
+
+Basis reads float arguments only; bool and int messages are dropped.

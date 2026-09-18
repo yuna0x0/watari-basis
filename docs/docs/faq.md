@@ -66,6 +66,16 @@ with no parameter steering them are read as motion, and only the rotation in the
 Two settings are fits rather than conversions: stiffness and drag. Both are adjustable under
 **Advanced** in the window. See [Physics](what-converts/physics.md).
 
+### Do Poiyomi or lilToon materials need converting?
+
+lilToon, Silent Cel Shading and VRM 1.0 MToon handle URP themselves. Poiyomi needs its URP
+package and a shader switch per material. See [Limitations](limitations.md#shaders).
+
+### Can an OSC app drive the converted toggles?
+
+Not by parameter name: converted controls carry no address. See
+[Limitations](limitations.md#osc). Face tracking over OSC is Basis's own and is not affected.
+
 ### A component was reported as an unknown script.
 
 Please [open an issue](https://github.com/yuna0x0/watari-basis/issues) with the code from the
