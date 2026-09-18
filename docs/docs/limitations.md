@@ -117,7 +117,7 @@ Basis keeps its own list of shaders known to work at
 
 Basis listens for OSC on port 9000 and routes `/avatar/parameters/<name>` to the Vixxy control
 whose address is `<name>`, on an avatar carrying HVR Basis Comms's Automatic Face Tracking or
-OSC Acquisition component. Converted controls are written without an address, so Vixxy
-generates one from the object path and an app cannot reach them by parameter name.
+OSC Acquisition component. A converted control's address is its parameter name, so an app that
+drove the parameter on VRChat drives the control here.
 
 Basis reads float arguments only; bool and int messages are dropped.

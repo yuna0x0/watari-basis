@@ -72,8 +72,9 @@ package and a shader switch per material. See [Limitations](limitations.md#shade
 
 ### Can an OSC app drive the converted toggles?
 
-Not by parameter name: converted controls carry no address. See
-[Limitations](limitations.md#osc). Face tracking over OSC is Basis's own and is not affected.
+Yes for float parameters: each control's address is its parameter name, so a float sent to
+`/avatar/parameters/<name>` drives it. Bool and int messages are dropped by Basis. See
+[Limitations](limitations.md#osc).
 
 ### A component was reported as an unknown script.
 

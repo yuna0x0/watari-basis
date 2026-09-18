@@ -64,6 +64,16 @@ namespace yuna0x0.Basis.Convert.Writers
                 networked.boolValue = plan.NetworkSynced;
             }
 
+            // The source parameter name as the control's address. Basis strips
+            // "/avatar/parameters/" off an incoming OSC address and matches the rest against
+            // this, so an app that drove the parameter on VRChat drives the control here.
+            SerializedProperty addressPath = serialized.FindProperty("address.path");
+            if (addressPath != null && !string.IsNullOrEmpty(plan.Parameter)
+                && !plan.Parameter.StartsWith("@System/"))
+            {
+                addressPath.stringValue = plan.Parameter;
+            }
+
             SerializedProperty activations = serialized.FindProperty("activations");
 
             int written = 0;

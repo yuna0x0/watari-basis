@@ -2743,6 +2743,23 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.rebuilt",
                     $"{plan.VixxyControls.Count} menu toggles were rebuilt as Vixxy controls, "
                     + "each with a menu item. The rest are listed above with why they were not.");
+
+                int addressed = 0;
+                foreach (PlannedVixxyControl control in plan.VixxyControls)
+                {
+                    if (!string.IsNullOrEmpty(control.Plan?.Parameter))
+                    {
+                        addressed++;
+                    }
+                }
+
+                if (addressed > 0)
+                {
+                    plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.address",
+                        $"{addressed} controls carry their parameter name as the Vixxy address, "
+                        + "so an OSC float sent to /avatar/parameters/<name> drives them.");
+                }
+
                 WarnIfCommsMissing(plan);
             }
         }

@@ -10,6 +10,8 @@ Notable changes to this package. The format follows
 
 - Components that exist only in the scene are read from the saved scene file: `source.scene`,
   `scene.unsaved`, `scene.dirty`, `scene.notText`.
+- A converted control's Vixxy address is its parameter name, so an OSC float sent to
+  `/avatar/parameters/<name>` drives it: `vixxy.address`.
 
 ### Changed
 

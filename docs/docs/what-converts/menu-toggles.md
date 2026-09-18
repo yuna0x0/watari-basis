@@ -51,6 +51,9 @@ Vixxy interpolates in a straight line between a control's choices, so the two en
 exactly and the shape of the sweep between them does not. A tree holding motions between its ends
 is reported as `vixxy.puppetEnds`.
 
+Each control's Vixxy address is the toggle's parameter name. Basis routes an OSC float sent to
+`/avatar/parameters/<name>` to that address; see [Limitations](../limitations.md#osc).
+
 ## What cannot
 
 - Anything that animates over time other than rotation. Vixxy holds a value per choice, not a

@@ -255,6 +255,7 @@ on the case; the usual one is given.
 | `expressions.assetNotText` | Warning | The menu or parameters sit in a file stored in binary form. VRCFury saves a built copy's menus that way, and only its own project can save the file again. |
 | `expressions.assetUnread` | Warning | The file is text but holds no menu or parameters at the file id the descriptor names. |
 | `vixxy.rebuilt` | Mapped | The count of menu toggles rebuilt as Vixxy controls, each with a menu item. |
+| `vixxy.address` | Mapped | Controls carry their parameter name as the Vixxy address, so an OSC float sent to `/avatar/parameters/<name>` drives them. |
 | `vixxy.notSimple` | Dropped | The toggle animates over time or drives something a Vixxy control cannot hold. |
 | `vixxy.nothingToSwitch` | Dropped | The toggle switched nothing that exists on this avatar. |
 | `vixxy.values.normalized` | Mapped | A two-state control used a value other than 1. It was written as 0 and 1 so Basis presents a toggle. |
