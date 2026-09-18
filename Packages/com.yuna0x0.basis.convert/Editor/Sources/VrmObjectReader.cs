@@ -414,8 +414,7 @@ namespace yuna0x0.Basis.Convert.Sources
                         && UnityYamlValues.TryParseFloat(
                             trimmed.Substring("CurveYRangeDegree:".Length).Trim(), out float scale))
                     {
-                        settings.EyeRotationLimitDegrees =
-                            Mathf.Max(settings.EyeRotationLimitDegrees, scale);
+                        settings.EyeRotationLimitsDegrees.Add(scale);
                         continue;
                     }
 

@@ -747,6 +747,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             BuildProfile(plan);
             EnsureAvatarComponent(plan);
             ApplyVrmEyePosition(plan);
+            ApplyVrmEyeRange(plan);
             ApplyVrmVisemes(plan);
             LoadExpressions(plan);
 
@@ -1081,17 +1082,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 plan.VrmEyeOrigin = origin;
             }
 
-            // Basis's eye driver turns every avatar's eyes up to the same angle, 25 degrees, and
-            // counter-rotates them while the head turns; nothing on the avatar lowers it. A model
-            // built for VRM's usual 10 shows the white of the eye well before 25.
-            const float basisEyeLimitDegrees = 25f;
-            if (!settings.LookAtByExpression && settings.EyeRotationLimitDegrees > 0f
-                && settings.EyeRotationLimitDegrees < basisEyeLimitDegrees)
-            {
-                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrm.lookAt.range",
-                    $"The avatar limits its eyes to {settings.EyeRotationLimitDegrees:0.#} degrees; Basis turns them up to {basisEyeLimitDegrees:0} with no per-avatar setting, so a large eye shows white past the limit.");
-            }
-
             if (settings.LookAtByExpression)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "vrm.lookAt.expression",
@@ -1184,6 +1174,24 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 $"The eyes sit {settings.EyeOffsetFromHead} from the head bone, which is "
                 + $"{eyes.x:0.###} up and {eyes.y:0.###} forward of the avatar root. That is "
                 + "what Basis stores as the eye position.");
+        }
+
+        /// <summary>
+        /// A VRM 1.0 range map states how far each eye bone turns in one direction; the Basis
+        /// Avatar holds one angle for all of them. An expression look-at has no eye bones to
+        /// limit, and without a humanoid rig there is no Basis Avatar to write to.
+        /// </summary>
+        private static void ApplyVrmEyeRange(AvatarConversionPlan plan)
+        {
+            VrmAvatarSettingsData settings = plan.VrmSettings;
+            if (settings == null || plan.Descriptor == null || settings.LookAtByExpression
+                || settings.EyeRotationLimitDegrees <= 0f)
+            {
+                return;
+            }
+
+            EyeLookAngleMapper.Apply(plan.Descriptor.Plan, "vrm.lookAt.range",
+                settings.EyeRotationLimitMinDegrees, settings.EyeRotationLimitDegrees);
         }
 
         /// <summary>

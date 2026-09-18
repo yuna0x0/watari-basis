@@ -41,6 +41,7 @@ namespace yuna0x0.Basis.Convert.Mapping
 
             MapVisemes(source, plan);
             MapBlink(source, plan);
+            MapEyeLookRange(source, plan);
             ReportExpressionSystems(source, plan);
 
             plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "descriptor.autoSetup",
@@ -126,6 +127,35 @@ namespace yuna0x0.Basis.Convert.Mapping
                     "All fifteen visemes carried across. Both systems keep them in the same "
                     + "order, so they map position for position.");
             }
+        }
+
+        /// <summary>
+        /// The SDK stores each gaze extreme as the eye bones' local rotation, so a limit is the
+        /// angle between that state and the straight one. Without eye bones nothing turned.
+        /// </summary>
+        private static void MapEyeLookRange(VrcAvatarDescriptorData source, BasisAvatarPlan plan)
+        {
+            if (!source.EnableEyeLook || !source.HasEyeRotations
+                || (source.LeftEyeFileId == 0L && source.RightEyeFileId == 0L))
+            {
+                return;
+            }
+
+            float min = float.MaxValue;
+            float max = 0f;
+            foreach (VrcEyeRotations state in new[]
+                     {
+                         source.EyesLookingUp, source.EyesLookingDown,
+                         source.EyesLookingLeft, source.EyesLookingRight,
+                     })
+            {
+                float left = Quaternion.Angle(source.EyesLookingStraight.Left, state.Left);
+                float right = Quaternion.Angle(source.EyesLookingStraight.Right, state.Right);
+                min = Mathf.Min(min, left, right);
+                max = Mathf.Max(max, left, right);
+            }
+
+            EyeLookAngleMapper.Apply(plan, "descriptor.eyeLook.range", min, max);
         }
 
         private static void MapBlink(VrcAvatarDescriptorData source, BasisAvatarPlan plan)

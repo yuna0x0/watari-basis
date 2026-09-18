@@ -6,6 +6,19 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The eye rotation limit of a VRChat descriptor or a VRM 1.0 look-at is written as the Basis
+  Avatar's eye look angle: `descriptor.eyeLook.range`, `vrm.lookAt.range`.
+
+### Changed
+
+- `vrm.lookAt.range` is Mapped rather than Dropped; Basis now has a per-avatar eye angle.
+
+### Fixed
+
+- Vector and rotation components written with a negative exponent, such as `-4e-08`, are read.
+
 ## [0.9.2] - 2026-09-17
 
 ### Changed

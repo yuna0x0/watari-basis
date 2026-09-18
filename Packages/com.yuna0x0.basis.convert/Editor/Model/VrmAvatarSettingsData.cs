@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace yuna0x0.Basis.Convert.Model
@@ -30,10 +31,18 @@ namespace yuna0x0.Basis.Convert.Model
         public bool LookAtByExpression;
 
         /// <summary>
-        /// The most an eye bone may turn, in degrees: the largest `outputScale` of the four VRM 1.0
-        /// range maps. Zero when the avatar states none.
+        /// The `outputScale` of each VRM 1.0 range map, in degrees: how far an eye bone may turn
+        /// in that direction. Empty when the avatar states none.
         /// </summary>
-        public float EyeRotationLimitDegrees;
+        public List<float> EyeRotationLimitsDegrees = new List<float>();
+
+        /// <summary>The most an eye bone may turn in any direction. Zero when none is stated.</summary>
+        public float EyeRotationLimitDegrees =>
+            EyeRotationLimitsDegrees.Count == 0 ? 0f : Mathf.Max(EyeRotationLimitsDegrees.ToArray());
+
+        /// <summary>The least an eye bone may turn in some direction. Zero when none is stated.</summary>
+        public float EyeRotationLimitMinDegrees =>
+            EyeRotationLimitsDegrees.Count == 0 ? 0f : Mathf.Min(EyeRotationLimitsDegrees.ToArray());
 
         public int ThirdPersonOnlyRenderers;
 

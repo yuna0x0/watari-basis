@@ -192,14 +192,17 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
-        public void TheEyeRotationLimitIsReadAndReported()
+        public void TheEyeRotationLimitIsWrittenToTheBasisAvatar()
         {
-            // VRM states how far the eye bones may turn; Basis turns them up to 25 degrees for
-            // every avatar. The largest of the four range maps is the avatar's limit.
+            // The fixture's range maps are 10, 10, 10 and 12 degrees. Basis holds one angle,
+            // so the largest is planned and the spread is reported.
             AvatarConversionPlan plan = PlanWithDescriptor(Vrm10Path);
 
             Assert.That(plan.VrmSettings.EyeRotationLimitDegrees, Is.EqualTo(12f).Within(1e-4f));
-            Assert.That(plan.AllDiagnostics().HasCode("vrm.lookAt.range"), Is.True);
+            Assert.That(plan.VrmSettings.EyeRotationLimitMinDegrees, Is.EqualTo(10f).Within(1e-4f));
+            Assert.That(plan.Descriptor.Plan.EyeMaxLookAngleDegrees, Is.EqualTo(12f).Within(1e-4f));
+            Assert.That(plan.AllDiagnostics().HasCode("vrm.lookAt.range.uneven"), Is.True);
+            Assert.That(plan.AllDiagnostics().HasCode("vrm.lookAt.range"), Is.False);
         }
 
         [Test]

@@ -92,6 +92,20 @@ namespace yuna0x0.Basis.Convert.Model
         public long RightEyeFileId;
 
         /// <summary>
+        /// The eye bones' local rotations at rest and at each gaze extreme, as the SDK records
+        /// them. Null when the descriptor carries no such state.
+        /// </summary>
+        public VrcEyeRotations EyesLookingStraight;
+        public VrcEyeRotations EyesLookingUp;
+        public VrcEyeRotations EyesLookingDown;
+        public VrcEyeRotations EyesLookingLeft;
+        public VrcEyeRotations EyesLookingRight;
+
+        public bool HasEyeRotations =>
+            EyesLookingStraight != null && EyesLookingUp != null && EyesLookingDown != null
+            && EyesLookingLeft != null && EyesLookingRight != null;
+
+        /// <summary>
         /// The expression and animation systems, recorded only so a conversion can say they
         /// exist and will not come across. Basis has no playable layers and no expression menu
         /// format; HVR Vixxy replaces both, and is authored by hand.
@@ -112,5 +126,13 @@ namespace yuna0x0.Basis.Convert.Model
 
         public List<VrcAnimationLayerEntry> AnimationLayers =
             new List<VrcAnimationLayerEntry>();
+    }
+
+    /// <summary>One gaze state: a local rotation for each eye bone.</summary>
+    public sealed class VrcEyeRotations
+    {
+        public bool Linked = true;
+        public Quaternion Left = Quaternion.identity;
+        public Quaternion Right = Quaternion.identity;
     }
 }

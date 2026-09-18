@@ -222,6 +222,10 @@ on the case; the usual one is given.
 | `descriptor.eyelids.none` | Mapped | No eyelid setup or no blink shape chosen, so blink is unset. |
 | `descriptor.eyelids.bones` | Dropped | Eyelids were driven by bones. Basis blinks with a blendshape. |
 | `descriptor.eyelids.lookUpDown` | Dropped | The looking up and down eyelid shapes have no equivalent. |
+| `descriptor.eyeLook.range` | Mapped | The eye rotation limit was written to the Basis Avatar. |
+| `descriptor.eyeLook.range.uneven` | Approximated | The limit differs by direction or eye. Basis has one angle, so the largest was written. |
+| `descriptor.eyeLook.range.clamped` | Approximated | The limit is outside the 1 to 45 degrees Basis allows and was clamped. |
+| `descriptor.eyeLook.range.none` | Approximated | Every gaze state is the rest rotation, so the eyes did not turn. The smallest limit, 1 degree, was written. |
 | `descriptor.viewPosition.sideways` | Dropped | The sideways part of the view position. Basis stores height and forward offset. |
 | `descriptor.animationLayers` | Dropped | Custom animation layers were assigned. Basis has no playable layers. |
 | `descriptor.expressionsMenu` | Dropped | The expression menu as a structure. Its toggles are rebuilt as Vixxy controls; see the menu codes. |
@@ -304,7 +308,9 @@ on the case; the usual one is given.
 | `vrm.firstPerson` | Dropped | Renderers marked to hide from the wearer. Basis hides the head bone instead. |
 | `vrm.lookAt` | Dropped | VRM 0.x look-at components. Basis drives gaze from the eye bones itself. |
 | `vrm.lookAt.expression` | Dropped | The avatar aims its eyes with expressions, not eye bones, so its eyes do not follow gaze. |
-| `vrm.lookAt.range` | Dropped | The avatar limits how far its eye bones turn. Basis turns eyes up to 25 degrees for every avatar. |
+| `vrm.lookAt.range` | Mapped | The eye rotation limit was written to the Basis Avatar. |
+| `vrm.lookAt.range.uneven` | Approximated | The range maps differ by direction. Basis has one angle, so the largest was written. |
+| `vrm.lookAt.range.clamped` | Approximated | The limit is outside the 1 to 45 degrees Basis allows and was clamped. |
 
 ### Rig
 

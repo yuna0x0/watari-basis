@@ -14,7 +14,7 @@ namespace yuna0x0.Basis.Convert.Sources
             @"fileID:\s*(?<fileId>-?\d+)", RegexOptions.Compiled);
 
         private static readonly Regex ComponentPattern = new Regex(
-            @"(?<axis>[xyzw])\s*:\s*(?<value>-?[\d.eE+]+)",
+            @"(?<axis>[xyzw])\s*:\s*(?<value>-?[\d.]+(?:[eE][-+]?\d+)?)",
             RegexOptions.Compiled);
 
         private static readonly Regex KeyValuePattern = new Regex(

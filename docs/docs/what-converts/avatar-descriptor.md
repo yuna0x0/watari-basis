@@ -13,6 +13,9 @@ becomes a `BasisAvatar`, the component Basis loads an avatar through.
 - **Visemes**, all fifteen. Both platforms order them the same way, so they map by position
   rather than by name.
 - **Blink**, taken from the eyelid blendshape the descriptor names.
+- **Eye rotation limit**, as the Basis Avatar's eye look angle. The descriptor records a
+  rotation per direction and per eye; Basis holds one angle, so the largest is written and a
+  spread is reported: `descriptor.eyeLook.range.uneven`.
 
 A VRM has no descriptor, and its own expressions fill what they can: the five vowels and blink.
 See [VRM](vrm.md).
@@ -36,7 +39,7 @@ filled in is thrown away.
 
 ## What does not carry across
 
-Eye look settings, lip sync mode, the collider layout VRChat uses for its own contacts, and the
+Eye movement timing, lip sync mode, the collider layout VRChat uses for its own contacts, and the
 expression menu and parameters, which are a separate subject: see
 [Menu toggles](menu-toggles.md).
 

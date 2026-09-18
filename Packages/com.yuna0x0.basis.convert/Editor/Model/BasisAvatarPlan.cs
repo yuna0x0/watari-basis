@@ -37,6 +37,12 @@ namespace yuna0x0.Basis.Convert.Model
         /// <summary>Blendshape indices on the blink mesh. Basis blinks with all of them.</summary>
         public List<int> BlinkBlendShapeIndices = new List<int>();
 
+        /// <summary>
+        /// How far the eye bones may turn from straight ahead, in degrees, already within the
+        /// range Basis accepts. Zero leaves the Basis Avatar's own setting alone.
+        /// </summary>
+        public float EyeMaxLookAngleDegrees;
+
         public List<ConversionDiagnostic> Diagnostics = new List<ConversionDiagnostic>();
     }
 }

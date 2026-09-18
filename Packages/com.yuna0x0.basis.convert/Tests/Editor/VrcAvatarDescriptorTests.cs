@@ -24,7 +24,8 @@ namespace yuna0x0.Basis.Convert.Tests
             int lipSync = 3,
             int eyelidType = 2,
             string eyelidsBlob = "1d000000ffffffffffffffff",
-            int enableEyeLook = 1)
+            int enableEyeLook = 1,
+            List<string> gazeStates = null)
         {
             List<string> lines = new List<string>
             {
@@ -51,10 +52,149 @@ namespace yuna0x0.Basis.Convert.Tests
             lines.Add($"    eyelidType: {eyelidType}");
             lines.Add("    eyelidsSkinnedMesh: {fileID: 66}");
             lines.Add($"    eyelidsBlendshapes: {eyelidsBlob}");
+            if (gazeStates != null)
+            {
+                lines.AddRange(gazeStates);
+            }
 
             List<UnityYamlDocument> documents = UnityYamlScanner.Scan(lines);
             Assert.That(documents.Count, Is.EqualTo(1));
             return VrcAvatarDescriptorReader.Read(documents[0]);
+        }
+
+        /// <summary>
+        /// The five gaze states as the SDK serializes them: each eye bone's local rotation,
+        /// here a turn of the given degrees about X for up and down and about Y for left and
+        /// right, composed onto the straight rotation.
+        /// </summary>
+        private static List<string> GazeStates(
+            float up, float down, float left, float right, Quaternion? straight = null,
+            float rightEyeScale = 1f)
+        {
+            Quaternion rest = straight ?? Quaternion.identity;
+            List<string> lines = new List<string>();
+            void Add(string key, Quaternion turn)
+            {
+                Quaternion leftEye = rest * turn;
+                Quaternion rightEye = rest * Quaternion.Slerp(Quaternion.identity, turn, rightEyeScale);
+                lines.Add($"    {key}:");
+                lines.Add($"      linked: {(rightEyeScale == 1f ? 1 : 0)}");
+                lines.Add($"      left: {Yaml(leftEye)}");
+                lines.Add($"      right: {Yaml(rightEye)}");
+            }
+
+            Add("eyesLookingStraight", Quaternion.identity);
+            Add("eyesLookingUp", Quaternion.Euler(-up, 0f, 0f));
+            Add("eyesLookingDown", Quaternion.Euler(down, 0f, 0f));
+            Add("eyesLookingLeft", Quaternion.Euler(0f, -left, 0f));
+            Add("eyesLookingRight", Quaternion.Euler(0f, right, 0f));
+            return lines;
+        }
+
+        private static string Yaml(Quaternion q)
+        {
+            // A "}}" straight after a format item is folded into its format string, so the
+            // components are formatted one by one.
+            string R(float f) => f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+            return "{x: " + R(q.x) + ", y: " + R(q.y) + ", z: " + R(q.z) + ", w: " + R(q.w) + "}";
+        }
+
+        [Test]
+        public void ComponentsWrittenWithANegativeExponentAreParsed()
+        {
+            // Unity writes a half turn about Y with a w of about -4e-08, and near-zero
+            // components in that form are common in rest rotations.
+            bool parsed = UnityYamlValues.TryParseQuaternion(
+                "{x: 0, y: 1, z: 0, w: -4.371139e-08}", out Quaternion q);
+
+            Assert.That(parsed, Is.True);
+            Assert.That(q.w, Is.EqualTo(-4.371139e-08f).Within(1e-12f));
+            Assert.That(q.y, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void GazeStatesAreReadAsEyeRotations()
+        {
+            VrcAvatarDescriptorData data = ReadDescriptor(
+                gazeStates: GazeStates(10f, 10f, 15f, 15f, rightEyeScale: 0.5f));
+
+            Assert.That(data.HasEyeRotations, Is.True);
+            Assert.That(data.EyesLookingUp.Linked, Is.False);
+            Assert.That(Quaternion.Angle(data.EyesLookingStraight.Left, data.EyesLookingUp.Left),
+                Is.EqualTo(10f).Within(1e-3f));
+            Assert.That(Quaternion.Angle(data.EyesLookingStraight.Right, data.EyesLookingLeft.Right),
+                Is.EqualTo(7.5f).Within(1e-3f));
+        }
+
+        [Test]
+        public void ADescriptorWithoutGazeStatesReadsNone()
+        {
+            VrcAvatarDescriptorData data = ReadDescriptor();
+
+            Assert.That(data.HasEyeRotations, Is.False);
+            Assert.That(VrcAvatarDescriptorToBasisMapper.Map(data).EyeMaxLookAngleDegrees, Is.Zero);
+        }
+
+        [Test]
+        public void AUniformEyeLimitIsWrittenAsIs()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(gazeStates: GazeStates(15f, 15f, 15f, 15f)));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(15f).Within(1e-3f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range.uneven"), Is.False);
+        }
+
+        [Test]
+        public void AnUnevenEyeLimitTakesTheLargestAndIsReported()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(gazeStates: GazeStates(10f, 10f, 15f, 15f)));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(15f).Within(1e-3f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range.uneven"), Is.True);
+        }
+
+        [Test]
+        public void TheEyeLimitIsMeasuredFromTheStraightState()
+        {
+            // An eye bone whose rest rotation is a half turn still turns 10 degrees from it.
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(
+                gazeStates: GazeStates(10f, 10f, 10f, 10f, Quaternion.Euler(0f, 180f, 0f))));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(10f).Within(1e-3f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range"), Is.True);
+        }
+
+        [Test]
+        public void GazeStatesLeftAtRestWriteTheSmallestLimit()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(gazeStates: GazeStates(0f, 0f, 0f, 0f)));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(1f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range.none"), Is.True);
+        }
+
+        [Test]
+        public void AnEyeLimitPastWhatBasisAllowsIsClamped()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(gazeStates: GazeStates(60f, 60f, 60f, 60f)));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(45f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range.clamped"), Is.True);
+        }
+
+        [Test]
+        public void DisabledEyeLookWritesNoEyeLimit()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(
+                ReadDescriptor(enableEyeLook: 0, gazeStates: GazeStates(15f, 15f, 15f, 15f)));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.Zero);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeLook.range"), Is.False);
         }
 
         [Test]

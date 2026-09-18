@@ -64,6 +64,14 @@ namespace yuna0x0.Basis.Convert.Writers
                 component.BlinkViseme = plan.BlinkBlendShapeIndices.ToArray();
             }
 
+            // A source that states no limit leaves the setting as it is, so a value set by
+            // hand on the component survives a repeated conversion.
+            if (plan.EyeMaxLookAngleDegrees > 0f)
+            {
+                component.EyeMaxLookAngleEnabled = true;
+                component.EyeMaxLookAngle = BasisAvatar.ClampEyeMaxLookAngle(plan.EyeMaxLookAngleDegrees);
+            }
+
             EditorUtility.SetDirty(component);
             return component;
         }

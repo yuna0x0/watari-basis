@@ -92,6 +92,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 return;
             }
 
+            VrcEyeRotations rotations = null;
             foreach (string line in block)
             {
                 Match match = NestedFieldPattern.Match(line);
@@ -101,8 +102,39 @@ namespace yuna0x0.Basis.Convert.Sources
                 }
 
                 string value = match.Groups["value"].Value;
-                switch (match.Groups["key"].Value)
+                string key = match.Groups["key"].Value;
+
+                // A gaze state is a nested map: its key line opens it and the three lines
+                // under it fill it. Any other key at the outer depth closes it.
+                if (rotations != null && line.Length - line.TrimStart().Length > 4)
                 {
+                    ReadEyeRotationField(rotations, key, value);
+                    continue;
+                }
+
+                rotations = null;
+                switch (key)
+                {
+                    case "eyesLookingStraight":
+                        data.EyesLookingStraight = rotations = new VrcEyeRotations();
+                        break;
+
+                    case "eyesLookingUp":
+                        data.EyesLookingUp = rotations = new VrcEyeRotations();
+                        break;
+
+                    case "eyesLookingDown":
+                        data.EyesLookingDown = rotations = new VrcEyeRotations();
+                        break;
+
+                    case "eyesLookingLeft":
+                        data.EyesLookingLeft = rotations = new VrcEyeRotations();
+                        break;
+
+                    case "eyesLookingRight":
+                        data.EyesLookingRight = rotations = new VrcEyeRotations();
+                        break;
+
                     case "eyelidType":
                         if (UnityYamlValues.TryParseInt(value, out int eyelidType))
                         {
@@ -127,6 +159,32 @@ namespace yuna0x0.Basis.Convert.Sources
                         data.RightEyeFileId = FileIdIn(value);
                         break;
                 }
+            }
+        }
+
+        private static void ReadEyeRotationField(VrcEyeRotations rotations, string key, string value)
+        {
+            switch (key)
+            {
+                case "linked":
+                    rotations.Linked = value.Trim() != "0";
+                    break;
+
+                case "left":
+                    if (UnityYamlValues.TryParseQuaternion(value, out Quaternion left))
+                    {
+                        rotations.Left = left;
+                    }
+
+                    break;
+
+                case "right":
+                    if (UnityYamlValues.TryParseQuaternion(value, out Quaternion right))
+                    {
+                        rotations.Right = right;
+                    }
+
+                    break;
             }
         }
 

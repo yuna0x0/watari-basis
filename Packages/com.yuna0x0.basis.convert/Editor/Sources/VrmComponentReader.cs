@@ -297,8 +297,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 SerializedProperty scale = vrm.FindProperty($"LookAt.{map}.CurveYRangeDegree");
                 if (scale != null)
                 {
-                    settings.EyeRotationLimitDegrees =
-                        Mathf.Max(settings.EyeRotationLimitDegrees, scale.floatValue);
+                    settings.EyeRotationLimitsDegrees.Add(scale.floatValue);
                 }
             }
 
