@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-09-21
+
 ### Fixed
 
 - A rig, constraint or collider whose bone sits in another prefab is written onto that bone
