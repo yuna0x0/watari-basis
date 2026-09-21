@@ -17,7 +17,8 @@ readers were checked against; see [Versions checked](versions.md).
 | Approximated | Fitted onto a Basis setting that does not mean quite the same thing. |
 | Mapped | Carried across as it was. Listed so the report is complete. |
 
-Entries with the same code are grouped, with a count and one example.
+Entries with the same code are grouped, with a count and one example. In the saved report, a
+warning lists every distinct message under its example, so each object a warning names is shown.
 
 ## Codes
 
@@ -53,7 +54,7 @@ on the case; the usual one is given.
 | `vrcfury.toggle.animatorOnly` | Approximated | The toggle also had a transition, a separate local state, a security lock or drove another parameter. The control switches its states directly. |
 | `vrcfury.exclusiveTag` | Approximated | Toggles sharing an exclusive tag turned each other off. Vixxy controls are independent. |
 | `vrcfury.action.dropped` | Dropped | Toggle actions a Vixxy control cannot express, by class: material swaps, animation clips, scale, and the rest. |
-| `vrcfury.action.unresolved` | Warning | An action names an object, blendshape or renderer that is not in the prefab. That part was left out. |
+| `vrcfury.action.unresolved` | Warning | An action names an object, blendshape or renderer that is not on the avatar. That part was left out. |
 | `vrcfury.fullController.assetMissing` | Warning | A Full Controller names a controller, menu or parameter asset that could not be read. |
 | `vrcfury.fullController.untraced` | Dropped | A Full Controller's menu controls traced to no toggle layer in its FX controller. |
 | `vrcfury.armatureLink` | Mapped | How many Armature Links are applied and how many clothing bones go under the avatar's. |
@@ -72,7 +73,7 @@ on the case; the usual one is given.
 |---|---|---|
 | `apply.noTarget` | Warning | Convert ran without a plan or a target. |
 | `apply.sourceUnresolved` | Warning | A prefab is not where it was when scanned, so nothing read from it was written. Rescan. |
-| `apply.unresolved` | Warning | A planned rig, constraint or head chop has no object in the target hierarchy and was skipped. |
+| `apply.unresolved` | Warning | A planned rig, constraint, head chop or armature link has no object in the target hierarchy and was skipped. |
 | `apply.descriptorUnresolved` | Warning | The avatar descriptor has no object in the target hierarchy. |
 | `apply.vixxyUnresolved` | Warning | A control switches an object that is not in the target hierarchy. |
 | `apply.motionUnresolved` | Warning | A motion came from a prefab that moved since the scan. |
@@ -241,6 +242,7 @@ on the case; the usual one is given.
 | `headChop.target.unresolved` | Warning | A head chop bone could not be resolved and was dropped. |
 | `contacts.dropped` | Dropped | VRChat contacts were found. Basis has no contact system. |
 | `raycast.dropped` | Dropped | VRChat raycast components were found. Basis has nothing that fires a ray into animator parameters. |
+| `audio.spatial.dropped` | Dropped | VRChat spatial audio settings were found. The Unity AudioSource stays; the VRChat settings have no counterpart. |
 | `vrchat.buildSettings` | Mapped | Per-platform overrides or impostor settings. They instruct VRChat's uploader and carry no behaviour. |
 
 ### Menu toggles
@@ -264,7 +266,7 @@ on the case; the usual one is given.
 | `vixxy.puppetEnds` | Approximated | A radial puppet blended through motions between its ends. A slider interpolates in a straight line. |
 | `vixxy.builtinGuard` | Approximated | The layer also waited on a VRChat parameter such as `IsLocal`. The control switches whenever it is used. |
 | `vixxy.materialBlock` | Approximated | The control sets material properties on a renderer with several materials. Vixxy sets them per renderer, so all are affected. |
-| `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar. That object was left out. |
+| `vixxy.targetMissing` | Warning | The control switches an object that is not in this avatar, or its prefab is not where it was scanned. That object was left out. |
 | `vixxy.componentSwitch` | Mapped | The toggle switches PhysBones or renderers on or off. The control drives their jiggle rigs and renderers. |
 | `vixxy.componentSwitch.dropped` | Dropped | The toggle switches a component that is not a converted PhysBone or a renderer. That switch was left out. |
 | `vixxy.rootActivation` | Warning | The control switches the avatar root, which Vixxy refuses. That object was left out. |

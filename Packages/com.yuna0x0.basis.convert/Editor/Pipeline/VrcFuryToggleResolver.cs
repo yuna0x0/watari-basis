@@ -10,7 +10,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
     {
         public ResolvedToggle Toggle;
 
+        /// <summary>The prefab the component was read from.</summary>
         public ConversionSource Source;
+
+        /// <summary>
+        /// The hierarchy transform the toggle's paths are relative to: the avatar for a Toggle,
+        /// whose actions name objects anywhere on it, and the prefab's own instance for a Full
+        /// Controller whose clips were authored against the object carrying it.
+        /// </summary>
+        public Transform PathRoot;
     }
 
     /// <summary>An Armature Link as read, with the prefab it sits in, for the planner.</summary>
@@ -56,7 +64,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
     public static class VrcFuryToggleResolver
     {
         public static VrcFuryReadResult Resolve(
-            List<UnityYamlDocument> documents, PrefabObjectResolver resolver, ConversionSource source)
+            List<UnityYamlDocument> documents, PrefabObjectResolver resolver, ConversionSource source,
+            HierarchyLocator hierarchy = null)
         {
             VrcFuryReadResult result = new VrcFuryReadResult();
             if (documents == null || resolver == null || source?.Root == null)
@@ -64,6 +73,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return result;
             }
 
+            // An action names objects anywhere on the avatar, VRCFury resolving them against
+            // the avatar object rather than the prefab holding the component. Without a
+            // hierarchy to locate them in, the prefab stands for the avatar.
+            hierarchy ??= new HierarchyLocator(source.Root, new List<ConversionSource> { source });
             Transform root = source.Root.transform;
 
             foreach (UnityYamlDocument document in documents)
@@ -85,12 +98,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     {
                         case VrcFuryToggleData toggle:
                             result.Toggles++;
-                            ResolveToggle(toggle, data.OwnerGameObjectFileId, root, resolver, source, result);
+                            ResolveToggle(toggle, data.OwnerGameObjectFileId, hierarchy, resolver, source, result);
                             break;
 
                         case VrcFuryFullControllerData controller:
                             result.FullControllers++;
-                            ResolveFullController(controller, data.OwnerGameObjectFileId, root, resolver, source, result);
+                            ResolveFullController(controller, data.OwnerGameObjectFileId, root, hierarchy, resolver, source, result);
                             break;
 
                         case VrcFuryArmatureLinkData link:
@@ -113,10 +126,11 @@ namespace yuna0x0.Basis.Convert.Pipeline
         }
 
         private static void ResolveToggle(
-            VrcFuryToggleData data, long ownerFileId, Transform root, PrefabObjectResolver resolver,
-            ConversionSource source, VrcFuryReadResult result)
+            VrcFuryToggleData data, long ownerFileId, HierarchyLocator hierarchy,
+            PrefabObjectResolver resolver, ConversionSource source, VrcFuryReadResult result)
         {
             string menuName = MenuNameOf(data.Name);
+            Transform root = hierarchy.Root;
 
             if (string.IsNullOrEmpty(data.Name))
             {
@@ -157,15 +171,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 switch (action.Kind)
                 {
                     case VrcFuryActionKind.ObjectToggle:
-                        AddObjectToggle(action, root, resolver, on, off, menuName, result);
+                        AddObjectToggle(action, hierarchy, resolver, source, on, off, menuName, result);
                         break;
 
                     case VrcFuryActionKind.BlendShape:
-                        AddBlendShape(action, root, resolver, on, menuName, result);
+                        AddBlendShape(action, hierarchy, resolver, source, on, menuName, result);
                         break;
 
                     case VrcFuryActionKind.MaterialProperty:
-                        AddMaterialProperty(action, root, resolver, on, menuName, result);
+                        AddMaterialProperty(action, hierarchy, resolver, source, on, menuName, result);
                         break;
 
                     case VrcFuryActionKind.MaterialSwap:
@@ -203,12 +217,30 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     + "than one can be on at once."));
             }
 
-            result.Resolved.Add(new VrcFuryToggle { Toggle = toggle, Source = source });
+            result.Resolved.Add(new VrcFuryToggle { Toggle = toggle, Source = source, PathRoot = root });
+        }
+
+        /// <summary>
+        /// The hierarchy object a reference in this prefab's file stands for. The reference
+        /// resolves to the prefab's own asset, or through the foreign-id table to another
+        /// prefab's, and either is then located under where that prefab sits on the avatar.
+        /// </summary>
+        private static bool TryLocate(
+            HierarchyLocator hierarchy, PrefabObjectResolver resolver, ConversionSource source,
+            long fileId, out Transform live)
+        {
+            live = null;
+            return fileId != 0L
+                && resolver.TryResolveTransform(fileId, out Transform asset)
+                && hierarchy.TryLive(source, asset, out live)
+                && live != hierarchy.Root
+                && live.IsChildOf(hierarchy.Root);
         }
 
         private static void AddObjectToggle(
-            VrcFuryActionData action, Transform root, PrefabObjectResolver resolver,
-            ClipEffects on, ClipEffects off, string menuName, VrcFuryReadResult result)
+            VrcFuryActionData action, HierarchyLocator hierarchy, PrefabObjectResolver resolver,
+            ConversionSource source, ClipEffects on, ClipEffects off, string menuName,
+            VrcFuryReadResult result)
         {
             // VRCFury itself does nothing for an action whose object was never set.
             if (action.ObjectFileId == 0L)
@@ -216,12 +248,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return;
             }
 
-            if (!resolver.TryResolveTransform(action.ObjectFileId, out Transform target)
-                || target == null || !target.IsChildOf(root) || target == root)
+            Transform root = hierarchy.Root;
+            if (!TryLocate(hierarchy, resolver, source, action.ObjectFileId, out Transform target))
             {
                 result.Diagnostics.Add(new ConversionDiagnostic(DiagnosticSeverity.Warning,
                     "vrcfury.action.unresolved",
-                    $"'{menuName}' switches an object that is not in this prefab. That switch "
+                    $"'{menuName}' switches an object that is not on this avatar. That switch "
                     + "was left out."));
                 return;
             }
@@ -246,21 +278,26 @@ namespace yuna0x0.Basis.Convert.Pipeline
         }
 
         private static void AddBlendShape(
-            VrcFuryActionData action, Transform root, PrefabObjectResolver resolver,
-            ClipEffects on, string menuName, VrcFuryReadResult result)
+            VrcFuryActionData action, HierarchyLocator hierarchy, PrefabObjectResolver resolver,
+            ConversionSource source, ClipEffects on, string menuName, VrcFuryReadResult result)
         {
             if (string.IsNullOrEmpty(action.BlendShape))
             {
                 return;
             }
 
+            // Every skinned mesh on the avatar, as VRCFury's BlendshapeActionBuilder takes them
+            // from the avatar object: a toggle kept in a prefab of its own has none of its own.
+            Transform root = hierarchy.Root;
             List<SkinnedMeshRenderer> renderers = new List<SkinnedMeshRenderer>();
             if (action.AllRenderers)
             {
                 renderers.AddRange(root.GetComponentsInChildren<SkinnedMeshRenderer>(true));
             }
             else if (resolver.TryResolve(action.RendererFileId, out Object component)
-                && component is SkinnedMeshRenderer single)
+                && component is SkinnedMeshRenderer asset
+                && hierarchy.TryLive(source, asset.transform, out Transform live)
+                && live.GetComponent<SkinnedMeshRenderer>() is SkinnedMeshRenderer single)
             {
                 renderers.Add(single);
             }
@@ -288,13 +325,13 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 result.Diagnostics.Add(new ConversionDiagnostic(DiagnosticSeverity.Warning,
                     "vrcfury.action.unresolved",
                     $"'{menuName}' sets the blendshape '{action.BlendShape}', which no renderer "
-                    + "in this prefab has. That part was left out."));
+                    + "on this avatar has. That part was left out."));
             }
         }
 
         private static void AddMaterialProperty(
-            VrcFuryActionData action, Transform root, PrefabObjectResolver resolver,
-            ClipEffects on, string menuName, VrcFuryReadResult result)
+            VrcFuryActionData action, HierarchyLocator hierarchy, PrefabObjectResolver resolver,
+            ConversionSource source, ClipEffects on, string menuName, VrcFuryReadResult result)
         {
             if (string.IsNullOrEmpty(action.PropertyName) || action.PropertyName.Contains("."))
             {
@@ -307,6 +344,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return;
             }
 
+            Transform root = hierarchy.Root;
             List<Renderer> renderers = new List<Renderer>();
             if (action.AffectAllMeshes)
             {
@@ -314,17 +352,21 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
             else
             {
-                Renderer single = null;
-                if (action.RendererObjectFileId != 0L
-                    && resolver.TryResolveTransform(action.RendererObjectFileId, out Transform host))
+                Transform asset = null;
+                if (action.RendererObjectFileId != 0L)
                 {
-                    single = host.GetComponent<Renderer>();
+                    resolver.TryResolveTransform(action.RendererObjectFileId, out asset);
                 }
                 else if (action.RendererFileId != 0L
-                    && resolver.TryResolve(action.RendererFileId, out Object component))
+                    && resolver.TryResolve(action.RendererFileId, out Object component)
+                    && component is Renderer referenced)
                 {
-                    single = component as Renderer;
+                    asset = referenced.transform;
                 }
+
+                Renderer single = asset != null && hierarchy.TryLive(source, asset, out Transform live)
+                    ? live.GetComponent<Renderer>()
+                    : null;
 
                 if (single != null)
                 {
@@ -337,7 +379,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 result.Diagnostics.Add(new ConversionDiagnostic(DiagnosticSeverity.Warning,
                     "vrcfury.action.unresolved",
                     $"'{menuName}' sets the material property '{action.PropertyName}' on a "
-                    + "renderer that is not in this prefab. That part was left out."));
+                    + "renderer that is not on this avatar. That part was left out."));
                 return;
             }
 
@@ -427,8 +469,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         private static void ResolveFullController(
             VrcFuryFullControllerData data, long ownerFileId, Transform root,
-            PrefabObjectResolver resolver, ConversionSource source, VrcFuryReadResult result)
+            HierarchyLocator hierarchy, PrefabObjectResolver resolver, ConversionSource source,
+            VrcFuryReadResult result)
         {
+            // Clip paths are relative to the prefab, or to the avatar when the controller was
+            // authored against it; either way the objects are the avatar's own.
+            Transform pathRoot = data.RootBindingsApplyToAvatar
+                ? hierarchy.Root
+                : hierarchy.LiveRootOf(source);
+
             // Menus and parameters, the way the base avatar's are read.
             VrcExpressionInventory inventory = new VrcExpressionInventory();
             foreach (VrcFuryMenuEntry entry in data.Menus)
@@ -509,7 +558,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     }
 
                     traced++;
-                    result.Resolved.Add(new VrcFuryToggle { Toggle = toggle, Source = source });
+                    result.Resolved.Add(new VrcFuryToggle
+                    {
+                        Toggle = toggle, Source = source, PathRoot = pathRoot,
+                    });
                 }
             }
 

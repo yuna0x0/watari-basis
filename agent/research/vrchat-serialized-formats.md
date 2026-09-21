@@ -26,6 +26,7 @@ So the identity key is the `(guid, fileID)` pair, not the guid alone.
 67cc4cb7839cd3741b63733d5adf0442 : 542108242     VRCAvatarDescriptor
 67cc4cb7839cd3741b63733d5adf0442 : -340790334    VRCExpressionsMenu
 67cc4cb7839cd3741b63733d5adf0442 : -1506855854   VRCExpressionParameters
+67cc4cb7839cd3741b63733d5adf0442 : 1610797297    VRCSpatialAudioSource (derived, seen in a report)
 4ecd63eff847044b68db9453ce219299 : -1427037861   PipelineManager
 f9ac8d30c6a0d9642a11e5be4c440740 : 11500000      DynamicBone
 baedd976e12657241bf7ff2d1c685342 : 11500000      DynamicBoneCollider

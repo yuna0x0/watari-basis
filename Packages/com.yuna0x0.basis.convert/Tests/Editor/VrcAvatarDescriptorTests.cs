@@ -376,6 +376,63 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(plan.Diagnostics.HasCode("descriptor.animationLayers"), Is.True);
         }
 
+        /// <summary>
+        /// A variant assigns its own controllers as one modification per field on the base
+        /// prefab's layer entries. The overrides land on the entry named, and the entry's type
+        /// is untouched, so the layers still read as what the SDK calls them.
+        /// </summary>
+        [Test]
+        public void CustomLayersKeepTheirTypesUnderVariantOverrides()
+        {
+            List<string> lines = new List<string>
+            {
+                "--- !u!114 &702",
+                "MonoBehaviour:",
+                "  m_GameObject: {fileID: 1}",
+                "  customizeAnimationLayers: 1",
+                "  baseAnimationLayers:",
+            };
+
+            void AddLayer(int type)
+            {
+                lines.Add("  - isEnabled: 0");
+                lines.Add($"    type: {type}");
+                lines.Add("    animatorController: {fileID: 0}");
+                lines.Add("    mask: {fileID: 0}");
+                lines.Add("    isDefault: 1");
+            }
+
+            foreach (int type in new[] { 0, 2, 3, 4, 5 })
+            {
+                AddLayer(type);
+            }
+
+            lines.Add("  specialAnimationLayers:");
+            foreach (int type in new[] { 6, 7, 8 })
+            {
+                AddLayer(type);
+            }
+
+            Assert.That(PrefabOverrides.SetPath(lines,
+                "baseAnimationLayers.Array.data[2].animatorController",
+                "{fileID: 9100000, guid: 205e26ae23607e84d8c162452df418b6, type: 2}"), Is.True);
+            Assert.That(PrefabOverrides.SetPath(lines,
+                "baseAnimationLayers.Array.data[2].isDefault", "0"), Is.True);
+            Assert.That(PrefabOverrides.SetPath(lines,
+                "baseAnimationLayers.Array.data[4].animatorController",
+                "{fileID: 9100000, guid: 214bad824fc67d94a8b40f11ecfcc3c0, type: 2}"), Is.True);
+            Assert.That(PrefabOverrides.SetPath(lines,
+                "baseAnimationLayers.Array.data[4].isDefault", "0"), Is.True);
+
+            List<UnityYamlDocument> documents = UnityYamlScanner.Scan(lines);
+            VrcAvatarDescriptorData data = VrcAvatarDescriptorReader.Read(documents[0]);
+
+            Assert.That(data.AnimationLayers.Count, Is.EqualTo(2),
+                string.Join("\n", lines));
+            Assert.That(data.AnimationLayers[0].Layer, Is.EqualTo(VrcAnimationLayer.Gesture));
+            Assert.That(data.AnimationLayers[1].Layer, Is.EqualTo(VrcAnimationLayer.FX));
+        }
+
         [Test]
         public void TheAnimationLayerOrderingMatchesTheSdk()
         {

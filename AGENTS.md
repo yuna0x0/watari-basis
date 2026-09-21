@@ -41,6 +41,10 @@ next. Then `agent/decisions/`. The short version of how this works:
 - **Read the output, not just the test results.** A wide angle limit clamping to a tighter one,
   and duplicate collider diagnostics, were both found by reading a generated report while every
   test passed.
+- **A reference resolves in its file; what it means is an object on the avatar.** A VRCFury
+  toggle kept in a prefab of its own holds no renderer, so "all renderers" searched in that
+  prefab found none, and a rest value read from the prefab asset missed the instance's
+  overrides. Every Vixxy target is located in the scanned hierarchy (`agent/decisions/0018`).
 - **Ask what else writes the property.** A converted VRM's Expression selector was right in every
   field and did nothing, because UniVRM's `Vrm10Instance` was still on the avatar rewriting every
   expression blendshape each frame. A plan or component that looks correct is not verified until

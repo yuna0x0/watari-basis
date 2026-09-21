@@ -28,6 +28,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// </summary>
         public int VrmRuntimeRemoved;
         public int VixxyControlsWritten;
+        public int VixxyControlsSkipped;
+        public int HeadChopsSkipped;
+        public int ArmatureLinksSkipped;
+        public int DescriptorSkipped;
         public int AuthoredMotionsWritten;
 
         /// <summary>Baked motion clips written to the project, which an undo does not remove.</summary>
@@ -38,7 +42,9 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public int TotalWritten =>
             RigsWritten + ConstraintsWritten + VixxyControlsWritten + AuthoredMotionsWritten
             + HeadChopsWritten + (DescriptorWritten ? 1 : 0);
-        public int TotalSkipped => RigsSkipped + ConstraintsSkipped;
+        public int TotalSkipped =>
+            RigsSkipped + ConstraintsSkipped + VixxyControlsSkipped + HeadChopsSkipped
+            + ArmatureLinksSkipped + DescriptorSkipped;
     }
 
     /// <summary>
@@ -72,8 +78,18 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Dictionary<ConversionSource, Transform> roots = LocateSources(plan, target, result);
             Dictionary<PlannedJiggleRig, JiggleRig> rigs = new Dictionary<PlannedJiggleRig, JiggleRig>();
 
-            // Bones move first: everything after resolves objects, not paths, so the order only
-            // matters for the rest poses the rigs and constraints capture from the transforms.
+            // Everything is located before any bone moves. An armature link takes clothing
+            // bones out of their prefab instance, after which the sibling-index path from that
+            // prefab no longer finds them; a transform located first survives the move.
+            List<(PlannedJiggleRig Planned, ResolvedJiggleRig Resolved)> plannedRigs =
+                ResolveRigs(plan, roots, target, result);
+            List<ResolvedBasisConstraint> constraints = ResolveConstraints(plan, roots, target, result);
+            ResolvedBasisAvatar descriptor = ResolveDescriptor(plan, roots, target, result);
+            List<ResolvedHeadChop> headChops = ResolveHeadChops(plan, roots, target, result);
+            List<LocatedVixxyControl> controls = ResolveVixxyControls(plan, roots, target, result);
+
+            // Bones move before anything is written, so the rest poses the rigs and constraints
+            // capture from the transforms are the linked ones.
             foreach (PlannedArmatureLink planned in plan.SelectedArmatureLinks())
             {
                 ResolvedArmatureLink resolved = new ResolvedArmatureLink
@@ -96,6 +112,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 if (resolved.Bones.Count == 0)
                 {
+                    result.ArmatureLinksSkipped++;
                     result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
                         $"The armature link {planned.Describe()} has no counterpart in the target "
                         + "hierarchy and was skipped.");
@@ -114,106 +131,38 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
 
-            foreach (PlannedJiggleRig planned in plan.SelectedRigs())
+            foreach ((PlannedJiggleRig planned, ResolvedJiggleRig resolved) in plannedRigs)
             {
-                if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
-                        out Transform host)
-                    || !TryTranslate(plan, roots, target, planned.Source, planned.SourceRootBone,
-                        out Transform root))
-                {
-                    result.RigsSkipped++;
-                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
-                        $"The rig for {planned.Describe()} has no counterpart in the target "
-                        + "hierarchy and was skipped.");
-                    continue;
-                }
-
-                ResolvedJiggleRig resolved = new ResolvedJiggleRig
-                {
-                    Plan = planned.Plan,
-                    Host = host.gameObject,
-                    RootBone = root,
-                };
-
-                foreach (Transform excluded in planned.SourceExcludedTransforms)
-                {
-                    if (TryTranslate(plan, roots, target, planned.Source, excluded,
-                            out Transform translated))
-                    {
-                        resolved.ExcludedTransforms.Add(translated);
-                    }
-                }
-
-                if (plan.Options.Colliders)
-                {
-                    foreach (PlannedJiggleCollider collider in planned.Colliders)
-                    {
-                        if (!TryTranslate(plan, roots, target, collider.Source ?? planned.Source,
-                                collider.SourceTransform, out Transform translated))
-                        {
-                            continue;
-                        }
-
-                        resolved.Colliders.Add(new ResolvedJiggleCollider
-                        {
-                            Plan = collider.Plan,
-                            Transform = translated,
-                        });
-                    }
-                }
-
                 JiggleRig written = JiggleRigWriter.Write(resolved, undoName);
                 rigs[planned] = written;
                 result.Written.Add(written);
                 result.RigsWritten++;
             }
 
-            foreach (PlannedConstraint planned in plan.SelectedConstraints())
+            foreach (ResolvedBasisConstraint resolved in constraints)
             {
-                if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
-                        out Transform host))
-                {
-                    result.ConstraintsSkipped++;
-                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
-                        $"The constraint for {planned.Describe()} has no counterpart in the "
-                        + "target hierarchy and was skipped.");
-                    continue;
-                }
-
-                ResolvedBasisConstraint resolved = new ResolvedBasisConstraint
-                {
-                    Plan = planned.Plan,
-                    Host = host.gameObject,
-                };
-
-                foreach (Transform sourceTransform in planned.SourceTransforms)
-                {
-                    resolved.Sources.Add(
-                        TryTranslate(plan, roots, target, planned.Source, sourceTransform,
-                            out Transform translated)
-                            ? translated
-                            : null);
-                }
-
-                if (TryTranslate(plan, roots, target, planned.Source, planned.SourceWorldUpObject,
-                        out Transform worldUp))
-                {
-                    resolved.WorldUpObject = worldUp;
-                }
-
                 BasisConstraintWriter.Write(resolved, undoName);
                 result.ConstraintsWritten++;
             }
 
-            WriteDescriptor(plan, roots, target, undoName, result);
-            WriteHeadChops(plan, roots, target, undoName, result);
+            if (descriptor != null)
+            {
+                BasisAvatarWriter.Write(descriptor, undoName);
+                result.DescriptorWritten = true;
+            }
+
+            foreach (ResolvedHeadChop resolved in headChops)
+            {
+                BasisHeadChopWriter.Write(resolved, undoName);
+                result.HeadChopsWritten++;
+            }
 
             // Motions are written first because a control that switches one has to hold the
             // component, and the component does not exist until it is written.
             Dictionary<PlannedAuthoredMotion, BasisAuthoredMotion> motions =
                 WriteAuthoredMotions(plan, roots, target, undoName, result);
 
-            WriteVixxyControls(plan, roots, target, motions, rigs, undoName, result);
+            WriteVixxyControls(controls, target, motions, rigs, undoName, result);
             RemoveVrmRuntime(target, undoName, result);
 
             Undo.CollapseUndoOperations(group);
@@ -270,16 +219,123 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 $"{result.VrmRuntimeRemoved} UniVRM runtime components removed (" + string.Join(", ", names) + "). They rewrote expressions, spring bones and look-at every frame. Undo restores them; Basis strips them at build.");
         }
 
-        /// <summary>
-        private static void WriteHeadChops(
+        private static List<(PlannedJiggleRig Planned, ResolvedJiggleRig Resolved)> ResolveRigs(
             AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
-            Transform target, string undoName, ConversionResult result)
+            Transform target, ConversionResult result)
         {
+            List<(PlannedJiggleRig, ResolvedJiggleRig)> located =
+                new List<(PlannedJiggleRig, ResolvedJiggleRig)>();
+
+            foreach (PlannedJiggleRig planned in plan.SelectedRigs())
+            {
+                if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
+                        out Transform host)
+                    || !TryTranslate(plan, roots, target, planned.Source, planned.SourceRootBone,
+                        out Transform root))
+                {
+                    result.RigsSkipped++;
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
+                        $"The rig for {planned.Describe()} has no counterpart in the target "
+                        + "hierarchy and was skipped.");
+                    continue;
+                }
+
+                ResolvedJiggleRig resolved = new ResolvedJiggleRig
+                {
+                    Plan = planned.Plan,
+                    Host = host.gameObject,
+                    RootBone = root,
+                };
+
+                foreach (Transform excluded in planned.SourceExcludedTransforms)
+                {
+                    if (TryTranslate(plan, roots, target, planned.Source, excluded,
+                            out Transform translated))
+                    {
+                        resolved.ExcludedTransforms.Add(translated);
+                    }
+                }
+
+                if (plan.Options.Colliders)
+                {
+                    foreach (PlannedJiggleCollider collider in planned.Colliders)
+                    {
+                        if (!TryTranslate(plan, roots, target, collider.Source ?? planned.Source,
+                                collider.SourceTransform, out Transform translated))
+                        {
+                            continue;
+                        }
+
+                        resolved.Colliders.Add(new ResolvedJiggleCollider
+                        {
+                            Plan = collider.Plan,
+                            Transform = translated,
+                        });
+                    }
+                }
+
+                located.Add((planned, resolved));
+            }
+
+            return located;
+        }
+
+        private static List<ResolvedBasisConstraint> ResolveConstraints(
+            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
+            Transform target, ConversionResult result)
+        {
+            List<ResolvedBasisConstraint> located = new List<ResolvedBasisConstraint>();
+
+            foreach (PlannedConstraint planned in plan.SelectedConstraints())
+            {
+                if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
+                        out Transform host))
+                {
+                    result.ConstraintsSkipped++;
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
+                        $"The constraint for {planned.Describe()} has no counterpart in the "
+                        + "target hierarchy and was skipped.");
+                    continue;
+                }
+
+                ResolvedBasisConstraint resolved = new ResolvedBasisConstraint
+                {
+                    Plan = planned.Plan,
+                    Host = host.gameObject,
+                };
+
+                foreach (Transform sourceTransform in planned.SourceTransforms)
+                {
+                    resolved.Sources.Add(
+                        TryTranslate(plan, roots, target, planned.Source, sourceTransform,
+                            out Transform translated)
+                            ? translated
+                            : null);
+                }
+
+                if (TryTranslate(plan, roots, target, planned.Source, planned.SourceWorldUpObject,
+                        out Transform worldUp))
+                {
+                    resolved.WorldUpObject = worldUp;
+                }
+
+                located.Add(resolved);
+            }
+
+            return located;
+        }
+
+        private static List<ResolvedHeadChop> ResolveHeadChops(
+            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
+            Transform target, ConversionResult result)
+        {
+            List<ResolvedHeadChop> located = new List<ResolvedHeadChop>();
             foreach (PlannedHeadChop planned in plan.SelectedHeadChops())
             {
                 if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
                         out Transform host))
                 {
+                    result.HeadChopsSkipped++;
                     result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
                         $"The head chop for {planned.Describe()} has no counterpart in the "
                         + "target hierarchy and was skipped.");
@@ -307,30 +363,36 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 if (resolved.Targets.Count == 0)
                 {
+                    result.HeadChopsSkipped++;
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
+                        $"The head chop for {planned.Describe()} names no bone with a "
+                        + "counterpart in the target hierarchy and was skipped.");
                     continue;
                 }
 
-                BasisHeadChopWriter.Write(resolved, undoName);
-                result.HeadChopsWritten++;
+                located.Add(resolved);
             }
+
+            return located;
         }
 
-        private static void WriteDescriptor(
+        private static ResolvedBasisAvatar ResolveDescriptor(
             AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
-            Transform target, string undoName, ConversionResult result)
+            Transform target, ConversionResult result)
         {
             if (!plan.DescriptorSelected)
             {
-                return;
+                return null;
             }
 
             if (!TryTranslate(plan, roots, target, plan.Descriptor.Source,
                     plan.Descriptor.SourceRoot, out Transform root))
             {
+                result.DescriptorSkipped++;
                 result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.descriptorUnresolved",
                     "The avatar descriptor has no counterpart in the target hierarchy and was "
                     + "skipped.");
-                return;
+                return null;
             }
 
             ResolvedBasisAvatar resolved = new ResolvedBasisAvatar
@@ -343,25 +405,106 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     plan.Descriptor.SourceBlinkMesh),
             };
 
-            BasisAvatarWriter.Write(resolved, undoName);
-            result.DescriptorWritten = true;
+            return resolved;
+        }
+
+        /// <summary>A planned control with its objects located in the target, ahead of the write.</summary>
+        private sealed class LocatedVixxyControl
+        {
+            public PlannedVixxyControl Planned;
+
+            /// <summary>One per activation: the target's transform, or null for a motion or rig slot.</summary>
+            public List<Transform> Targets = new List<Transform>();
+
+            public List<Renderer> Renderers = new List<Renderer>();
+        }
+
+        /// <summary>
+        /// Locates every object a control touches. A control's transforms are in the scanned
+        /// hierarchy's space whichever prefab its toggle came from, so they translate from the
+        /// hierarchy root rather than from a source.
+        /// </summary>
+        private static List<LocatedVixxyControl> ResolveVixxyControls(
+            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
+            Transform target, ConversionResult result)
+        {
+            List<LocatedVixxyControl> located = new List<LocatedVixxyControl>();
+
+            foreach (PlannedVixxyControl planned in plan.SelectedVixxyControls())
+            {
+                LocatedVixxyControl control = new LocatedVixxyControl { Planned = planned };
+                bool ok = true;
+
+                for (int i = 0; i < planned.SourceTargets.Count && ok; i++)
+                {
+                    int motionIndex = i < planned.Plan.Activations.Count
+                        ? planned.Plan.Activations[i].MotionIndex
+                        : -1;
+
+                    if (motionIndex >= 0)
+                    {
+                        control.Targets.Add(null);
+                        continue;
+                    }
+
+                    if (TryTranslate(plan, roots, target, null, planned.SourceTargets[i],
+                            out Transform translated))
+                    {
+                        control.Targets.Add(translated);
+                    }
+                    else
+                    {
+                        ok = false;
+                    }
+                }
+
+                foreach (Renderer renderer in planned.SourceRenderers)
+                {
+                    if (!ok)
+                    {
+                        break;
+                    }
+
+                    Renderer translated = TranslateRenderer(plan, roots, target, null, renderer);
+                    if (translated == null)
+                    {
+                        ok = false;
+                        break;
+                    }
+
+                    control.Renderers.Add(translated);
+                }
+
+                if (!ok)
+                {
+                    result.VixxyControlsSkipped++;
+                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.vixxyUnresolved",
+                        $"'{planned.Plan.MenuName}' switches an object with no counterpart in "
+                        + "the target hierarchy and was skipped.");
+                    continue;
+                }
+
+                located.Add(control);
+            }
+
+            return located;
         }
 
         private static void WriteVixxyControls(
-            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
-            Transform target, Dictionary<PlannedAuthoredMotion, BasisAuthoredMotion> motions,
+            List<LocatedVixxyControl> controls, Transform target,
+            Dictionary<PlannedAuthoredMotion, BasisAuthoredMotion> motions,
             Dictionary<PlannedJiggleRig, JiggleRig> rigs, string undoName, ConversionResult result)
         {
-            foreach (PlannedVixxyControl planned in plan.SelectedVixxyControls())
+            foreach (LocatedVixxyControl control in controls)
             {
+                PlannedVixxyControl planned = control.Planned;
                 ResolvedVixxyControl resolved = new ResolvedVixxyControl
                 {
                     Plan = planned.Plan,
                     Host = targetRootOf(target),
                 };
 
-                bool ok = true;
-                for (int i = 0; i < planned.SourceTargets.Count; i++)
+                for (int i = 0; i < control.Targets.Count; i++)
                 {
                     int motionIndex = i < planned.Plan.Activations.Count
                         ? planned.Plan.Activations[i].MotionIndex
@@ -390,13 +533,6 @@ namespace yuna0x0.Basis.Convert.Pipeline
                         continue;
                     }
 
-                    if (!TryTranslate(plan, roots, target, planned.Source,
-                            planned.SourceTargets[i], out Transform translated))
-                    {
-                        ok = false;
-                        break;
-                    }
-
                     VixxyActivationTarget kind = i < planned.Plan.Activations.Count
                         ? planned.Plan.Activations[i].Target
                         : VixxyActivationTarget.Object;
@@ -421,33 +557,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                     if (kind == VixxyActivationTarget.Renderer)
                     {
-                        resolved.Targets.Add(translated.GetComponent<Renderer>());
+                        resolved.Targets.Add(control.Targets[i].GetComponent<Renderer>());
                         continue;
                     }
 
-                    resolved.Targets.Add(translated);
+                    resolved.Targets.Add(control.Targets[i]);
                 }
 
-                foreach (Renderer renderer in planned.SourceRenderers)
-                {
-                    Renderer translated =
-                        TranslateRenderer(plan, roots, target, planned.Source, renderer);
-                    if (translated == null)
-                    {
-                        ok = false;
-                        break;
-                    }
-
-                    resolved.Renderers.Add(translated);
-                }
-
-                if (!ok)
-                {
-                    result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.vixxyUnresolved",
-                        $"'{planned.Plan.MenuName}' switches an object with no counterpart in "
-                        + "the target hierarchy and was skipped.");
-                    continue;
-                }
+                resolved.Renderers.AddRange(control.Renderers);
 
                 VixxyWriter.Write(resolved, undoName);
                 result.VixxyControlsWritten++;
@@ -746,14 +863,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Transform sourceRoot;
             Transform targetRoot;
 
+            // No source: the transform is in the scanned hierarchy's own space, which is where
+            // every Vixxy target lives whichever prefab its toggle was read from.
             if (source == null)
             {
-                if (plan.SourceRoot == null)
+                GameObject hierarchy = plan.HierarchyRoot != null ? plan.HierarchyRoot : plan.SourceRoot;
+                if (hierarchy == null)
                 {
                     return false;
                 }
 
-                sourceRoot = plan.SourceRoot.transform;
+                sourceRoot = hierarchy.transform;
                 targetRoot = target;
             }
             else

@@ -6,6 +6,24 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- VRCFury toggle actions resolve against the avatar, as VRCFury does: a toggle kept in a prefab
+  of its own finds the avatar's renderers and objects.
+- The rest state of a blendshape or material property is read from the avatar's instance,
+  prefab overrides included.
+- Rigs and constraints on bones an armature link moves are located before the link and written
+  after it, instead of being skipped.
+- Skips at write time are listed in the report and the window as `apply.*`, and every kind of
+  skip is counted.
+- `vixxy.rebuilt`, `vixxy.address` and `vixxy.sharedParameter` are reported once.
+- `constraint.source.overflow` no longer fires for an empty source slot.
+
+### Added
+
+- VRCSpatialAudioSource is recognised and reported: `audio.spatial.dropped`.
+- A warning in the saved report lists every distinct message.
+
 ## [0.11.1] - 2026-09-18
 
 ### Added

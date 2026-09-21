@@ -201,6 +201,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public GameObject SourceRoot;
 
         /// <summary>
+        /// The object that was scanned: the scene instance when a hierarchy was planned, the
+        /// asset itself when a prefab path was. Every Vixxy target and renderer this plan holds
+        /// is a transform under it, so a control switches the object the avatar carries, with
+        /// its instance overrides, wherever the toggle was read from.
+        /// </summary>
+        public GameObject HierarchyRoot;
+
+        /// <summary>Finds the hierarchy transform for a transform of any source's asset.</summary>
+        public HierarchyLocator Locator;
+
+        /// <summary>
         /// <summary>Every scanned file's documents by the file's guid, for variant overrides.</summary>
         internal Dictionary<string, Dictionary<long, UnityYamlDocument>> DocumentsByGuid =
             new Dictionary<string, Dictionary<long, UnityYamlDocument>>();
@@ -444,6 +455,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
         public int ContactsFound;
         public int HeadChopsFound;
         public int RaycastsFound;
+        public int SpatialAudioFound;
         public int VrcBuildSettingsFound;
 
         /// <summary>What kind of source this appears to be, for the reader to sanity check.</summary>

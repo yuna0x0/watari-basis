@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Pipeline;
@@ -14,6 +15,9 @@ namespace yuna0x0.Basis.Convert.Reporting
 
         /// <summary>One representative message. They only differ by the values quoted in them.</summary>
         public string Example;
+
+        /// <summary>Every distinct message, in the order first seen. The example is the first.</summary>
+        public List<string> Messages = new List<string>();
     }
 
     /// <summary>
@@ -27,11 +31,21 @@ namespace yuna0x0.Basis.Convert.Reporting
     /// </summary>
     public static class ConversionReport
     {
-        public static List<DiagnosticGroup> Group(AvatarConversionPlan plan)
+        /// <summary>
+        /// Groups the plan's diagnostics and, once it has been applied, the converter's: what
+        /// was skipped at write time is reported the same way as what was dropped at read time.
+        /// </summary>
+        public static List<DiagnosticGroup> Group(AvatarConversionPlan plan, ConversionResult result = null)
         {
             Dictionary<string, DiagnosticGroup> groups = new Dictionary<string, DiagnosticGroup>();
 
-            foreach (ConversionDiagnostic diagnostic in plan.SelectedDiagnostics())
+            IEnumerable<ConversionDiagnostic> diagnostics = plan.SelectedDiagnostics();
+            if (result != null)
+            {
+                diagnostics = diagnostics.Concat(result.Diagnostics);
+            }
+
+            foreach (ConversionDiagnostic diagnostic in diagnostics)
             {
                 if (!groups.TryGetValue(diagnostic.Code, out DiagnosticGroup group))
                 {
@@ -45,6 +59,10 @@ namespace yuna0x0.Basis.Convert.Reporting
                 }
 
                 group.Count++;
+                if (!group.Messages.Contains(diagnostic.Message))
+                {
+                    group.Messages.Add(diagnostic.Message);
+                }
             }
 
             List<DiagnosticGroup> ordered = new List<DiagnosticGroup>(groups.Values);
@@ -135,7 +153,7 @@ namespace yuna0x0.Basis.Convert.Reporting
             text.AppendLine("Diagnostics, grouped by code.");
             text.AppendLine();
 
-            List<DiagnosticGroup> groups = Group(plan);
+            List<DiagnosticGroup> groups = Group(plan, result);
             foreach (DiagnosticSeverity severity in new[]
                      {
                          DiagnosticSeverity.Warning,
@@ -155,6 +173,18 @@ namespace yuna0x0.Basis.Convert.Reporting
                 foreach (DiagnosticGroup group in section)
                 {
                     text.AppendLine($"- **{group.Code}** ({group.Count}): {group.Example}");
+
+                    // A warning names what was lost, so each one is listed; the other sections
+                    // differ only by the values quoted and keep one example.
+                    if (severity != DiagnosticSeverity.Warning)
+                    {
+                        continue;
+                    }
+
+                    for (int i = 1; i < group.Messages.Count; i++)
+                    {
+                        text.AppendLine($"  - {group.Messages[i]}");
+                    }
                 }
 
                 text.AppendLine();

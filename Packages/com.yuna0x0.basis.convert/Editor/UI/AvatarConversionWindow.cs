@@ -1274,7 +1274,7 @@ namespace yuna0x0.Basis.Convert.UI
             _result = AvatarConverter.Apply(_plan, destination,
                 $"{ProductInfo.Name}: convert avatar");
 
-            _groups = ConversionReport.Group(_plan);
+            _groups = ConversionReport.Group(_plan, _result);
         }
 
         /// <summary>A count and its noun, pluralised, for the list in the dialog.</summary>

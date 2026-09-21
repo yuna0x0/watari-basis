@@ -31,6 +31,10 @@ actions. Rebuilt as a Vixxy control.
 | Material Property | Float, colour or vector on every renderer, or the one named |
 | Material swap, animation clip, scale, flipbook, FX float, SPS, others | Not rebuilt: `vrcfury.action.dropped` |
 
+Actions resolve against the avatar, as VRCFury resolves them, so a toggle kept in a prefab of its
+own finds the avatar's meshes. The side of a toggle that sets nothing keeps the value the avatar's
+instance carries, prefab overrides included.
+
 - A slider toggle becomes a Vixxy slider. The saved flag and default carry over.
 - The menu item is the last segment of the toggle's menu path. Folders are not rebuilt.
 - A hold button, or a toggle with no menu item, is not rebuilt: `vrcfury.toggle.dropped`.

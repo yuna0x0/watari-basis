@@ -26,6 +26,9 @@ namespace yuna0x0.Basis.Convert.Sources
         /// <summary>Fires a ray and sets animator parameters from the hit. Nothing in Basis does.</summary>
         VrcRaycast,
 
+        /// <summary>VRChat's spatialiser settings on an AudioSource. The AudioSource itself is Unity's.</summary>
+        VrcSpatialAudioSource,
+
         // Instructions to VRChat's uploader: which avatar to build per platform, and impostor
         // generation. They carry no runtime behaviour and mean nothing under Basis.
         VrcPerPlatformOverrides,
@@ -189,6 +192,7 @@ namespace yuna0x0.Basis.Convert.Sources
                 // rather than DLL types, so they carry their own .meta guids.
                 { (GuidVrcSdk3AAssembly, -1888410255L), SourceComponentKind.VrcHeadChop },
                 { (GuidVrcSdk3AAssembly, 1472509199L), SourceComponentKind.VrcRaycast },
+                { (GuidVrcSdk3AAssembly, 1610797297L), SourceComponentKind.VrcSpatialAudioSource },
                 { (GuidVrcSdk3AAssembly, 798808286L), SourceComponentKind.VrcImpostorSettings },
                 { (GuidVrcSdk3AAssembly, 306702890L), SourceComponentKind.VrcImpostorEnvironment },
                 { ("45da21a324e147228aaee066e399bff0", LooseScriptFileId), SourceComponentKind.VrcPerPlatformOverrides },

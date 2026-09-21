@@ -43,6 +43,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             plan.Sources.Add(source);
             plan.SourceRoot = source.Root;
+            plan.HierarchyRoot = source.Root;
+            plan.Locator = new HierarchyLocator(source.Root, plan.Sources);
 
             HashSet<string> unknownIdentities = new HashSet<string>();
             ReadSource(plan, source, profile, unknownIdentities);
@@ -87,6 +89,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             plan.SourceAssetPath = plan.Sources[0].AssetPath;
             plan.SourceRoot = plan.Sources[0].Root;
+            plan.HierarchyRoot = hierarchyRoot;
+            plan.Locator = new HierarchyLocator(hierarchyRoot, plan.Sources);
 
             HashSet<string> unknownIdentities = new HashSet<string>();
             foreach (ConversionSource source in sources)
@@ -545,7 +549,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
             plan.ModularAvatarToggles.AddRange(
                 ModularAvatarToggleResolver.Resolve(documents, resolver, source));
 
-            MergeVrcFury(plan, VrcFuryToggleResolver.Resolve(documents, resolver, source));
+            MergeVrcFury(plan,
+                VrcFuryToggleResolver.Resolve(documents, resolver, source, plan.Locator));
 
             // VRM chains are read in a pass of their own: a spring names joint components that
             // sit anywhere in the file, so they cannot be resolved as the documents go past.
@@ -698,6 +703,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (kind == SourceComponentKind.VrcRaycast)
                 {
                     plan.RaycastsFound++;
+                    continue;
+                }
+
+                if (kind == SourceComponentKind.VrcSpatialAudioSource)
+                {
+                    plan.SpatialAudioFound++;
                     continue;
                 }
 
@@ -884,6 +895,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     + "does this, so anything driven by them does not come across.");
             }
 
+            if (plan.SpatialAudioFound > 0)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "audio.spatial.dropped",
+                    $"{plan.SpatialAudioFound} VRChat spatial audio settings were found. The "
+                    + "Unity AudioSource they sit on stays; the VRChat settings have no "
+                    + "counterpart in Basis and were dropped.");
+            }
+
             if (plan.VrcBuildSettingsFound > 0)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "vrchat.buildSettings",
@@ -903,6 +922,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
             // of reading one: what Modular Avatar installs stands on its own.
             BuildModularAvatarControls(plan);
             BuildVrcFuryControls(plan);
+            ReportVixxyControls(plan);
             ReportOverlaps(plan);
 
             // Only meaningful once the descriptor is known: a prop has physics but no rig, and
@@ -1632,8 +1652,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             Transform root = source?.Root != null
-                ? source.Root.transform
-                : plan.SourceRoot.transform;
+                ? plan.Locator?.LiveRootOf(source) ?? source.Root.transform
+                : plan.Locator?.Root ?? plan.SourceRoot.transform;
 
             List<VrmExpressionData> choices = new List<VrmExpressionData>();
             int driven = 0;
@@ -2217,7 +2237,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             int before = plan.VixxyControls.Count;
 
-            BuildVixxyControls(plan, plan.Toggles, plan.SourceRoot.transform,
+            BuildVixxyControls(plan, plan.Toggles, plan.Locator.Root,
                 plan.Sources.Count > 0 ? plan.Sources[0] : null);
 
             int rebuilt = plan.VixxyControls.Count - before;
@@ -2537,13 +2557,12 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             foreach (VrcFuryToggle toggle in plan.VrcFuryToggles)
             {
-                if (toggle.Source?.Root == null)
+                if (toggle.Source?.Root == null || toggle.PathRoot == null)
                 {
                     continue;
                 }
 
-                BuildVixxyControls(plan, new[] { toggle.Toggle },
-                    toggle.Source.Root.transform, toggle.Source);
+                BuildVixxyControls(plan, new[] { toggle.Toggle }, toggle.PathRoot, toggle.Source);
             }
 
             if (plan.VrcFuryToggles.Count > 0)
@@ -2566,8 +2585,18 @@ namespace yuna0x0.Basis.Convert.Pipeline
                     continue;
                 }
 
-                BuildVixxyControls(plan, new[] { toggle.Toggle },
-                    toggle.Source.Root.transform, toggle.Source);
+                // The toggle's paths are relative to its prefab; the objects are the ones the
+                // avatar carries, under where that prefab sits.
+                Transform root = plan.Locator.LiveRootOf(toggle.Source);
+                if (root == null)
+                {
+                    plan.ToggleDiagnostics.Add(DiagnosticSeverity.Warning, "vixxy.targetMissing",
+                        $"'{toggle.Toggle.MenuName}' comes from {toggle.Source.Name}, which is "
+                        + "not where it was when this was scanned. Rescan.");
+                    continue;
+                }
+
+                BuildVixxyControls(plan, new[] { toggle.Toggle }, root, toggle.Source);
             }
 
             int rebuilt = plan.VixxyControls.Count - before;
@@ -2738,6 +2767,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
 
+        }
+
+        /// <summary>
+        /// The count of controls, their addresses and shared parameters, once every source's
+        /// toggles have been built, so the counts cover all of them.
+        /// </summary>
+        private static void ReportVixxyControls(AvatarConversionPlan plan)
+        {
             if (plan.VixxyControls.Count > 0)
             {
                 plan.ToggleDiagnostics.Add(DiagnosticSeverity.Mapped, "vixxy.rebuilt",
@@ -2802,7 +2839,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
         {
             foreach (PlannedJiggleRig rig in plan.Rigs)
             {
-                if (rig.SourceHost == host)
+                if (rig.SourceHost == host
+                    || (plan.Locator != null
+                        && plan.Locator.TryLive(rig.Source, rig.SourceHost, out Transform live)
+                        && live == host))
                 {
                     return rig;
                 }
