@@ -6,6 +6,8 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-21
+
 ### Fixed
 
 - VRCFury toggle actions resolve against the avatar, as VRCFury does: a toggle kept in a prefab
