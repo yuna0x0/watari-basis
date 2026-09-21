@@ -412,6 +412,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 if (inheritedResolver != null)
                 {
                     inheritedResolver.Foreign = plan.ResolveForeign;
+
+                    // A nested prefab's overrides set in this base file name the base's own
+                    // objects, and those ids are answered by this resolver.
+                    string inheritedGuid = GuidOf(inherited);
+                    if (!string.IsNullOrEmpty(inheritedGuid)
+                        && !plan.ResolversByGuid.ContainsKey(inheritedGuid))
+                    {
+                        plan.ResolversByGuid[inheritedGuid] = inheritedResolver;
+                    }
                 }
 
                 if (inheritedResolver == null || inheritedResolver.Root == null)
@@ -424,7 +433,7 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
                 plan.InheritedSourcesRead++;
                 ReadDocuments(plan, source, profile, unknownIdentities,
-                    inheritedDocuments, inheritedResolver);
+                    inheritedDocuments, inheritedResolver, GuidOf(inherited));
             }
 
             string model = source.ModelAssetPath();
@@ -531,12 +540,15 @@ namespace yuna0x0.Basis.Convert.Pipeline
         /// <summary>One file's worth of documents, resolved against the objects they belong to.</summary>
         private static void ReadDocuments(AvatarConversionPlan plan, ConversionSource source,
             JiggleMappingProfile profile, HashSet<string> unknownIdentities,
-            List<UnityYamlDocument> documents, PrefabObjectResolver resolver)
+            List<UnityYamlDocument> documents, PrefabObjectResolver resolver,
+            string fileGuid = null)
         {
             Dictionary<long, PlannedJiggleCollider> colliders =
                 MapColliders(documents, resolver, plan);
 
-            string colliderFileGuid = GuidOf(source.AssetPath);
+            // Colliders are indexed by the file that defines them, which for a variant's base
+            // is not the source's own file: an override naming one names the base's guid.
+            string colliderFileGuid = fileGuid ?? GuidOf(source.AssetPath);
             foreach (KeyValuePair<long, PlannedJiggleCollider> pair in colliders)
             {
                 pair.Value.Source = source;
@@ -3302,9 +3314,19 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 }
             }
 
-            JiggleRigPlan rigPlan = PhysBoneToJiggleMapper.Map(
-                source, profile, CountChildren(rootBone, ignored));
+            int rootChildren = CountChildren(rootBone, ignored);
+            JiggleRigPlan rigPlan = PhysBoneToJiggleMapper.Map(source, profile, rootChildren);
             rigPlan.Preset = JigglePresetLibrary.GuessFrom(rootBone.name);
+
+            // A root with nothing below it is a chain of one bone. On VRChat that still swings
+            // the root; a jiggle rig with a motionless root moves nothing, and a root that was
+            // meant to be another object reads as this shape.
+            if (rootChildren == 0)
+            {
+                rigPlan.Diagnostics.Add(DiagnosticSeverity.Warning, "physbone.noChain",
+                    $"The PhysBone on {host.name} has no bone below its root {rootBone.name}, "
+                    + "so the rig has nothing to move.");
+            }
 
             if (source.MultiChildType == PhysBoneMultiChildType.Ignore)
             {

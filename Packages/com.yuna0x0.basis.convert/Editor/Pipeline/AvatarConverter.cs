@@ -893,7 +893,39 @@ namespace yuna0x0.Basis.Convert.Pipeline
             }
 
             int[] path = TransformIndexPath.Of(sourceRoot, sourceTransform);
-            return path != null && TransformIndexPath.TryResolve(targetRoot, path, out translated);
+            if (path == null)
+            {
+                return TryTranslateAcrossSources(plan, target, sourceTransform, out translated);
+            }
+
+            return TransformIndexPath.TryResolve(targetRoot, path, out translated);
+        }
+
+        /// <summary>
+        /// A transform that is not under its item's own prefab: a root bone, collider or
+        /// excluded bone the prefab names in another file, which resolved to that file's asset.
+        /// It is located in the scanned hierarchy and translated from the hierarchy root.
+        /// </summary>
+        private static bool TryTranslateAcrossSources(
+            AvatarConversionPlan plan, Transform target, Transform sourceTransform,
+            out Transform translated)
+        {
+            translated = null;
+            Transform hierarchy = plan.HierarchyRoot != null ? plan.HierarchyRoot.transform : null;
+            if (hierarchy == null || plan.Locator == null
+                || !plan.Locator.TryLive(sourceTransform, out Transform live))
+            {
+                return false;
+            }
+
+            if (hierarchy == target)
+            {
+                translated = live;
+                return true;
+            }
+
+            int[] path = TransformIndexPath.Of(hierarchy, live);
+            return path != null && TransformIndexPath.TryResolve(target, path, out translated);
         }
     }
 }

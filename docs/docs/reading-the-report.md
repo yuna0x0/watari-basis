@@ -86,6 +86,7 @@ on the case; the usual one is given.
 | `physbone.unresolved` | Warning | The PhysBone could not be tied to a transform and was skipped. |
 | `physbone.disabled` | Mapped | The component was disabled and simulated nothing. No rig was written. |
 | `physbone.rootUnresolved` | Warning | The Root Transform could not be resolved. The PhysBone was skipped. |
+| `physbone.noChain` | Warning | No bone sits below the root, so the rig has nothing to move. A root meant to be another object reads as this shape. |
 | `physbone.radius.collisionRadius` | Mapped | Radius became collision radius, with its curve. |
 | `physbone.radius.negative` | Warning | A negative radius was clamped to 0 and collision left off. |
 | `physbone.gravity` | Approximated | Gravity became the gravity multiplier, with its curve. PhysBone blends toward down; jiggle scales world gravity. |

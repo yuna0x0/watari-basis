@@ -6,6 +6,17 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A rig, constraint or collider whose bone sits in another prefab is written onto that bone
+  instead of being skipped.
+- Overrides recorded in a variant's base file resolve against the base's objects, colliders
+  included.
+
+### Added
+
+- A PhysBone with no bone below its root is reported: `physbone.noChain`.
+
 ## [0.12.0] - 2026-09-21
 
 ### Fixed
