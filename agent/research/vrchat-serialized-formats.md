@@ -137,3 +137,15 @@ and the versions page when done.
 - VRC constraints have a `TargetTransform` that lets them drive a transform other than their
   own. Unity's and Basis's constraints always drive their own GameObject. This is the biggest
   hazard in constraint conversion.
+
+## Prefab override paths
+
+A PrefabInstance's `m_Modifications` name a target document, a `propertyPath` and a value.
+The paths `PrefabOverrides.SetPath` follows: dotted field names, `Array.data[i]` for a list
+entry, `Array.size` for its length, and `managedReferences[<id>].<field>` for a field of a
+`[SerializeReference]` object, where `<id>` is the `rid` of the entry under
+`references.RefIds` and the field sits under that entry's `data`. The last form was read back
+from `PrefabUtility.GetPropertyModifications` in a test (`ManagedReferenceOverrideTests`),
+since no local file held an example; VRCFury's actions are serialized this way, so an outer
+prefab points a nested toggle at its objects through it.
+

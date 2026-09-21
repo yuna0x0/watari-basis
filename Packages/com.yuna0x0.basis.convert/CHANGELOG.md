@@ -18,6 +18,8 @@ Notable changes to this package. The format follows
   skip is counted.
 - `vixxy.rebuilt`, `vixxy.address` and `vixxy.sharedParameter` are reported once.
 - `constraint.source.overflow` no longer fires for an empty source slot.
+- Overrides an outer prefab sets on a nested VRCFury toggle's actions (`managedReferences[id]`)
+  are applied, so a toggle pointed at the avatar's objects finds them.
 
 ### Added
 

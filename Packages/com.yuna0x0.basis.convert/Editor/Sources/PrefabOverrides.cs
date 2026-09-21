@@ -38,6 +38,9 @@ namespace yuna0x0.Basis.Convert.Sources
         private static readonly Regex IndexPattern = new Regex(
             @"^data\[(?<index>\d+)\]$", RegexOptions.Compiled);
 
+        private static readonly Regex ManagedReferencePattern = new Regex(
+            @"^managedReferences\[(?<id>-?\d+)\]$", RegexOptions.Compiled);
+
         /// <summary>The modifications every PrefabInstance in these documents carries.</summary>
         public static List<PrefabModification> Read(
             List<UnityYamlDocument> documents, string originGuid = null)
@@ -268,7 +271,64 @@ namespace yuna0x0.Basis.Convert.Sources
             }
 
             string[] parts = propertyPath.Split('.');
+            Match managed = ManagedReferencePattern.Match(parts[0]);
+            if (managed.Success)
+            {
+                return SetManagedReference(lines, managed.Groups["id"].Value, parts, value);
+            }
+
             return Set(lines, 0, lines.Count, 2, parts, 0, value);
+        }
+
+        /// <summary>
+        /// A field of a <c>[SerializeReference]</c> object is overridden as
+        /// <c>managedReferences[id].field</c>, the id being the <c>rid</c> of the entry under
+        /// <c>references.RefIds</c>, whose fields sit under its <c>data</c> block. This is how
+        /// an outer prefab points a nested VRCFury toggle's action at one of its own objects.
+        /// </summary>
+        private static bool SetManagedReference(
+            List<string> lines, string id, string[] parts, string value)
+        {
+            if (parts.Length < 2)
+            {
+                return false;
+            }
+
+            int references = FindKey(lines, 0, lines.Count, 2, "references");
+            if (references < 0)
+            {
+                return false;
+            }
+
+            int referencesEnd = BlockEnd(lines, references, lines.Count, 2);
+            int refIds = FindKey(lines, references + 1, referencesEnd, 4, "RefIds");
+            if (refIds < 0)
+            {
+                return false;
+            }
+
+            int refIdsEnd = BlockEnd(lines, refIds, referencesEnd, 4);
+            List<int> starts = EntryStarts(lines, refIds, refIdsEnd, 4);
+            for (int i = 0; i < starts.Count; i++)
+            {
+                int entryStart = starts[i];
+                int entryEnd = i + 1 < starts.Count ? starts[i + 1] : refIdsEnd;
+                if (lines[entryStart].Trim() != "- rid: " + id)
+                {
+                    continue;
+                }
+
+                int data = FindKey(lines, entryStart + 1, entryEnd, 6, "data");
+                if (data < 0)
+                {
+                    return false;
+                }
+
+                int dataEnd = BlockEnd(lines, data, entryEnd, 6);
+                return Set(lines, data + 1, dataEnd, 8, parts, 1, value);
+            }
+
+            return false;
         }
 
         private static bool Set(List<string> lines, int start, int end, int indent,
