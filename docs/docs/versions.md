@@ -16,7 +16,7 @@ the same versions.
 | [Dynamic Bone](https://assetstore.unity.com/packages/tools/animation/dynamic-bone-16743) | 1.3.4 |
 | [Modular Avatar](https://modular-avatar.nadena.dev/) | 1.18.7, with [NDMF](https://ndmf.nadena.dev/) 1.14.8 |
 | [VRCFury](https://vrcfury.com/) | 1.1429.0 |
-| Basis | `developer` at [81f190b21](https://github.com/BasisVR/Basis/commit/81f190b217c11c2b39231e0bc9db330fd4a2803c), 2026-09-29 |
+| Basis | `developer` at [eac8e38cc](https://github.com/BasisVR/Basis/commit/eac8e38ccd72f6dac51ce813c06259ff110a2607), 2026-10-07 |
 
 The Basis row covers what the converter writes to as well as what it reads: Jiggle Physics and HVR
 Basis Comms are part of the Basis repository and change with it, at version numbers that do not
