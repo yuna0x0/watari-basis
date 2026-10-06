@@ -6,6 +6,10 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Checked against UniVRM 0.131.3 and VRCFury 1.1431.0.
+
 ## [0.12.1] - 2026-09-21
 
 ### Fixed

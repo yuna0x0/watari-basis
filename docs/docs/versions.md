@@ -12,10 +12,10 @@ the same versions.
 | Source | Checked against |
 |---|---|
 | [VRChat SDK](https://creators.vrchat.com/sdk/) | 3.10.5 |
-| [UniVRM](https://github.com/vrm-c/UniVRM) | 0.131.2 |
+| [UniVRM](https://github.com/vrm-c/UniVRM) | 0.131.3 |
 | [Dynamic Bone](https://assetstore.unity.com/packages/tools/animation/dynamic-bone-16743) | 1.3.4 |
 | [Modular Avatar](https://modular-avatar.nadena.dev/) | 1.18.7, with [NDMF](https://ndmf.nadena.dev/) 1.14.8 |
-| [VRCFury](https://vrcfury.com/) | 1.1429.0 |
+| [VRCFury](https://vrcfury.com/) | 1.1431.0 |
 | Basis | `developer` at [eac8e38cc](https://github.com/BasisVR/Basis/commit/eac8e38ccd72f6dac51ce813c06259ff110a2607), 2026-10-07 |
 
 The Basis row covers what the converter writes to as well as what it reads: Jiggle Physics and HVR
@@ -53,5 +53,5 @@ for which are rebuilt, which are left to Modular Avatar and which are reported.
 
 ## VRCFury
 
-Toggles, Full Controllers and Armature Links as 1.1429.0 writes them. Files written by an older
+Toggles, Full Controllers and Armature Links as 1.1431.0 writes them. Files written by an older
 VRCFury are read the way VRCFury upgrades them. See [VRCFury](what-converts/vrcfury.md).

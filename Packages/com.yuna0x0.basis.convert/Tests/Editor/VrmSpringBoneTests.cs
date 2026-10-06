@@ -137,6 +137,40 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void AConeLimitIsClampedTheWayUniVrmClampsIt()
+        {
+            // UniVRM 0.131.3 clamps a cone to 0..180 degrees on import and in the solver. Jiggle's
+            // range ends at 90, so a wide cone is fully open and a negative one fully closed.
+            VrmSpringChainData wide = Chain(
+                new VrmSpringJointData { AngleLimitType = 1, Pitch = Mathf.PI * 2f / 3f },
+                new VrmSpringJointData());
+            JiggleRigPlan widePlan = Mapping.VrmSpringBoneToJiggleMapper.Map(wide);
+            Assert.That(widePlan.Parameters.AngleLimit.Value.Value, Is.EqualTo(1f));
+
+            VrmSpringChainData negative = Chain(
+                new VrmSpringJointData { AngleLimitType = 1, Pitch = -0.3f },
+                new VrmSpringJointData());
+            JiggleRigPlan negativePlan = Mapping.VrmSpringBoneToJiggleMapper.Map(negative);
+            Assert.That(negativePlan.Parameters.AngleLimitToggle, Is.True);
+            Assert.That(negativePlan.Parameters.AngleLimit.Value.Value, Is.Zero);
+        }
+
+        [Test]
+        public void AConeLimitOnTheTailJointIsIgnored()
+        {
+            // The tail joint is never simulated, and UniVRM 0.131.3 rejects a limit on a leaf
+            // node at import. A prefab imported by an earlier release can still carry one.
+            VrmSpringChainData chain = Chain(
+                new VrmSpringJointData(),
+                new VrmSpringJointData { AngleLimitType = 1, Pitch = Mathf.PI / 8f });
+
+            JiggleRigPlan plan = Mapping.VrmSpringBoneToJiggleMapper.Map(chain);
+
+            Assert.That(plan.Parameters.AngleLimitToggle, Is.False);
+            Assert.That(plan.Diagnostics.HasCode("vrm.angleLimit.cone"), Is.False);
+        }
+
+        [Test]
         public void ACentreTransformBecomesFullIgnoreRootMotion()
         {
             VrmSpringChainData chain = Chain(new VrmSpringJointData(), new VrmSpringJointData());
