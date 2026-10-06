@@ -6,9 +6,12 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-10-07
+
 ### Changed
 
 - Checked against UniVRM 0.131.3 and VRCFury 1.1431.0.
+- Checked against Basis `developer` at eac8e38cc, on Unity 6000.7.
 
 ## [0.12.1] - 2026-09-21
 
