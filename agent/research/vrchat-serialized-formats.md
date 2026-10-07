@@ -112,13 +112,21 @@ classes the readers touch: `VRCPhysBoneBase`, `VRCPhysBoneColliderBase`, `Contac
 KnownScriptIdentities; a loose script's guid is in its `.meta`. Raise `ProductInfo.CheckedAgainst`
 and the versions page when done.
 
+When a release moves the SDK to a Unity version that writes typed hex blobs (6000.7 or later),
+save a descriptor with eyelid blendshapes in that editor and add its `eyelidsBlendshapes` value
+to the hex blob test.
+
 ## Other formats worth knowing
 
 - `VRCAvatarDescriptor.VisemeBlendShapes` is a `string[15]` in the same order Basis uses for
   `FaceVisemeMovement`, so viseme mapping is positional.
 - `customEyeLookSettings.eyelidsBlendshapes` is an `int[]` that Unity writes as a **hex byte
   blob**, for example `1d000000ffffffffffffffff` meaning `{29, -1, -1}`, little-endian int32.
-  It is not a string.
+  It is not a string. Unity 6000.7 appends a type letter to such blobs (`i` for int, `y` for
+  byte), but only on components whose script is present. In a Basis project the descriptor is
+  a missing script, and Unity keeps its data byte for byte on save, so the blob arrives as the
+  SDK's editor wrote it. `ParseHexInt32Blob` reads whole eight-character values and ignores a
+  shorter tail, so a suffix would still decode correctly.
 - `baseAnimationLayers` / `specialAnimationLayers` entries carry a `type` field. **The ordering
   usually quoted is wrong.** Decompiled from `VRCSDK3A.dll`
   (`VRC.SDK3.Avatars.Components.VRCAvatarDescriptor.AnimLayerType`) it is:
