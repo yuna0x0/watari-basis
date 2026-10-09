@@ -66,6 +66,19 @@ format rather than a platform, an avatar carrying nothing but Dynamic Bone belon
 and all of them are in scope. What decides whether something converts is the components it
 carries, not where it came from.
 
+## Related repositories
+
+World script conversion spans three repositories. Read the newest worklog entry in each before
+working on it:
+
+- **basis-udon** (`com.yuna0x0.basis.udon`, not yet published, `agent/worklog/`): the runtime
+  package that converted world scripts run against through Cilbox. Watari never references its
+  code; the code Watari generates is the only link.
+- **Basis** (`BasisVR/Basis`, `developer` branch): the target, including Cilbox and its
+  allow-list.
+- **A private test repository for world conversion**, where converted worlds are checked in a
+  client. Nothing from it is copied here.
+
 ## Read this first
 
 `agent/` is the committed knowledge base:

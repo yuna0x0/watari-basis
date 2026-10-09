@@ -39,3 +39,5 @@ or at least say that a number came from one sample.
 
 Test fixtures are hand-authored minimal YAML in the package's test folder. Findings from real
 avatars are recorded here as prose and numbers, never as committed assets.
+
+`compliance/record.md` records sources and licence terms for the conversion work, as dated evidence.

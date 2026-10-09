@@ -190,6 +190,23 @@ the original. Everything else maps directly.
     Converting a world's scripts means implementing VRChat's world API on top of Basis's
     networking and player model first, which is a runtime project rather than a reader, and one
     with its own licensing questions.
+  - **Scripts, in progress (2026-10-08, branch `world-scripts`, not released).** Planned as a
+    translator here that keeps a world's UdonSharp sources (adding only `partial`), generates
+    dispatch and sync code for them, and checks the result against Cilbox's allow-list, plus a
+    separate runtime package of `[Cilboxable]` classes that implements the Udon API on Basis.
+    Watari never references the runtime package's code; the generated code is the only link. A
+    "Scripts" category offers Convert, Remove (the default without the runtime package) and the
+    creator's own port. Needs a decision that says how this relates to 0004 and 0017. User docs
+    (decided 2026-10-08): Watari's site gets the conversion side and the report codes, linking to
+    the runtime package's own reference for the API; drafted after the door milestone, with diagrams
+    of the conversion pipeline (asked for by the user). `docs/versions.md` gains rows for
+    UdonSharp and for Cilbox (the Basis commit and `Cilbox.cs` hash, since its package version
+    stays 0.1.0), matching the runtime package's own "Versions checked" page. VRChat's SDK licence
+    forbids using "Content or Distro Assets" (output derived from VRChat's Example Assets, ClientSim
+    among them) outside VRChat (§4.3(i)): the converter should detect VRChat example prefabs and
+    scripts in a world and report them instead of converting them (basis-udon decision 0002,
+    rechecked 2026-10-08). Research:
+    `research/udon-world-scripting.md`, `research/cilbox-for-converted-scripts.md`.
 
   Physics and constraints already convert on any hierarchy the window is pointed at, and the rig
   check skips itself when there is no humanoid.
