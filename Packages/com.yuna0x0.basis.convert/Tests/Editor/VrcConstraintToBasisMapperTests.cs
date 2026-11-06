@@ -170,6 +170,18 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void SmoothingIsReportedOnlyWhenSet()
+        {
+            VrcConstraintData source = Constraint(VrcConstraintKind.Rotation);
+            Assert.That(VrcConstraintToBasisMapper.Map(source).Diagnostics
+                .HasCode("constraint.smoothing.dropped"), Is.False);
+
+            source.SmoothingFactor = 0.5f;
+            Assert.That(VrcConstraintToBasisMapper.Map(source).Diagnostics
+                .HasCode("constraint.smoothing.dropped"), Is.True);
+        }
+
+        [Test]
         public void AimSettingsCarryAcross()
         {
             VrcConstraintData source = Constraint(VrcConstraintKind.Aim);

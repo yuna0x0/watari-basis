@@ -25,7 +25,9 @@ namespace yuna0x0.Basis.Convert.Tests
             int eyelidType = 2,
             string eyelidsBlob = "1d000000ffffffffffffffff",
             int enableEyeLook = 1,
-            List<string> gazeStates = null)
+            List<string> gazeStates = null,
+            int? eyeGazeMode = null,
+            int? enableFaceTracking = null)
         {
             List<string> lines = new List<string>
             {
@@ -43,10 +45,20 @@ namespace yuna0x0.Basis.Convert.Tests
                 lines.Add($"  - {name}");
             }
 
+            if (enableFaceTracking.HasValue)
+            {
+                lines.Add($"  enableFaceTracking: {enableFaceTracking.Value}");
+            }
+
             lines.Add($"  enableEyeLook: {enableEyeLook}");
             lines.Add("  customEyeLookSettings:");
             lines.Add("    eyeMovement:");
             lines.Add("      confidence: 0.5");
+            if (eyeGazeMode.HasValue)
+            {
+                lines.Add($"    eyeGazeMode: {eyeGazeMode.Value}");
+            }
+
             lines.Add("    leftEye: {fileID: 11}");
             lines.Add("    rightEye: {fileID: 12}");
             lines.Add($"    eyelidType: {eyelidType}");
@@ -304,6 +316,59 @@ namespace yuna0x0.Basis.Convert.Tests
                     $"lipSync mode {mode} should be reported as unsupported.");
                 Assert.That(plan.VisemeMeshFileId, Is.Zero);
             }
+        }
+
+        [Test]
+        public void FaceTrackingLipSyncIsReportedAsItself()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(lipSync: 5));
+
+            Assert.That(plan.Diagnostics.HasCode("descriptor.lipSync.faceTracking"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.lipSync.unsupported"), Is.False);
+            Assert.That(plan.VisemeMeshFileId, Is.Zero);
+        }
+
+        [Test]
+        public void FaceTrackingEyelidsAreNotReportedAsNoEyelids()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(eyelidType: 3));
+
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyelids.faceTracking"), Is.True);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyelids.none"), Is.False);
+            Assert.That(plan.BlinkBlendShapeIndices, Is.Empty);
+        }
+
+        [Test]
+        public void FaceTrackingGazeWritesNoEyeLimitFromTheBones()
+        {
+            VrcAvatarDescriptorData data = ReadDescriptor(
+                gazeStates: GazeStates(15f, 15f, 15f, 15f), eyeGazeMode: 1);
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(data);
+
+            Assert.That(data.EyeGazeMode, Is.EqualTo(VrcEyeGazeMode.FaceTracking));
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.Zero);
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeGaze.faceTracking"), Is.True);
+        }
+
+        [Test]
+        public void GazeFromBonesAndFaceTrackingStillWritesTheEyeLimit()
+        {
+            BasisAvatarPlan plan = VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(
+                gazeStates: GazeStates(15f, 15f, 15f, 15f), eyeGazeMode: 2));
+
+            Assert.That(plan.EyeMaxLookAngleDegrees, Is.EqualTo(15f).Within(1e-3f));
+            Assert.That(plan.Diagnostics.HasCode("descriptor.eyeGaze.faceTracking"), Is.False);
+        }
+
+        [Test]
+        public void TheFaceTrackingSectionIsReportedWhenOn()
+        {
+            Assert.That(VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(enableFaceTracking: 1))
+                .Diagnostics.HasCode("descriptor.faceTracking"), Is.True);
+            Assert.That(VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor(enableFaceTracking: 0))
+                .Diagnostics.HasCode("descriptor.faceTracking"), Is.False);
+            Assert.That(VrcAvatarDescriptorToBasisMapper.Map(ReadDescriptor())
+                .Diagnostics.HasCode("descriptor.faceTracking"), Is.False);
         }
 
         [Test]

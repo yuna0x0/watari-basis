@@ -218,6 +218,14 @@ namespace yuna0x0.Basis.Convert.Mapping
                     "constraint.freezeToWorld.dropped",
                     "Freeze To World was on and has no Basis equivalent.");
             }
+
+            if (source.SmoothingFactor > 0f)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped,
+                    "constraint.smoothing.dropped",
+                    $"Smoothing was {source.SmoothingFactor}. The Basis constraint follows its "
+                    + "sources without smoothing.");
+            }
         }
 
         private static ConstraintAxes AxesOf(bool x, bool y, bool z)

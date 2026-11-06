@@ -76,6 +76,18 @@ namespace yuna0x0.Basis.Convert.Tests
             Assert.That(data.AffectsRotationX, Is.True);
             Assert.That(data.AffectsRotationY, Is.False);
             Assert.That(data.AffectsRotationZ, Is.True);
+            Assert.That(data.SmoothingFactor, Is.Zero);
+        }
+
+        [Test]
+        public void ReadsTheSmoothingFactor()
+        {
+            List<string> lines = new List<string>(RotationConstraintLines(1, 555L));
+            lines.Insert(lines.IndexOf("  FreezeToWorld: 0") + 1, "  SmoothingFactor: 0.25");
+
+            VrcConstraintData data = Read(lines.ToArray(), VrcConstraintKind.Rotation);
+
+            Assert.That(data.SmoothingFactor, Is.EqualTo(0.25f).Within(1e-6f));
         }
 
         [Test]

@@ -47,6 +47,11 @@ namespace yuna0x0.Basis.Convert.Sources
                 data.EnableEyeLook = eyeLook;
             }
 
+            if (document.TryGetBool("enableFaceTracking", out bool faceTracking))
+            {
+                data.EnableFaceTracking = faceTracking;
+            }
+
             data.VisemeBlendShapes = ReadStringSequence(document, "VisemeBlendShapes");
             ReadEyeLookSettings(document, data);
 
@@ -139,6 +144,14 @@ namespace yuna0x0.Basis.Convert.Sources
                         if (UnityYamlValues.TryParseInt(value, out int eyelidType))
                         {
                             data.EyelidType = (VrcEyelidType)eyelidType;
+                        }
+
+                        break;
+
+                    case "eyeGazeMode":
+                        if (UnityYamlValues.TryParseInt(value, out int gazeMode))
+                        {
+                            data.EyeGazeMode = (VrcEyeGazeMode)gazeMode;
                         }
 
                         break;

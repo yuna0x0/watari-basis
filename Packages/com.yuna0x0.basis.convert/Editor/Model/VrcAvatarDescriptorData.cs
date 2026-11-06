@@ -11,6 +11,7 @@ namespace yuna0x0.Basis.Convert.Model
         JawFlapBlendShape = 2,
         VisemeBlendShape = 3,
         VisemeParameterOnly = 4,
+        VisemeBlendShapeFaceTracking = 5,
     }
 
     /// <summary>How VRChat drives eyelids.</summary>
@@ -19,6 +20,15 @@ namespace yuna0x0.Basis.Convert.Model
         None = 0,
         Bones = 1,
         Blendshapes = 2,
+        FaceTracking = 3,
+    }
+
+    /// <summary>What moves the eyes' gaze (SDK 3.10.6 and later).</summary>
+    public enum VrcEyeGazeMode
+    {
+        BoneRotation = 0,
+        FaceTracking = 1,
+        Both = 2,
     }
 
     /// <summary>
@@ -80,6 +90,10 @@ namespace yuna0x0.Basis.Convert.Model
 
         public bool EnableEyeLook;
         public VrcEyelidType EyelidType = VrcEyelidType.None;
+        public VrcEyeGazeMode EyeGazeMode = VrcEyeGazeMode.BoneRotation;
+
+        /// <summary>The descriptor's Face Tracking section is on (SDK 3.10.6 and later).</summary>
+        public bool EnableFaceTracking;
         public long EyelidsSkinnedMeshFileId;
 
         /// <summary>

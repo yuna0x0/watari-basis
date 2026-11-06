@@ -77,6 +77,11 @@ namespace yuna0x0.Basis.Convert.Sources
             data.Locked = ReadBool(document, "Locked", true);
             data.SolveInLocalSpace = ReadBool(document, "SolveInLocalSpace", false);
             data.FreezeToWorld = ReadBool(document, "FreezeToWorld", false);
+            if (document.TryGetFloat("SmoothingFactor", out float smoothing))
+            {
+                data.SmoothingFactor = smoothing;
+            }
+
             data.UseUpTransform = ReadBool(document, "UseUpTransform", false);
 
             if (document.TryGetFloat("GlobalWeight", out float weight))

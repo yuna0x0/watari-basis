@@ -478,6 +478,14 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 ? hierarchy.Root
                 : hierarchy.LiveRootOf(source);
 
+            if (data.HasFaceTracking)
+            {
+                result.Diagnostics.Add(new ConversionDiagnostic(DiagnosticSeverity.Dropped,
+                    "vrcfury.fullController.faceTracking",
+                    "A VRCFury Full Controller's face tracking meshes and blendshape sets were not "
+                    + "converted. Basis matches face tracking to blendshapes by name."));
+            }
+
             // Menus and parameters, the way the base avatar's are read.
             VrcExpressionInventory inventory = new VrcExpressionInventory();
             foreach (VrcFuryMenuEntry entry in data.Menus)

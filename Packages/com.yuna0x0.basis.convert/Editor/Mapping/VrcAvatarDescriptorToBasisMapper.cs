@@ -42,6 +42,7 @@ namespace yuna0x0.Basis.Convert.Mapping
             MapVisemes(source, plan);
             MapBlink(source, plan);
             MapEyeLookRange(source, plan);
+            ReportFaceTracking(source, plan);
             ReportExpressionSystems(source, plan);
 
             plan.Diagnostics.Add(DiagnosticSeverity.Mapped, "descriptor.autoSetup",
@@ -89,8 +90,30 @@ namespace yuna0x0.Basis.Convert.Mapping
                 $"{names.Count} custom animation layers (" + string.Join(", ", names) + ") do not carry over; Basis has no playable layers. Toggles become Vixxy controls, looping movement Authored Motion.");
         }
 
+        /// <summary>
+        /// The descriptor's Face Tracking section (SDK 3.10.6) is not read. Basis detects face
+        /// tracking blendshapes by name at load instead.
+        /// </summary>
+        private static void ReportFaceTracking(VrcAvatarDescriptorData source, BasisAvatarPlan plan)
+        {
+            if (source.EnableFaceTracking)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "descriptor.faceTracking",
+                    "The descriptor's Face Tracking settings were not converted. Basis matches "
+                    + "face tracking to blendshapes by their ARKit or Unified Expressions names.");
+            }
+        }
+
         private static void MapVisemes(VrcAvatarDescriptorData source, BasisAvatarPlan plan)
         {
+            if (source.LipSync == VrcLipSyncStyle.VisemeBlendShapeFaceTracking)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "descriptor.lipSync.faceTracking",
+                    "Visemes were set in the face tracking blendshape sets, which are not read. "
+                    + "Assign the viseme blendshapes on the Basis Avatar by hand.");
+                return;
+            }
+
             if (source.LipSync != VrcLipSyncStyle.VisemeBlendShape)
             {
                 plan.Diagnostics.Add(DiagnosticSeverity.Dropped, "descriptor.lipSync.unsupported",
@@ -138,6 +161,17 @@ namespace yuna0x0.Basis.Convert.Mapping
             if (!source.EnableEyeLook || !source.HasEyeRotations
                 || (source.LeftEyeFileId == 0L && source.RightEyeFileId == 0L))
             {
+                return;
+            }
+
+            // In face tracking gaze mode VRChat leaves the eye bones still, so the gaze states
+            // say nothing about how far they turn.
+            if (source.EyeGazeMode == VrcEyeGazeMode.FaceTracking)
+            {
+                plan.Diagnostics.Add(DiagnosticSeverity.Approximated,
+                    "descriptor.eyeGaze.faceTracking",
+                    "Eye gaze was driven by face tracking blendshapes. Basis turns the eye bones, "
+                    + "so the eye look range was left at Basis's default.");
                 return;
             }
 
@@ -201,6 +235,13 @@ namespace yuna0x0.Basis.Convert.Mapping
                             + "Basis drives blink only, and moves the eyes with bones.");
                     }
 
+                    break;
+
+                case VrcEyelidType.FaceTracking:
+                    plan.Diagnostics.Add(DiagnosticSeverity.Dropped,
+                        "descriptor.eyelids.faceTracking",
+                        "Eyelids were driven by face tracking blendshapes, which are not read, so "
+                        + "blink was left unset.");
                     break;
 
                 case VrcEyelidType.Bones:

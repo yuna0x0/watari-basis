@@ -60,6 +60,9 @@ namespace yuna0x0.Basis.Convert.Model
         /// <summary>VRChat-only. No Unity or Basis equivalent.</summary>
         public bool FreezeToWorld;
 
+        /// <summary>SDK 3.10.6 and later. Zero snaps to the sources. No Basis equivalent.</summary>
+        public float SmoothingFactor;
+
         public List<VrcConstraintSource> Sources = new List<VrcConstraintSource>();
 
         /// <summary>

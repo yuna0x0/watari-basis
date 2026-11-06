@@ -147,6 +147,9 @@ namespace yuna0x0.Basis.Convert.Sources
         public bool RootBindingsApplyToAvatar;
         public string ToggleParam = string.Empty;
         public bool IgnoreSaved;
+
+        /// <summary>Face tracking meshes or blendshape sets are set (VRCFury 1.1442.0 with VRChat SDK 3.10.6).</summary>
+        public bool HasFaceTracking;
     }
 
     public sealed class VrcFuryLinkTarget
@@ -471,6 +474,8 @@ namespace yuna0x0.Basis.Convert.Sources
                 RootBindingsApplyToAvatar = data.Bool("rootBindingsApplyToAvatar"),
                 ToggleParam = data.Text("toggleParam"),
                 IgnoreSaved = data.Bool("ignoreSaved"),
+                HasFaceTracking = data.Child("faceTrackingMeshes").Entries().Count > 0
+                    || data.Child("faceTrackingBlendshapeSets").Entries().Count > 0,
             };
 
             foreach (UnityYamlBlock entry in data.Child("controllers").Entries())

@@ -57,6 +57,7 @@ on the case; the usual one is given.
 | `vrcfury.action.unresolved` | Warning | An action names an object, blendshape or renderer that is not on the avatar. That part was left out. |
 | `vrcfury.fullController.assetMissing` | Warning | A Full Controller names a controller, menu or parameter asset that could not be read. |
 | `vrcfury.fullController.untraced` | Dropped | A Full Controller's menu controls traced to no toggle layer in its FX controller. |
+| `vrcfury.fullController.faceTracking` | Dropped | A Full Controller's face tracking meshes and blendshape sets were not converted. |
 | `vrcfury.armatureLink` | Mapped | How many Armature Links are applied and how many clothing bones go under the avatar's. |
 | `vrcfury.armatureLink.unresolved` | Warning | The link's target could not be found: the avatar has no humanoid rig, the bone or object is missing, or the clothing was scanned on its own. |
 | `vrcfury.armatureLink.auto` | Approximated | A link in VRCFury's old Auto mode. The clothing's meshes decided whether the whole tree merges. |
@@ -208,6 +209,7 @@ on the case; the usual one is given.
 | `constraint.weight.clamped` | Warning | The weight was outside 0 to 1 and was clamped. |
 | `constraint.solveInLocalSpace.dropped` | Dropped | Basis constraints solve in world space. |
 | `constraint.freezeToWorld.dropped` | Dropped | No equivalent. |
+| `constraint.smoothing.dropped` | Dropped | The constraint was smoothed. Basis constraints follow their sources without smoothing. |
 | `vrm.constraint.rotation` | Approximated | A VRM rotation constraint copies a delta from rest. A Basis one follows the rotation itself, offset so the authored pose holds at rest. |
 | `vrm.constraint.aim` | Approximated | A VRM aim constraint states no up direction, so the scene's up is used. |
 | `vrm.constraint.roll` | Approximated | Nothing in Basis copies rotation about one axis, so this became a rotation constraint limited to it. |
@@ -225,9 +227,13 @@ on the case; the usual one is given.
 | `descriptor.visemeMesh.missing` | Warning | Lip sync was set to blendshapes with no mesh assigned. |
 | `descriptor.visemesUnset` | Warning | Nothing named the visemes or blink. Assign them on the Basis Avatar by hand. |
 | `descriptor.lipSync.unsupported` | Dropped | Lip sync was not blendshape based. Basis drives visemes from blendshapes only. |
+| `descriptor.lipSync.faceTracking` | Dropped | Visemes were set in the face tracking blendshape sets, which are not read. |
+| `descriptor.faceTracking` | Dropped | The descriptor's Face Tracking settings were not converted. Basis matches face tracking blendshapes by name. |
 | `descriptor.eyeLook.disabled` | Mapped | Eye Look was disabled, so blink is unset. |
 | `descriptor.eyelids.none` | Mapped | No eyelid setup or no blink shape chosen, so blink is unset. |
 | `descriptor.eyelids.bones` | Dropped | Eyelids were driven by bones. Basis blinks with a blendshape. |
+| `descriptor.eyelids.faceTracking` | Dropped | Eyelids were driven by face tracking blendshapes, which are not read. Blink is unset. |
+| `descriptor.eyeGaze.faceTracking` | Approximated | Eye gaze was driven by face tracking blendshapes. The eye look range is left at Basis's default. |
 | `descriptor.eyelids.lookUpDown` | Dropped | The looking up and down eyelid shapes have no equivalent. |
 | `descriptor.eyeLook.range` | Mapped | The eye rotation limit was written to the Basis Avatar. |
 | `descriptor.eyeLook.range.uneven` | Approximated | The limit differs by direction or eye. Basis has one angle, so the largest was written. |

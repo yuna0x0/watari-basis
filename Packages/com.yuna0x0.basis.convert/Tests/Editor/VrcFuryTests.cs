@@ -94,6 +94,48 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void AFullControllerWithFaceTrackingIsMarked()
+        {
+            VrcFuryFullControllerData Read(params string[] faceTracking)
+            {
+                List<string> lines = new List<string>
+                {
+                    "--- !u!114 &110004",
+                    "MonoBehaviour:",
+                    "  m_GameObject: {fileID: 100000}",
+                    "  m_Script: {fileID: 11500000, guid: d9e94e501a2d4c95bff3d5601013d923, type: 3}",
+                    "  version: 3",
+                    "  content:",
+                    "    rid: 4001",
+                    "  references:",
+                    "    version: 2",
+                    "    RefIds:",
+                    "    - rid: 4001",
+                    "      type: {class: FullController, ns: VF.Model.Feature, asm: VRCFury}",
+                    "      data:",
+                    "        version: 4",
+                    "        controllers: []",
+                    "        menus: []",
+                    "        prms: []",
+                };
+                lines.AddRange(faceTracking);
+                lines.Add("        rootBindingsApplyToAvatar: 0");
+                return VrcFuryDocumentReader.Read(UnityYamlScanner.Scan(lines)[0]).Features
+                    .OfType<VrcFuryFullControllerData>().Single();
+            }
+
+            Assert.That(Read().HasFaceTracking, Is.False);
+            Assert.That(Read("        faceTrackingMeshes: []", "        faceTrackingBlendshapeSets: []")
+                .HasFaceTracking, Is.False);
+            Assert.That(Read(
+                "        faceTrackingMeshes:",
+                "        - version: 1",
+                "          id: ",
+                "          objRef: {fileID: 4300000}",
+                "        faceTrackingBlendshapeSets: []").HasFaceTracking, Is.True);
+        }
+
+        [Test]
         public void AToggleBecomesAResolvedToggleWithBothSides()
         {
             AvatarConversionPlan plan = AvatarConversionPlanner.Plan(FixturePath);
