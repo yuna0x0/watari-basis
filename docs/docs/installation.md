@@ -8,6 +8,12 @@ Watari installs into a Basis project as a Unity package. It builds against the B
 Jiggle Physics and HVR Basis Comms, all of which ship with the Basis framework, so a Basis
 project already has everything it needs.
 
+A Basis project is the `Basis` folder inside the Basis framework download, opened in Unity, as
+described in Basis's [avatar setup](https://docs.basisvr.org/en/docs/avatar/setup). In any other
+project ALCOM reports **Some packages are not found** for `com.basis.sdk`,
+`dev.hai-vr.basis.comms` and `com.gator-dragon-games.jigglephysics`. Basis's own VPM listing does
+not satisfy them: its `0.0.1` is a May 2026 build that Watari does not compile against.
+
 :::danger Do not install the VRChat SDK into a Basis project
 
 It is not needed. VRChat components arrive as missing scripts, which is what Watari reads.

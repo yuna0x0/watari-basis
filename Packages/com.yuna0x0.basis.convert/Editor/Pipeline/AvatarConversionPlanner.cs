@@ -2878,7 +2878,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
         /// <summary>
         /// A Vixxy control inside an avatar is initialised by HVRAvatarComms, which the
-        /// HVR.Networking prefab carries. Without it every control is inert.
+        /// HVR.Networking prefab carries. Without it a control is inert, unless Basis adds
+        /// comms at load for face tracking it detects on the avatar.
         /// </summary>
         private static void WarnIfCommsMissing(AvatarConversionPlan plan)
         {

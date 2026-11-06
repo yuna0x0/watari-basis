@@ -35,8 +35,13 @@ Everything here is also reported by the tool. This is the same information in on
 - **Two physics settings are fits**, not conversions. See [Physics](what-converts/physics.md).
 - **Wide angle limits are dropped** rather than clamped to something tighter.
 - **A head chop applies in VR and on desktop alike**, whichever VRChat limited it to.
-- **Eyes turn up to 25 degrees on every avatar.** Basis has no per-avatar limit; a VRM built for
-  10 degrees shows white when its eyes track past that.
+- **A wearer can override the eye limit.** Watari writes the avatar's eye look range from the
+  source. Basis's **Override Eye Look Range** setting replaces it on the wearer's own view.
+- **Face tracking can reset a toggle's blendshapes.** Basis adds face tracking to an avatar whose
+  blendshapes have ARKit or Unified Expressions names. When tracking stops, every matched shape
+  goes to 0, including one a converted toggle set, until the toggle changes again.
+- **Idle Expressions add to smile, joy, surprise and sad shapes**, which a converted VRM
+  expression selector may also set. The setting is on by default.
 - **Global PhysBone colliders stay local.** Basis makes hands, arms and feet global on its own.
 - **Material properties are applied through a property block**, which covers every material on a
   renderer. A renderer with more than one material is reported.
@@ -119,5 +124,9 @@ Basis listens for OSC on port 9000 and routes `/avatar/parameters/<name>` to the
 whose address is `<name>`, on an avatar carrying HVR Basis Comms's Automatic Face Tracking or
 OSC Acquisition component. A converted control's address is its parameter name, so an app that
 drove the parameter on VRChat drives the control here.
+
+Basis adds Automatic Face Tracking itself to an avatar with matching face blendshapes or humanoid
+eye bones, unless the wearer turns off **Auto-Detect Face Tracking** and **Auto-Detect Eye
+Tracking**.
 
 Basis reads float arguments only; bool and int messages are dropped.
