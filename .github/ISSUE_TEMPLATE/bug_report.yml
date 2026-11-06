@@ -1,0 +1,76 @@
+name: Bug report
+description: A conversion gave a wrong result, or Watari failed.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: report
+    attributes:
+      label: Conversion report
+      description: >-
+        Press **Copy report** in the Watari window and paste it here. Remove any names or paths
+        you do not want public.
+      render: markdown
+
+  - type: input
+    id: watari
+    attributes:
+      label: Watari version
+      description: The first line of the report, or the bottom of the window.
+      placeholder: "0.13.1"
+    validations:
+      required: true
+
+  - type: input
+    id: basis
+    attributes:
+      label: Basis version
+      description: The release you downloaded, or the commit you are on.
+      placeholder: "lts-20260916, or developer at d8b718d4f"
+    validations:
+      required: true
+
+  - type: input
+    id: unity
+    attributes:
+      label: Unity version
+      placeholder: "6000.7.0b7"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How Watari was installed
+      options:
+        - VPM (ALCOM, vrc-get or VPM CLI)
+        - OpenUPM
+        - Git URL
+        - .unitypackage
+    validations:
+      required: true
+
+  - type: input
+    id: sources
+    attributes:
+      label: Source tools on the avatar
+      description: The versions the avatar was set up with, if known.
+      placeholder: "VRChat SDK 3.10.6, VRCFury 1.1442.0, Modular Avatar 1.18.7"
