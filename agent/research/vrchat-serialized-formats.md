@@ -100,7 +100,12 @@ what VRChat's factor means too.
 
 ## Checking a new SDK release
 
-Done for 3.10.5 on 2026-09-05, against 3.8.0. The package zips are on GitHub
+Done for 3.10.5 on 2026-09-05, against 3.8.0, and for 3.10.6 on 2026-11-06, against 3.10.5. 3.10.6
+adds the descriptor's Face Tracking section (`enableFaceTracking` and the blendshape sets),
+`lipSync` 5 (visemes from face tracking sets), `eyelidType` 3 and `customEyeLookSettings.eyeGazeMode`
+(0 bones, 1 face tracking, 2 both), constraint `SmoothingFactor`, expression parameter bit width and
+lerp duration, contact receiver material writes and advanced parameters, and Raycast 1.1. No script
+guid or fileID changed. The package zips are on GitHub
 (`vrchat/packages` releases) and the official VPM listing at `packages.vrchat.com/official`
 names the newest; both need a User-Agent header. Unzip `Runtime/VRCSDK/Plugins/*.dll` from
 `com.vrchat.base` and `com.vrchat.avatars` into a scratch folder, never into the Basis project,

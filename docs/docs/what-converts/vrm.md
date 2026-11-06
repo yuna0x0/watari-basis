@@ -66,6 +66,10 @@ that stiffens toward its tip keeps that shape instead of being averaged.
 rig simulates everything under its root. An accessory hanging off a hair bone would start
 swinging, so it is excluded to leave it as still as VRM left it.
 
+**An angle limit is read only if UniVRM imported it.** UniVRM 0.131.4 imports a limit whose
+`specVersion` is `1.0`. A limit written as `1.0-draft`, as UniVRM 0.131.3 exports it, is dropped
+on import, so the converted rig has none.
+
 ## Expressions
 
 A VRM expression is a set of blendshape weights. The avatar's expressions become one Vixxy

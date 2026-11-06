@@ -22,7 +22,7 @@ namespace yuna0x0.Basis.Convert
         /// which ones were.
         /// </summary>
         public const string CheckedAgainst =
-            "VRChat SDK 3.10.5, UniVRM 0.131.3, Dynamic Bone 1.3.4, Modular Avatar 1.18.7, VRCFury 1.1431.0";
+            "VRChat SDK 3.10.6, UniVRM 0.131.4, Dynamic Bone 1.3.4, Modular Avatar 1.18.7, VRCFury 1.1442.0";
 
         /// <summary>The package version, from its manifest.</summary>
         public static string Version =>

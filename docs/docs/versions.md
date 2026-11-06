@@ -11,12 +11,12 @@ the same versions.
 
 | Source | Checked against |
 |---|---|
-| [VRChat SDK](https://creators.vrchat.com/sdk/) | 3.10.5 |
-| [UniVRM](https://github.com/vrm-c/UniVRM) | 0.131.3 |
+| [VRChat SDK](https://creators.vrchat.com/sdk/) | 3.10.6 |
+| [UniVRM](https://github.com/vrm-c/UniVRM) | 0.131.4 |
 | [Dynamic Bone](https://assetstore.unity.com/packages/tools/animation/dynamic-bone-16743) | 1.3.4 |
 | [Modular Avatar](https://modular-avatar.nadena.dev/) | 1.18.7, with [NDMF](https://ndmf.nadena.dev/) 1.14.8 |
-| [VRCFury](https://vrcfury.com/) | 1.1431.0 |
-| Basis | `developer` at [eac8e38cc](https://github.com/BasisVR/Basis/commit/eac8e38ccd72f6dac51ce813c06259ff110a2607), 2026-10-07 |
+| [VRCFury](https://vrcfury.com/) | 1.1442.0 |
+| Basis | `developer` at [d8b718d4f](https://github.com/BasisVR/Basis/commit/d8b718d4fb6a16e6f2339d4431ffd1212d97c69d), 2026-11-06 |
 
 The Basis row covers what the converter writes to as well as what it reads: Jiggle Physics and HVR
 Basis Comms are part of the Basis repository and change with it, at version numbers that do not
@@ -34,7 +34,8 @@ given where the release notes state it.
 | Expression menu and parameters | Toggles, selectors and radials are rebuilt as Vixxy controls. See [Menu toggles](what-converts/menu-toggles.md) |
 | Contacts, box-shaped ones included (3.10.4) | Reported as `contacts.dropped` |
 | VRC Head Chop | Converts to a Basis Head Chop |
-| Constraints, all six types (3.7.0) | Convert to Basis constraints |
+| Constraints, all six types (3.7.0) | Convert to Basis constraints. Smoothing (3.10.6) is reported as `constraint.smoothing.dropped` |
+| Face Tracking on the descriptor (3.10.6) | Reported as `descriptor.faceTracking`; face tracking visemes, eyelids and gaze are reported on their own |
 | Per-platform overrides (3.8.1) and impostor settings | Reported as `vrchat.buildSettings` |
 | VRC Raycast (3.10.3) | Reported as `raycast.dropped` |
 | Global PhysBone colliders (3.10.4) | Reported as `collider.global.dropped` |
@@ -53,5 +54,6 @@ for which are rebuilt, which are left to Modular Avatar and which are reported.
 
 ## VRCFury
 
-Toggles, Full Controllers and Armature Links as 1.1431.0 writes them. Files written by an older
+Toggles, Full Controllers and Armature Links as 1.1442.0 writes them. A Full Controller's face
+tracking settings are reported as `vrcfury.fullController.faceTracking`. Files written by an older
 VRCFury are read the way VRCFury upgrades them. See [VRCFury](what-converts/vrcfury.md).
