@@ -28,6 +28,18 @@ namespace yuna0x0.Basis.Convert.Writers
     {
         public const int VisemeCount = 15;
 
+        /// <summary>
+        /// A root-space eye position as Basis measures one (BasisAutomaticSetupAvatarEditor): the
+        /// point's world offset from the root with the root's rotation taken out and its scale
+        /// kept, so an avatar scaled on its root gets its real eye height.
+        /// </summary>
+        public static Vector2 EyePositionInMetres(Transform root, Vector2 rootSpace)
+        {
+            Vector3 world = root.TransformPoint(new Vector3(0f, rootSpace.x, rootSpace.y));
+            Vector3 metres = Quaternion.Inverse(root.rotation) * (world - root.position);
+            return new Vector2(metres.y, metres.z);
+        }
+
         public static BasisAvatar Write(
             ResolvedBasisAvatar avatar, string undoName = "Convert avatar descriptor")
         {
@@ -49,7 +61,7 @@ namespace yuna0x0.Basis.Convert.Writers
             Undo.SetCurrentGroupName(undoName);
 
             BasisAvatarPlan plan = avatar.Plan;
-            component.AvatarEyePosition = plan.EyePosition;
+            component.AvatarEyePosition = EyePositionInMetres(avatar.Root.transform, plan.EyePosition);
 
             if (avatar.VisemeMesh != null)
             {

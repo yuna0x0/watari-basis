@@ -18,8 +18,9 @@ namespace yuna0x0.Basis.Convert.Model
         public long AvatarRootFileId;
 
         /// <summary>
-        /// Basis stores the eye position as height above the root and forward offset, which is
-        /// VRChat's view position with its sideways component discarded.
+        /// Height above the root and forward offset, in the root's own unscaled space: VRChat's
+        /// view position with its sideways component discarded. The writer scales it by the
+        /// avatar root, since Basis stores the distance in metres.
         /// </summary>
         public Vector2 EyePosition;
 

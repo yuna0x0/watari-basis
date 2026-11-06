@@ -1569,8 +1569,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
         }
 
         /// <summary>
-        /// The height and depth of a point offset from the head bone, measured in the avatar
-        /// root's space. VRM states the eyes that way and Basis stores them this way.
+        /// The height and depth of a point offset from the head bone, in the avatar root's
+        /// unscaled space. VRM states the eyes that way; the writer scales the result by the root.
         /// </summary>
         public static Vector2 EyePositionFrom(Transform root, Transform head, Vector3 offset)
         {

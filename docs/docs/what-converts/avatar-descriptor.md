@@ -9,7 +9,7 @@ becomes a `BasisAvatar`, the component Basis loads an avatar through.
 
 ## What carries across
 
-- **View position**, as the avatar's eye position.
+- **View position**, as the avatar's eye position, scaled by the avatar root's scale.
 - **Visemes**, all fifteen. Both platforms order them the same way, so they map by position
   rather than by name.
 - **Blink**, taken from the eyelid blendshape the descriptor names.

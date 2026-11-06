@@ -37,6 +37,25 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void TheEyePositionIsScaledByTheAvatarRoot()
+        {
+            // The view position is in the root's own space; Basis stores metres.
+            GameObject root = new GameObject("Avatar");
+            _spawned.Add(root);
+            root.transform.localScale = Vector3.one * 0.5f;
+            root.transform.SetPositionAndRotation(new Vector3(3f, 1f, -2f), Quaternion.Euler(0f, 90f, 0f));
+
+            BasisAvatar avatar = BasisAvatarWriter.Write(new ResolvedBasisAvatar
+            {
+                Root = root,
+                Plan = new BasisAvatarPlan { EyePosition = new Vector2(1.6f, 0.1f) },
+            });
+
+            Assert.That(avatar.AvatarEyePosition.x, Is.EqualTo(0.8f).Within(1e-5f));
+            Assert.That(avatar.AvatarEyePosition.y, Is.EqualTo(0.05f).Within(1e-5f));
+        }
+
+        [Test]
         public void APlannedEyeLimitEnablesAndSetsTheAvatarsAngle()
         {
             BasisAvatar avatar = Write(12f);
