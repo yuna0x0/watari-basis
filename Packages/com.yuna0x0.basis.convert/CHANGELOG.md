@@ -6,6 +6,13 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-06
+
+### Fixed
+
+- A toggle guarded by `UserFaceTracking`, `UserEyeTracking` or `IsAnimatorEnabled` is rebuilt and
+  the guard reported, as for VRChat's other built-in parameters.
+
 ## [0.13.0] - 2026-11-06
 
 ### Added
@@ -466,7 +473,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.1
 [0.13.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.0
 [0.12.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.2
 [0.12.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.1
