@@ -6,6 +6,25 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-06
+
+### Added
+
+- VRChat SDK 3.10.6 face tracking is reported: `descriptor.faceTracking`,
+  `descriptor.lipSync.faceTracking`, `descriptor.eyelids.faceTracking`, `descriptor.eyeGaze.faceTracking`.
+- Constraint smoothing is reported: `constraint.smoothing.dropped`.
+- A VRCFury Full Controller's face tracking settings are reported: `vrcfury.fullController.faceTracking`.
+
+### Fixed
+
+- Face tracking lip sync and eyelids are no longer reported as unsupported or missing.
+- Eyes gazing by face tracking get no eye look range measured from the eye bones.
+
+### Changed
+
+- Checked against VRChat SDK 3.10.6, UniVRM 0.131.4 and VRCFury 1.1442.0.
+- Checked against Basis `developer` at d8b718d4f, on Unity 6000.7.0b7.
+
 ## [0.12.2] - 2026-10-07
 
 ### Changed
@@ -447,7 +466,11 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.0
+[0.12.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.2
+[0.12.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.1
+[0.12.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.0
 [0.11.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.11.1
 [0.11.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.11.0
 [0.10.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.10.0
