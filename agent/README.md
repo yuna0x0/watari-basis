@@ -11,10 +11,21 @@ already known. Aimed at AI agents, useful to anyone.
 | `plans/` | design documents for current and upcoming work |
 | `decisions/` | what was decided, why, and what was rejected |
 | `worklog/` | `YYYY-MM-DD.md` per session: what happened, what broke, where it stopped |
+| `compliance/` | sources and licence terms for the conversion work, dated |
 
 `decisions/` is append-only. Reversing a decision means adding a new one that supersedes it, and
 saying so in both. Research notes are corrected in place when they turn out to be wrong, rather
 than accumulating contradictions.
+
+## Branches
+
+Notes are committed to `main`, whatever branch the work is on. Commit them as docs-only commits
+and rebase the work branch onto `main`; the work branch carries code, tests and user docs. Every
+branch then reads the same notes, and none are lost when a branch is dropped.
+
+A note about unmerged work names its branch. A worklog section about a branch says so in its first
+line. Notes on `main` may name code that exists only on that branch. A branch that notes refer to
+is pushed, so that its code can be read. When it merges or is dropped, that day's worklog says so.
 
 ## Accuracy
 
@@ -39,5 +50,3 @@ or at least say that a number came from one sample.
 
 Test fixtures are hand-authored minimal YAML in the package's test folder. Findings from real
 avatars are recorded here as prose and numbers, never as committed assets.
-
-`compliance/record.md` records sources and licence terms for the conversion work, as dated evidence.

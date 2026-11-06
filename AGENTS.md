@@ -91,6 +91,8 @@ working on it:
 
 Check `decisions/` before arguing for an approach; it may already have been considered.
 
+Notes go to `main` even when the work is on a branch; see Branches in `agent/README.md`.
+
 Research notes record what was true when written. Verify anything that names a file, field or
 flag before relying on it. Basis develops on a `developer` branch, all of its packages are
 version `0.0.1`, and several fields this package touches are private or internal and reached
