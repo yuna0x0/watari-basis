@@ -27,5 +27,4 @@ the conversion writes.
 Out of scope: Basis, Unity, the VRChat SDK, VRCFury, Modular Avatar and UniVRM. Report those to
 their own projects.
 
-The policy for all yuna0x0 projects is at
-[yuna0x0.com/posts/security](https://yuna0x0.com/posts/security/).
+The policy for all yuna0x0 projects is at https://yuna0x0.com/posts/security/.
