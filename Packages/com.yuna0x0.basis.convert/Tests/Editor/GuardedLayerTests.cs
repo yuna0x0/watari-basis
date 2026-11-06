@@ -71,6 +71,32 @@ namespace yuna0x0.Basis.Convert.Tests
         }
 
         [Test]
+        public void AToggleGuardedByFaceTrackingIsStillTheTogglesLayer()
+        {
+            // UserFaceTracking is a VRChat built-in, documented with UserEyeTracking.
+            AnimatorController controller = Controller();
+            controller.AddParameter("Expression", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("UserFaceTracking", AnimatorControllerParameterType.Bool);
+
+            AnimatorControllerLayer layer = controller.layers[0];
+            AnimatorState off = layer.stateMachine.AddState("Off");
+            AnimatorState on = layer.stateMachine.AddState("On");
+            layer.stateMachine.defaultState = off;
+
+            AnimatorStateTransition toOn = off.AddTransition(on);
+            toOn.AddCondition(AnimatorConditionMode.If, 0f, "Expression");
+            toOn.AddCondition(AnimatorConditionMode.IfNot, 0f, "UserFaceTracking");
+
+            AnimatorStateTransition toOff = on.AddTransition(off);
+            toOff.AddCondition(AnimatorConditionMode.IfNot, 0f, "Expression");
+
+            var found = FxControllerReader.FindToggleLayers(controller, new[] {"Expression"});
+
+            Assert.That(found.Count, Is.EqualTo(1));
+            Assert.That(found[0].GuardedBy, Is.EqualTo(new[] {"UserFaceTracking"}));
+        }
+
+        [Test]
         public void ALayerAGestureSteersOnItsOwnIsLeftAlone()
         {
             // One transition here is decided by the gesture alone, so the layer belongs to the

@@ -12,7 +12,8 @@ namespace yuna0x0.Basis.Convert.Sources
     /// the menu parameter's layer, and the guard is what gets reported.
     /// </para>
     /// <para>
-    /// Names are the SDK's own, taken from what an avatar's controllers actually reference. A
+    /// Names are the SDK's own, taken from what an avatar's controllers actually reference and
+    /// from VRChat's animator parameter documentation (checked 2026-11-06). A
     /// name this does not know is treated as the avatar's own parameter, which is the safe way
     /// round: an unknown name makes a layer look steered by two things and leaves it alone.
     /// </para>
@@ -47,6 +48,9 @@ namespace yuna0x0.Basis.Convert.Sources
             "Earmuffs",
             "IsOnFriendsList",
             "AvatarVersion",
+            "IsAnimatorEnabled",
+            "UserEyeTracking",
+            "UserFaceTracking",
             "ScaleModified",
             "ScaleFactor",
             "ScaleFactorInverse",
