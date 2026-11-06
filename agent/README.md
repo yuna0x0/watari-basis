@@ -27,6 +27,12 @@ A note about unmerged work names its branch. A worklog section about a branch sa
 line. Notes on `main` may name code that exists only on that branch. A branch that notes refer to
 is pushed, so that its code can be read. When it merges or is dropped, that day's worklog says so.
 
+This applies to agents working from another repository too. Before writing a note here, run
+`git branch --show-current` in this repository. If it is not `main`, do not write into that
+working tree: add a worktree on `main` (`git worktree add <path> main`), write and commit the note
+there, and remove the worktree. Do not switch the branch of the existing checkout; it may be
+symlinked into a running Unity project.
+
 ## Accuracy
 
 These notes record what was true when written, against a framework that moves. Verify before
