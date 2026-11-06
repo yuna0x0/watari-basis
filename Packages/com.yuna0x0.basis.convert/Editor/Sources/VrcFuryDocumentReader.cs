@@ -170,6 +170,12 @@ namespace yuna0x0.Basis.Convert.Sources
         public bool AlignPosition;
         public bool AlignRotation;
         public bool AlignScale;
+
+        /// <summary>
+        /// Before version 7 alignment was Keep Bone Offsets, whose Auto setting meant: align when
+        /// the whole tree merges. The planner sets the three flags once that is decided.
+        /// </summary>
+        public bool AlignFollowsRecursive;
         public bool RemoveParentConstraints = true;
         public string RemoveBoneSuffix = string.Empty;
     }
@@ -581,10 +587,20 @@ namespace yuna0x0.Basis.Convert.Sources
             {
                 // Before version 7 the mode field decided: merging as children or rewriting the
                 // skin meant the whole hierarchy, reparenting the root meant that one bone, and
-                // Auto depended on the live meshes, which this cannot see.
-                int linkMode = data.Int("linkMode", 4);
+                // Auto depends on the avatar's meshes, which the planner checks. The upgrade
+                // steps are VRCFury's own (ArmatureLink.Upgrade).
+                int linkMode = version < 1
+                    ? (data.Bool("useBoneMerging") ? 0 : 1)
+                    : data.Int("linkMode", 4);
                 link.RecursiveKnown = linkMode != 4;
                 link.Recursive = linkMode == 0 || linkMode == 1 || linkMode == 2;
+
+                // Keep Bone Offsets: 0 Auto, 1 Yes, 2 No. Before version 3 it was a bool.
+                int keepOffsets = version < 3
+                    ? (data.Bool("keepBoneOffsets") ? 1 : 2)
+                    : data.Int("keepBoneOffsets2", 0);
+                link.AlignFollowsRecursive = keepOffsets == 0;
+                link.AlignPosition = link.AlignRotation = link.AlignScale = keepOffsets == 2;
             }
 
             return link;

@@ -129,13 +129,22 @@ namespace yuna0x0.Basis.Convert.Pipeline
             bool recursive = data.Recursive;
             if (!data.RecursiveKnown)
             {
-                // The older Auto mode: merge the whole hierarchy when the clothing's meshes are
-                // bound to bones outside it, which is what VRCFury checks at build.
-                recursive = HasExternalSkinBoneReference(propBone, clothingRoot);
+                // The older Auto mode: merge the whole hierarchy when a mesh outside the link
+                // root is skinned to it, as VRCFury decides on upgrade. VRCFury looks across the
+                // avatar, so the scanned hierarchy is searched where the bone can be found in it.
+                recursive = plan.Locator != null
+                    && plan.Locator.TryLive(link.Source, propBone, out Transform liveProp)
+                        ? HasExternalSkinBoneReference(liveProp, plan.Locator.Root)
+                        : HasExternalSkinBoneReference(propBone, clothingRoot);
                 plan.Diagnostics.Add(DiagnosticSeverity.Approximated, "vrcfury.armatureLink.auto",
                     $"The Armature Link on {planned.PropName} in {link.Source.Name} was written in "
                     + "VRCFury's old Auto mode. The clothing's meshes decided: "
                     + (recursive ? "the whole bone tree is merged." : "only the root bone is moved."));
+            }
+
+            if (data.AlignFollowsRecursive)
+            {
+                planned.AlignPosition = planned.AlignRotation = planned.AlignScale = recursive;
             }
 
             planned.ScaleFactor = ScaleFactorOf(data, recursive, propBone, avatarBone);
@@ -402,33 +411,30 @@ namespace yuna0x0.Basis.Convert.Pipeline
             return bones;
         }
 
-        /// <summary>VRCFury's Auto-mode test: is any skinned mesh bound to bones outside the link root.</summary>
-        private static bool HasExternalSkinBoneReference(Transform propBone, Transform clothingRoot)
+        /// <summary>
+        /// VRCFury's Auto-mode test (ArmatureLink.HasExternalSkinBoneReference): is a skinned
+        /// mesh that is not itself under the link root bound to it or a bone below it.
+        /// </summary>
+        public static bool HasExternalSkinBoneReference(Transform propBone, Transform searchRoot)
         {
-            foreach (SkinnedMeshRenderer skin in clothingRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            foreach (SkinnedMeshRenderer skin in searchRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                bool usesProp = false;
-                bool usesOther = false;
-                foreach (Transform bone in skin.bones)
+                if (skin == null || skin.transform.IsChildOf(propBone))
                 {
-                    if (bone == null)
-                    {
-                        continue;
-                    }
-
-                    if (bone == propBone || bone.IsChildOf(propBone))
-                    {
-                        usesProp = true;
-                    }
-                    else
-                    {
-                        usesOther = true;
-                    }
+                    continue;
                 }
 
-                if (usesProp && usesOther)
+                if (skin.rootBone != null && skin.rootBone.IsChildOf(propBone))
                 {
                     return true;
+                }
+
+                foreach (Transform bone in skin.bones)
+                {
+                    if (bone != null && bone.IsChildOf(propBone))
+                    {
+                        return true;
+                    }
                 }
             }
 

@@ -60,7 +60,7 @@ on the case; the usual one is given.
 | `vrcfury.fullController.faceTracking` | Dropped | A Full Controller's face tracking meshes and blendshape sets were not converted. |
 | `vrcfury.armatureLink` | Mapped | How many Armature Links are applied and how many clothing bones go under the avatar's. |
 | `vrcfury.armatureLink.unresolved` | Warning | The link's target could not be found: the avatar has no humanoid rig, the bone or object is missing, or the clothing was scanned on its own. |
-| `vrcfury.armatureLink.auto` | Approximated | A link in VRCFury's old Auto mode. The clothing's meshes decided whether the whole tree merges. |
+| `vrcfury.armatureLink.auto` | Approximated | A link in VRCFury's old Auto mode. A mesh outside the link root skinned to it merges the whole tree, as VRCFury decides. |
 | `vrcfury.armatureLink.physBone` | Approximated | Bones inside a PhysBone chain stay with the chain instead of going under their own avatar bone. |
 | `vrcfury.armatureLink.attached` | Approximated | Linked bones carry renderers, which now follow the avatar bone and are no longer under the clothing's own object. |
 | `vrcfury.armatureLink.constraintRemoved` | Mapped | Constraints on linked bones were left out, as VRCFury removes them. |

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using UnityEngine;
 using yuna0x0.Basis.Convert.Model;
 using yuna0x0.Basis.Convert.Pipeline;
 using yuna0x0.Basis.Convert.Sources;
@@ -133,6 +134,89 @@ namespace yuna0x0.Basis.Convert.Tests
                 "          id: ",
                 "          objRef: {fileID: 4300000}",
                 "        faceTrackingBlendshapeSets: []").HasFaceTracking, Is.True);
+        }
+
+        private static VrcFuryArmatureLinkData ReadLink(params string[] fields)
+        {
+            List<string> lines = new List<string>
+            {
+                "--- !u!114 &110006",
+                "MonoBehaviour:",
+                "  m_GameObject: {fileID: 100000}",
+                "  m_Script: {fileID: 11500000, guid: d9e94e501a2d4c95bff3d5601013d923, type: 3}",
+                "  version: 3",
+                "  content:",
+                "    rid: 6001",
+                "  references:",
+                "    version: 2",
+                "    RefIds:",
+                "    - rid: 6001",
+                "      type: {class: ArmatureLink, ns: VF.Model.Feature, asm: VRCFury}",
+                "      data:",
+            };
+            foreach (string field in fields)
+            {
+                lines.Add("        " + field);
+            }
+
+            return VrcFuryDocumentReader.Read(UnityYamlScanner.Scan(lines)[0]).Features
+                .OfType<VrcFuryArmatureLinkData>().Single();
+        }
+
+        [Test]
+        public void AnOldAutoLinkLeavesRecursionAndAlignmentToThePlanner()
+        {
+            VrcFuryArmatureLinkData link = ReadLink(
+                "version: 6", "propBone: {fileID: 200000}", "linkMode: 4", "keepBoneOffsets2: 0");
+
+            Assert.That(link.RecursiveKnown, Is.False);
+            Assert.That(link.AlignFollowsRecursive, Is.True);
+        }
+
+        [Test]
+        public void AnOldLinkTakesAlignmentFromKeepBoneOffsets()
+        {
+            VrcFuryArmatureLinkData merged = ReadLink(
+                "version: 6", "propBone: {fileID: 200000}", "linkMode: 0", "keepBoneOffsets2: 2");
+            Assert.That(merged.RecursiveKnown && merged.Recursive, Is.True);
+            Assert.That(merged.AlignFollowsRecursive, Is.False);
+            Assert.That(merged.AlignPosition && merged.AlignRotation && merged.AlignScale, Is.True);
+
+            // Before version 3 Keep Bone Offsets was a bool: kept offsets mean no alignment.
+            VrcFuryArmatureLinkData kept = ReadLink(
+                "version: 2", "propBone: {fileID: 200000}", "linkMode: 3", "keepBoneOffsets: 1");
+            Assert.That(kept.RecursiveKnown && !kept.Recursive, Is.True);
+            Assert.That(kept.AlignPosition || kept.AlignRotation || kept.AlignScale, Is.False);
+        }
+
+        [Test]
+        public void AutoMergesWhenAMeshBesideTheArmatureIsSkinnedToIt()
+        {
+            // Clothing laid out as it usually is: the mesh beside its armature, skinned only to it.
+            GameObject clothing = new GameObject("Clothing");
+            try
+            {
+                Transform armature = new GameObject("Armature").transform;
+                armature.SetParent(clothing.transform, false);
+                Transform hips = new GameObject("Hips").transform;
+                hips.SetParent(armature, false);
+                GameObject pants = new GameObject("Pants");
+                pants.transform.SetParent(clothing.transform, false);
+                SkinnedMeshRenderer skin = pants.AddComponent<SkinnedMeshRenderer>();
+                skin.bones = new[] { hips };
+
+                Assert.That(ArmatureLinkPlanner.HasExternalSkinBoneReference(armature, clothing.transform),
+                    Is.True);
+
+                // A mesh inside the link root does not count.
+                pants.transform.SetParent(armature, false);
+                Assert.That(ArmatureLinkPlanner.HasExternalSkinBoneReference(armature, clothing.transform),
+                    Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(clothing);
+            }
         }
 
         [Test]

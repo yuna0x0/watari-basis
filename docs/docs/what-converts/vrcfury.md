@@ -57,6 +57,8 @@ avatar's bones. The target is **Armature links** in the window.
 - A matched bone is aligned to its avatar bone as the link asks and renamed
   `[VF] <bone> from <clothing>`.
 - A bone with no match stays under its clothing parent.
+- A link saved in the old Auto mode merges the whole tree when a mesh outside the link root is
+  skinned to it, as VRCFury decides when it upgrades the link: `vrcfury.armatureLink.auto`.
 - A bone inside a PhysBone chain stays with the chain: `vrcfury.armatureLink.physBone`.
 - The clothing's prefab instance is unpacked first, because Unity does not allow a bone to
   leave one: `apply.unpacked`. Undo restores it. Converting the avatar again no longer reads that
