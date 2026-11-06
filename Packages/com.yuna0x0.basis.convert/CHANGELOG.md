@@ -6,6 +6,15 @@ Notable changes to this package. The format follows
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-11-06
+
+### Fixed
+
+- Rigs, constraints and links land on their own objects when a scene instance adds or removes
+  children. An object removed on the instance is reported: `apply.removedOnInstance`.
+- An Armature Link in VRCFury's old Auto mode merges and aligns as VRCFury decides.
+- The eye position is scaled by the avatar root's scale.
+
 ## [0.13.1] - 2026-11-06
 
 ### Fixed
@@ -473,7 +482,8 @@ First release.
 - Two physics settings are fits rather than conversions, exposed as adjustable weights.
 - Component data is read from prefab files, so the avatar must still be linked to its prefab.
 
-[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/yuna0x0/watari-basis/compare/v0.13.2...HEAD
+[0.13.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.2
 [0.13.1]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.1
 [0.13.0]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.13.0
 [0.12.2]: https://github.com/yuna0x0/watari-basis/releases/tag/v0.12.2
