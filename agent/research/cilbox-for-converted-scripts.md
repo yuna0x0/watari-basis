@@ -1,6 +1,9 @@
 # Cilbox, for converted world scripts
 
-Basis `developer` at `eac8e38cc` (Unity 6000.7.0b2). Paths are relative to `Basis/Basis/Packages/`;
+Basis `developer` at `eac8e38cc` (Unity 6000.7.0b2), rechecked against `d8b718d4f` (6000.7.0b7) on
+2026-11-06 by reading the diff. `C:` references in BoxInitialize and the export postprocessor, `P:`
+and `BC:`/`BS:` are at `d8b718d4f`; other `C:` references are at `eac8e38cc`. Paths are relative to
+`Basis/Basis/Packages/`;
 `C:` is `com.cnlohr.cilbox/Cilbox.cs`, `U:` `CilboxUsage.cs`, `P:` `CilboxProxy.cs`, `T:`
 `CilboxUtil.cs`, `BC:`/`BS:` the Basis allow-lists `com.basis.shim/Shims/CilboxBasisCommon.cs` and
 `CilboxSceneBasis.cs`.
@@ -9,7 +12,8 @@ Sources: two full read-throughs of the Cilbox source (2026-10-08), and measureme
 tests (`Tests/Editor/CilboxRunTests.cs`: `Conformance`, `Semantics`, `DataContainersRunUnderCilbox`,
 `LockRunsUnderCilbox`), which export a scene through Cilbox and drive it headlessly. **Measured**
 marks a result a test pins; everything else is read from the code. When Basis is updated, those
-tests are the first thing to rerun.
+tests are the first thing to rerun. They have not been rerun against `d8b718d4f`: they call
+`Cilbox.InterpretIID`, which 11747954a replaced with `CilboxClass.InterpretMethod` (`C:2130`).
 
 ## How Cilbox works
 
@@ -24,11 +28,14 @@ covers nested types (`T:1080-1089`).
   assembly** (copied in); methods without bodies (abstract, interface) are skipped. Tokens become
   name and signature strings, resolved again at load. Each script component is replaced by a
   `CilboxProxy` carrying its serialized fields.
-- **Load** (`Cilbox.BoxInitialize`, `C:2268-2527`): resolves every token and checks every native
+- **Load** (`Cilbox.BoxInitialize`, `C:2299-2563`): resolves every token and checks every native
   type, field and method against the allow-list. Load runs at export too (`P:51`), so most load
   errors appear at build time. **There is no isolation: one failure leaves the whole box broken.**
   Static constructors of every class run eagerly at the end, in export order.
-- **Run**: hooks are found by name among the most-derived class's methods (`C:2111`); native calls
+- **Clones**: once a proxy has loaded it drops its serialized data (`P:345`), and a proxy with none
+  does not load (`P:190`). An `Instantiate` of a loaded object carrying scripts gives proxies that
+  never run. Read from the code at `d8b718d4f`; at `eac8e38cc` the data was kept.
+- **Run**: hooks are found by name among the most-derived class's methods (`C:2117`); native calls
   go through reflection and allocate.
 
 ## Three kinds of failure
@@ -40,7 +47,10 @@ covers nested types (`T:1080-1089`).
    breaks the whole box: abstract and interface calls (`C:2478`, **measured**), `GetType()`,
    anything named `*Invoke*`, `MonoBehaviour` methods other than `.ctor`, non-allow-listed static
    readonly fields, generic types with an interpreted argument, static fields typed as an
-   interpreted class (`C:2085`, **measured**).
+   interpreted class (`C:2085`, **measured**). Two exceptions at `d8b718d4f`, read from the code: a
+   method call whose declaring type is unresolvable or refused logs an error and is skipped
+   (`C:2516-2521`), so the box loads and that call fails at run time; a field on such a type throws
+   a NullReferenceException (`C:2381`) before "Illegal field reference" (`C:2390`) is reached.
 3. **Run**: catchable by the script (`catch (Exception)`): exceptions thrown inside native methods,
    the interpreter's NullReference, IndexOutOfRange and DivideByZero, user `throw`. Not catchable:
    every interpreter error (missing opcode, failed cast, disallowed field, timeout, reflection
@@ -121,7 +131,7 @@ which is missing.
 - `[NonSerialized]` is not honoured: public fields are always written. Serialized values overwrite
   field initializers.
 
-**Lifecycle** (`P:498-520`)
+**Lifecycle** (`P:497-519`)
 
 - `Awake` and `Start` both run in Unity's `Start`, back to back; one script's `Start` can precede
   another's `Awake`. The first `OnEnable` is dropped. Nothing runs on an object until it is first
@@ -139,14 +149,23 @@ which is missing.
 
 ## The allow-list
 
-Code, not an asset: `BC:10-318` (types), `BC:320-399` (fields), `BC:401-540` (per-type method
-lists), `BS:12-627` (world additions). A type is refused unless listed (one `*` wildcard per name);
-fields are refused unless `Type.field` is listed; a listed type allows all its methods unless it has
-a method list. Hard refusals (`BC:595-642`): `*Invoke*`, `Application.OpenURL`/`Quit`/`Load*`,
-`GameObject.AddComponent`, `SendMessage`, `BroadcastMessage`, `Animator.GetBehaviour(s)`.
-`Instantiate` is redirected through a sanitising shim; `Debug` and `VideoPlayer` are swapped for
-shims. The world box's `GameObject` allows a listed set (`BS:263-284`); `new GameObject()`,
-`GameObject.Find` and `CreatePrimitive` are refused. Only `System.Exception` among exception types.
+Code, not an asset: `BC:14-356` (types), `BC:358-503` (fields), `BC:505-779` (per-type method
+lists), `BS:14-197`, `BS:199-265` and `BS:267` onward (world additions). The checks take a `Type`
+and match its `GetSanitizedTypeName` (`BC:857-906`). A type is refused unless listed (one `*`
+wildcard per name); fields are refused unless `Type.field` is listed; a listed type allows all its
+methods unless it has a method list. Curated refusals (`BC:1025-1066`): `*Invoke*`,
+`Application.Quit`/`Unload`/`Load*` and similar, `GameObject.AddComponent`, `SendMessage`,
+`BroadcastMessage`, `Animator.GetBehaviour(s)`. `Application.OpenURL` is redirected to
+`BasisExternalLinkShim.OpenURL`, a link the viewer confirms (`BC:928`). `Instantiate` is redirected
+through a sanitising shim; `Debug` and `VideoPlayer` are swapped for shims. The world box's
+`GameObject` allows a listed set (`BS:272-290`); `new GameObject()`, `GameObject.Find` and
+`CreatePrimitive` are refused. Only `System.Exception` among exception types.
+
+**Consent** (from `d8b718d4f`): every refusal above goes through `Beyond` (`BC:811`). During play, a
+viewer with **AllowUntrustedScriptPermissions** on (off by default) can grant an off-list item
+(`CilboxBasisConsent`). Never grantable: `hardDeniedTypes` (`BC:829-855`), pointer types and
+signatures containing `*`. At edit time and at export, off-list items are refused as before, so the
+load check still sees them as failures.
 
 ## Basis APIs reachable from a world script
 
@@ -166,10 +185,13 @@ shims. The world box's `GameObject` allows a listed set (`BS:263-284`); `new Gam
   false and sends only log an error.
 - **Buttons:** `BasisInteractableButton.ButtonDown`/`ButtonUp` (`+=` a script method). **Pickups:**
   `BasisPickupInteractable.OnInteractStartEvent`/`OnInteractEndEvent`/`OnPickupUse` (`AddListener`);
-  its methods are blocked, `enabled` works. **Seats:** `BasisSeat` (poll). **Mirror:**
+  its methods other than `Drop` are blocked (`BS:384`), `enabled` and
+  `BasisInteractableObject.InteractableEnabled` work. **Seats:** `BasisSeat` (poll). **Mirror:**
   `BasisSDKMirror`.
-- **Not reachable:** URP `Volume`, any respawn or teleport event, persistent storage, controller or
-  mouse input other than `Keyboard`.
+- **Shims:** the world box allows `Basis.Shims.*` (`BS:48`), which at `d8b718d4f` includes
+  persistent storage (`BasisSaveShim`, `BasisServerStorageShim`) and input (`BasisInputShim`,
+  `BasisControllerInputShim`, `BasisDesktopInputShim`, `BasisPlayspaceInputShim`).
+- **Not reachable:** URP `Volume`, any respawn or teleport event.
 - **Triggers:** the local player is one CharacterController on the `LocalPlayer` root, layer 3,
   colliding with Default; identify it with `other.gameObject ==
   BasisLocalPlayer.Instance.gameObject`. Remote players have no colliders.

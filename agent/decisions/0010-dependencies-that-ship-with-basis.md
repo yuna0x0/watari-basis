@@ -78,3 +78,12 @@ If Basis ever unbundles Haï's Comms package, the fix is that split: `VixxyWrite
 mapper and the planner's toggle path move into an assembly constrained on a symbol declared
 through `versionDefines`, and the rest keeps working without toggles. Nothing else has to move,
 because Vixxy is only touched in those places.
+
+## Correction, 2026-11-06
+
+"All of those live inside the Basis repository rather than in a listing" was wrong when written:
+Basis has published a VPM listing (`https://raw.githubusercontent.com/BasisVR/Basis/vpm/vpm-repo.json`)
+since 2026-05. It holds one `0.0.1` of each package, built at tag `vpm-v0` (2026-05-12), and
+weekly `0.0.1-dev.<year>.W<week>.<run>` versions. That `0.0.1` predates `EyeMaxLookAngle`, so a
+project resolved from it cannot compile Watari. The decision stands: a Basis framework checkout
+carries the three packages at the declared versions.
