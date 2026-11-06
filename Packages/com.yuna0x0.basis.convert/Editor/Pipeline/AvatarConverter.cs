@@ -51,9 +51,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
     /// Applies a plan, producing real components.
     /// <para>
     /// The plan is read from a prefab asset, but the components are written onto whichever
-    /// hierarchy is being converted, usually a scene instance of that prefab. The two have the
-    /// same shape, so each transform is located in the target by the sibling-index path it has
-    /// in the source. Names are not used, since avatars repeat bone names.
+    /// hierarchy is being converted, usually a scene instance of that prefab. Each transform is
+    /// located in the target through the instance's prefab links (<see cref="PrefabCorrespondence"/>),
+    /// and by its sibling-index path where the target is not an instance. Names are not used,
+    /// since avatars repeat bone names.
     /// </para>
     /// </summary>
     public static class AvatarConverter
@@ -228,8 +229,18 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             foreach (PlannedJiggleRig planned in plan.SelectedRigs())
             {
-                if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
-                        out Transform host)
+                bool hostFound = TryTranslate(plan, roots, target, planned.Source,
+                    planned.SourceHost, out Transform host, out bool hostRemoved);
+                if (hostRemoved)
+                {
+                    result.RigsSkipped++;
+                    result.Diagnostics.Add(DiagnosticSeverity.Mapped, "apply.removedOnInstance",
+                        $"The PhysBone for {planned.Describe()} is on an object removed from this "
+                        + "instance. No rig was written.");
+                    continue;
+                }
+
+                if (!hostFound
                     || !TryTranslate(plan, roots, target, planned.Source, planned.SourceRootBone,
                         out Transform root))
                 {
@@ -289,9 +300,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
             foreach (PlannedConstraint planned in plan.SelectedConstraints())
             {
                 if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
-                        out Transform host))
+                        out Transform host, out bool removed))
                 {
                     result.ConstraintsSkipped++;
+                    if (removed)
+                    {
+                        result.Diagnostics.Add(DiagnosticSeverity.Mapped, "apply.removedOnInstance",
+                            $"The constraint for {planned.Describe()} is on an object removed from "
+                            + "this instance. None was written.");
+                        continue;
+                    }
+
                     result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
                         $"The constraint for {planned.Describe()} has no counterpart in the "
                         + "target hierarchy and was skipped.");
@@ -333,9 +352,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
             foreach (PlannedHeadChop planned in plan.SelectedHeadChops())
             {
                 if (!TryTranslate(plan, roots, target, planned.Source, planned.SourceHost,
-                        out Transform host))
+                        out Transform host, out bool removed))
                 {
                     result.HeadChopsSkipped++;
+                    if (removed)
+                    {
+                        result.Diagnostics.Add(DiagnosticSeverity.Mapped, "apply.removedOnInstance",
+                            $"The head chop for {planned.Describe()} is on an object removed from "
+                            + "this instance. None was written.");
+                        continue;
+                    }
+
                     result.Diagnostics.Add(DiagnosticSeverity.Warning, "apply.unresolved",
                         $"The head chop for {planned.Describe()} has no counterpart in the "
                         + "target hierarchy and was skipped.");
@@ -854,7 +881,17 @@ namespace yuna0x0.Basis.Convert.Pipeline
             Transform target, ConversionSource source, Transform sourceTransform,
             out Transform translated)
         {
+            return TryTranslate(plan, roots, target, source, sourceTransform, out translated, out _);
+        }
+
+        /// <param name="removed">Set when the object was removed on the instance being converted.</param>
+        private static bool TryTranslate(
+            AvatarConversionPlan plan, Dictionary<ConversionSource, Transform> roots,
+            Transform target, ConversionSource source, Transform sourceTransform,
+            out Transform translated, out bool removed)
+        {
             translated = null;
+            removed = false;
             if (sourceTransform == null)
             {
                 return false;
@@ -898,7 +935,16 @@ namespace yuna0x0.Basis.Convert.Pipeline
                 return TryTranslateAcrossSources(plan, target, sourceTransform, out translated);
             }
 
-            return TransformIndexPath.TryResolve(targetRoot, path, out translated);
+            switch (PrefabCorrespondence.Find(targetRoot, sourceRoot, sourceTransform, out translated))
+            {
+                case PrefabCorrespondence.Outcome.Found:
+                    return true;
+                case PrefabCorrespondence.Outcome.Removed:
+                    removed = true;
+                    return false;
+                default:
+                    return TransformIndexPath.TryResolve(targetRoot, path, out translated);
+            }
         }
 
         /// <summary>

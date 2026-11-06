@@ -75,6 +75,7 @@ on the case; the usual one is given.
 | `apply.noTarget` | Warning | Convert ran without a plan or a target. |
 | `apply.sourceUnresolved` | Warning | A prefab is not where it was when scanned, so nothing read from it was written. Rescan. |
 | `apply.unresolved` | Warning | A planned rig, constraint, head chop or armature link has no object in the target hierarchy and was skipped. |
+| `apply.removedOnInstance` | Mapped | The PhysBone, constraint or head chop is on an object removed from the prefab instance. None was written. |
 | `apply.descriptorUnresolved` | Warning | The avatar descriptor has no object in the target hierarchy. |
 | `apply.vixxyUnresolved` | Warning | A control switches an object that is not in the target hierarchy. |
 | `apply.motionUnresolved` | Warning | A motion came from a prefab that moved since the scan. |

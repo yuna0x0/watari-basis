@@ -10,8 +10,8 @@ namespace yuna0x0.Basis.Convert.Pipeline
     /// Readers resolve references inside the file they read, so what they hand back are
     /// transforms of that prefab's asset. A toggle in one prefab commonly names a renderer in
     /// another, and what a control switches has to be the object in the avatar, with every
-    /// override its instance carries. Each source records where it sits in the hierarchy, so an
-    /// asset transform is found again by its sibling-index path under that instance.
+    /// override its instance carries. Each source records where it sits in the hierarchy, and an
+    /// asset transform is found again under that instance through its prefab links.
     /// </para>
     /// </summary>
     public sealed class HierarchyLocator
@@ -72,8 +72,20 @@ namespace yuna0x0.Basis.Convert.Pipeline
 
             Transform liveRoot = LiveRootOf(source);
             int[] path = TransformIndexPath.Of(sourceRoot, asset);
-            return liveRoot != null && path != null
-                && TransformIndexPath.TryResolve(liveRoot, path, out live);
+            if (liveRoot == null || path == null)
+            {
+                return false;
+            }
+
+            switch (PrefabCorrespondence.Find(liveRoot, sourceRoot, asset, out live))
+            {
+                case PrefabCorrespondence.Outcome.Found:
+                    return true;
+                case PrefabCorrespondence.Outcome.Removed:
+                    return false;
+                default:
+                    return TransformIndexPath.TryResolve(liveRoot, path, out live);
+            }
         }
 
         /// <summary>The hierarchy transform for an asset transform of any source read.</summary>

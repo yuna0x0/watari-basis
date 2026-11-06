@@ -6,11 +6,10 @@ namespace yuna0x0.Basis.Convert.Pipeline
     /// <summary>
     /// Locates a transform by its chain of sibling indices from a root, rather than by name.
     /// <para>
-    /// Source data is read from a prefab asset, and the components are written onto whichever
-    /// hierarchy is being converted, which may be a scene instance of that prefab. Both have the
-    /// same shape, so a sibling-index path taken from one applies exactly to the other. Names
-    /// would not: avatars routinely repeat bone names, and Basis only renames duplicates at
-    /// build time.
+    /// Used between two hierarchies of the same shape, and where a hierarchy is not an instance of
+    /// the asset it was read from. An instance that adds or removes children does not have the
+    /// asset's shape; <see cref="PrefabCorrespondence"/> handles that case. Names are not used:
+    /// avatars routinely repeat bone names, and Basis only renames duplicates at build time.
     /// </para>
     /// </summary>
     public static class TransformIndexPath
